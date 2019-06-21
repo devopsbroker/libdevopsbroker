@@ -1,7 +1,7 @@
 /*
- * integer.h - DevOpsBroker C header file for providing integer-related functionality
+ * hashmap.h - C header file for the org.devopsbroker.adt.HashMap struct
  *
- * Copyright (C) 2018-2019 Edward Smith <edwardsmith@devopsbroker.org>
+ * Copyright (C) 2019 AUTHOR_NAME <email@address.com>
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -16,146 +16,154 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  * -----------------------------------------------------------------------------
- * Developed on Ubuntu 16.04.5 LTS running kernel.osrelease = 4.15.0-34
+ * Developed on Ubuntu 18.04.2 LTS running kernel.osrelease = 4.18.0-21
  *
- * echo ORG_DEVOPSBROKER_LANG_INTEGER | md5sum | cut -c 25-32
+ * echo ORG_DEVOPSBROKER_ADT_HASHMAP | md5sum | cut -c 25-32
  * -----------------------------------------------------------------------------
  */
 
-#ifndef ORG_DEVOPSBROKER_LANG_INTEGER_H
-#define ORG_DEVOPSBROKER_LANG_INTEGER_H
+#ifndef ORG_DEVOPSBROKER_ADT_HASHMAP_H
+#define ORG_DEVOPSBROKER_ADT_HASHMAP_H
 
 // ═════════════════════════════════ Includes ═════════════════════════════════
 
+#include <stdbool.h>
 #include <stdint.h>
+
+#include <assert.h>
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
+typedef struct MapEntry {
+	void *key;
+	void *value;
+	struct MapEntry *next;
+	uint32_t hash;
+} MapEntry;
+
+static_assert(sizeof(MapEntry) == 32, "Check your assumptions");
+
+typedef struct HashMap {
+	MapEntry **table;
+	uint32_t (*hashCode)(void *);
+	bool (*equals)(void *, void *);
+	uint32_t capacity;
+	uint32_t size;
+	uint32_t length;
+} HashMap;
+
+static_assert(sizeof(HashMap) == 40, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
 
 // ═══════════════════════════ Function Declarations ══════════════════════════
 
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_getStringSize_int32
- * Description: Calculates the string size of a signed integer value
- *
- * Parameters:
- *   value      The signed integer value to evaluate
- * Returns:     The size of the string including null termination
- * ----------------------------------------------------------------------------
- */
-uint32_t f45efac2_getStringSize_int32(const int32_t value);
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_getStringSize_uint32
- * Description: Calculates the string size of an unsigned integer value
+ * Function:    c47905f7_createHashMap
+ * Description: Creates a HashMap struct instance
  *
- * Parameters:
- *   value      The unsigned integer value to evaluate
- * Returns:     The size of the string including null termination
+ * Returns:     A HashMap struct instance
  * ----------------------------------------------------------------------------
  */
-uint32_t f45efac2_getStringSize_uint32(const uint32_t value);
+HashMap *c47905f7_createHashMap(uint32_t (*hashCode)(void *), bool (*equals)(void *, void *), uint32_t capacity);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_max_uint32
- * Description: Returns the maximum unsigned integer value
+ * Function:    c47905f7_destroyHashMap
+ * Description: Frees the memory allocated to the HashMap struct pointer
  *
  * Parameters:
- *   foo        An unsigned integer value to evaluate
- *   bar        An unsigned integer value to evaluate
- * Returns:     The maximum unsigned integer value
+ *   hashMap	A pointer to the HashMap instance to destroy
  * ----------------------------------------------------------------------------
  */
-static inline uint32_t f45efac2_max_uint32(register const uint32_t foo, register const uint32_t bar) {
-	return (foo > bar) ? foo : bar;
-}
+void c47905f7_destroyHashMap(HashMap *hashMap);
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_min_uint32
- * Description: Returns the minimum unsigned integer value
+ * Function:    c47905f7_initHashMap
+ * Description: Initializes an existing HashMap struct
  *
  * Parameters:
- *   foo        An unsigned integer value to evaluate
- *   bar        An unsigned integer value to evaluate
- * Returns:     The minimum unsigned integer value
+ *   hashMap	A pointer to the HashMap instance to initalize
  * ----------------------------------------------------------------------------
  */
-static inline uint32_t f45efac2_min_uint32(register const uint32_t foo, register const uint32_t bar) {
-	return (foo < bar) ? foo : bar;
-}
+void c47905f7_initHashMap(HashMap *hashMap, uint32_t (*hashCode)(void *), bool (*equals)(void *, void *), uint32_t capacity);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_parse_uint32
- * Description: Converts a char* to an unsigned integer
+ * Function:    c47905f7_cleanUpHashMap
+ * Description: Cleans up an existing HashMap struct
  *
  * Parameters:
- *   source     A char* representation of an unsigned integer
- * Returns:     The unsigned integer value
+ *   hashMap	A pointer to the HashMap instance to clean up
  * ----------------------------------------------------------------------------
  */
-uint32_t f45efac2_parse_uint32(const char *source);
+void c47905f7_cleanUpHashMap(HashMap *hashMap);
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_parseHex_uint32
- * Description: Converts a hexadecimal char* to an unsigned integer
+ * Function:    c47905f7_clear
+ * Description: Removes all key-value pair mappings from the HashMap
  *
  * Parameters:
- *   source     A hexadecimal char* representation of an unsigned integer
- * Returns:     The unsigned integer value
+ *   hashMap    A pointer to the HashMap instance to clear
  * ----------------------------------------------------------------------------
  */
-uint32_t f45efac2_parseHex_uint32(const char *source);
+void c47905f7_clear(HashMap *hashMap);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_parseInt
- * Description: Converts a char* to an integer
+ * Function:    c47905f7_containsKey
+ * Description: Returns true if the HashMap contains a mapping for the specified key
  *
  * Parameters:
- *   source     A char* representation of an integer
- *   value      The memory location to store the value
- * Returns:
+ *   hashMap    A pointer to the HashMap instance to search
+ *   key        A pointer to the key to search for
+ * Returns:     True if the HashMap contains a mapping for the specified key
  * ----------------------------------------------------------------------------
  */
-int f45efac2_parseInt(const char *source, int *value);
+bool c47905f7_containsKey(HashMap *hashMap, void *key);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_toString_int32
- * Description: Converts a signed integer to a string
+ * Function:    c47905f7_get
+ * Description: Returns the value mapped to the specified key, or NULL if not found
  *
  * Parameters:
- *   value      An signed integer value
- * Returns:     The string representation of the signed integer value
+ *   hashMap    A pointer to the HashMap instance to search
+ *   key        A pointer to the key to search for
+ * Returns:     A pointer to the value indexed by key if found, NULL otherwise
  * ----------------------------------------------------------------------------
  */
-char *f45efac2_toString_int32(int32_t value);
+void *c47905f7_get(HashMap *hashMap, void *key);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_toString_uint32
- * Description: Converts an unsigned integer to a string
+ * Function:    c47905f7_put
+ * Description: Maps the specified key to the specified value
  *
  * Parameters:
- *   value      An unsigned integer value
- * Returns:     The string representation of the unsigned integer value
+ *   hashMap    A pointer to the HashMap instance to populate
+ *   key        A pointer to the key to associate with the value
+ *   value      A pointer to the value to associate with the key
+ * Returns:     A pointer to the previous value indexed by key, NULL otherwise
  * ----------------------------------------------------------------------------
  */
-char *f45efac2_toString_uint32(uint32_t value);
+void *c47905f7_put(HashMap *hashMap, void *key, void *value);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f45efac2_toStringHex_uint32
- * Description: Converts an unsigned integer to a hexadecimal string
+ * Function:    c47905f7_remove
+ * Description: Removes the value mapped to the specified key, or NULL if not found
  *
  * Parameters:
- *   value      An unsigned integer value
- *   precision  The minimum number of hexadecimal characters required
- * Returns:     The hexadecimal string representation of the unsigned integer value
+ *   hashMap    A pointer to the HashMap instance to search
+ *   key        A pointer to the key to search for
+ * Returns:     A pointer to the removed value indexed by key if found, NULL otherwise
  * ----------------------------------------------------------------------------
  */
-char *f45efac2_toStringHex_uint32(uint32_t value, const uint32_t precision);
+void *c47905f7_remove(HashMap *hashMap, void *key);
 
-#endif /* ORG_DEVOPSBROKER_LANG_INTEGER_H */
+#endif /* ORG_DEVOPSBROKER_ADT_HASHMAP_H */

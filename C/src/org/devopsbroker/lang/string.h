@@ -168,6 +168,17 @@ static inline uint32_t f6215943_getLength(register const char *string) {
 }
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f6215943_hashCode
+ * Description: Calculates the hash code for a string
+ *
+ * Parameters:
+ *   string     The char* instance to calculate its hash code
+ * Returns:     The calculated hash code
+ * ----------------------------------------------------------------------------
+ */
+uint32_t f6215943_hashCode(void *string);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f6215943_isEqual
  * Description: Compares the two strings for equality
  *
@@ -177,7 +188,7 @@ static inline uint32_t f6215943_getLength(register const char *string) {
  * Returns:     True if the two string instances are equal, false otherwise
  * ----------------------------------------------------------------------------
  */
-bool f6215943_isEqual(char *foo, char *bar);
+bool f6215943_isEqual(void *foo, void *bar);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f6215943_isNotEqual

@@ -23,6 +23,7 @@
 ; org.devopsbroker.lang.string.h header file:
 ;
 ;   o char *f6215943_copy(char *source, uint32_t length);
+;   o uint32_t f6215943_hashCode(const char *string);
 ;   o bool f6215943_isEqual(char *foo, char *bar);
 ;   o char *f6215943_search(char *pattern, char *text);
 ;   o char *f6215943_trim(char *string);
@@ -119,6 +120,48 @@ f6215943_copy:
 
 .fatalError:
 	call       abort WRT ..plt
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_hashCode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f6215943_hashCode:function
+f6215943_hashCode:
+; Parameters:
+;	rdi : char *string
+; Local Variables:
+;	cl  : loop counter
+;	rdx : 64-bit character buffer
+;   r9d : temporary variable
+
+.prologue:                            ; functions typically have a prologue
+	xor        eax, eax               ; return value = 0
+
+	test       rdi, rdi               ; if (foo == NULL)
+	jz         .epilogue
+
+.whileString:
+	mov        r8, [rdi]              ; load eight characters into r8
+	add        rdi, 0x08
+	mov        cl, 0x08               ; numChars = 8
+
+	test       r8b, r8b               ; if (ch == '\0')
+	jz         .epilogue
+
+.whileChars:
+	movzx      r9d, r8b
+	shl        eax, 3
+	xor        eax, r9d
+
+	dec        cl
+	shr        r8, 8
+
+	test       cl, cl                 ; if (numChars == 0)
+	je         .whileString
+
+	test       r8b, r8b               ; if (ch == '\0')
+	jnz        .whileChars
+
+.epilogue:
+	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_isEqual ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
