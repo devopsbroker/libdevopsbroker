@@ -155,6 +155,18 @@ void *c47905f7_get(HashMap *hashMap, void *key);
 void *c47905f7_put(HashMap *hashMap, void *key, void *value);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    c47905f7_putAll
+ * Description: Maps the specified key to the specified value
+ *
+ * Parameters:
+ *   hashMap        A pointer to the HashMap instance to populate
+ *   elementArray   The list of key/value pairs to add to the HashMap
+ *   numElements    The number of elements to add
+ * ----------------------------------------------------------------------------
+ */
+void c47905f7_putAll(HashMap *hashMap, void **elementArray, uint32_t numElements);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    c47905f7_remove
  * Description: Removes the value mapped to the specified key, or NULL if not found
  *

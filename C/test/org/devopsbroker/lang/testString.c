@@ -48,12 +48,17 @@
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
 static void positiveTest(char *label, int expected, int actual);
+static void positiveTestBool(char *label, bool expected, bool actual);
 
+static void testCopy();
+static void testCopyToBuffer();
 static void testHashCode();
 
 // ══════════════════════════════════ main() ══════════════════════════════════
 
 int main(int argc, char *argv[]) {
+	testCopy();
+	testCopyToBuffer();
 	testHashCode();
 
 	// Exit with success
@@ -62,7 +67,7 @@ int main(int argc, char *argv[]) {
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
-void positiveTest(char *label, int expected, int actual) {
+static void positiveTest(char *label, int expected, int actual) {
 	printf("%s", label);
 
 	if (expected == actual) {
@@ -70,6 +75,55 @@ void positiveTest(char *label, int expected, int actual) {
 	} else {
 		printf(FAIL);
 	}
+}
+
+static void positiveTestBool(char *label, bool expected, bool actual) {
+	printf("%s", label);
+
+	if (expected == actual) {
+		printf(PASS);
+	} else {
+		printf(FAIL);
+	}
+}
+
+static void testCopy() {
+	char *foo = NULL;
+	char dest[8];
+
+	puts("testCopy:");
+	foo = f6215943_copy("foo", dest);
+	positiveTestBool("  f6215943_copy(\"foo\", dest)\t\t", true, f6215943_isEqual("foo", foo));
+
+	foo = f6215943_copy("bar", dest);
+	positiveTestBool("  f6215943_copy(\"bar\", dest)\t\t", true, f6215943_isEqual("bar", foo));
+
+	foo = f6215943_copy("XYZ", dest);
+	positiveTestBool("  f6215943_copy(\"XYZ\", dest)\t\t", true, f6215943_isEqual("XYZ", foo));
+
+	printf("\n");
+}
+
+static void testCopyToBuffer() {
+	char dest[16];
+
+	puts("testCopyToBuffer:");
+	f6215943_copyToBuffer("foo", dest, 4);
+	positiveTestBool("  f6215943_copyToBuffer(\"foo\", dest, 4)\t\t\t", true, f6215943_isEqual("foo", dest));
+
+	f6215943_copyToBuffer("foo", dest, 3);
+	positiveTestBool("  f6215943_copyToBuffer(\"foo\", dest, 3)\t\t\t", true, f6215943_isEqual("fo", dest));
+
+	f6215943_copyToBuffer("international", dest, 8);
+	positiveTestBool("  f6215943_copyToBuffer(\"international\", dest, 8)\t", true, f6215943_isEqual("interna", dest));
+
+	f6215943_copyToBuffer("international", dest, 14);
+	positiveTestBool("  f6215943_copyToBuffer(\"international\", dest, 14)\t", true, f6215943_isEqual("international", dest));
+
+	f6215943_copyToBuffer("international", dest, 9);
+	positiveTestBool("  f6215943_copyToBuffer(\"international\", dest, 9)\t", true, f6215943_isEqual("internat", dest));
+
+	printf("\n");
 }
 
 static void testHashCode() {

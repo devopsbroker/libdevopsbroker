@@ -23,6 +23,7 @@
 ; org.devopsbroker.lang.string.h header file:
 ;
 ;   o char *f6215943_copy(char *source, uint32_t length);
+;   o void f6215943_copyToBuffer(char *source, char *buffer, uint32_t numBytes);
 ;   o uint32_t f6215943_hashCode(const char *string);
 ;   o bool f6215943_isEqual(char *foo, char *bar);
 ;   o char *f6215943_search(char *pattern, char *text);
@@ -64,35 +65,73 @@ extern  b196167f_addAll
 f6215943_copy:
 ; Parameters:
 ;	rdi : char *source
-;	rsi : uint32_t length
+;	rsi : char *dest
 ; Local Variables:
-;	rdi : char *destination
-;	rsi : char *source
-;	edx : uint32_t length
-;	ecx : count register for repeat instruction
+;	cl  : numChars
+;	r8  : 64-bit character buffer
+;	r9  : temporary variable
 
 .prologue:                            ; functions typically have a prologue
-	test       esi, esi               ; if (length == 0)
+	prefetcht0 [rdi]                  ; prefetch source into the CPU cache
+	mov        rax, rsi               ; return value = char *dest
+
+	xor        ecx, ecx               ; numChars = 0
+	mov        r8, [rdi]              ; load eight characters into r8
+	mov        r9, r8                 ; save 64-bit buffer into r9
+	add        rdi, 0x08              ; source += 8
+
+.whileString:
+	inc        cl                     ; numChars++
+	test       r8b, r8b               ; if (ch == '\0')
+	jz         .foundNull
+
+	shr        r8, 8
+
+	cmp        cl, 0x08
+	jne        .whileString
+
+.saveCharBuffer:
+	mov        [rsi], r9              ; save eight characters into char *dest
+	add        rsi, 0x08              ; dest += 8
+
+.manageCharBuffer:
+	xor        ecx, ecx               ; numChars = 0
+	mov        r8, [rdi]              ; load eight characters into r8
+	mov        r9, r8                 ; save 64-bit buffer into r9
+	add        rdi, 0x08              ; source += 8
+	jmp        .whileString
+
+.foundNull:
+	mov        [rsi], r9b             ; save partial character buffer into char *dest
+	dec        cl
+	inc        rsi
+	shr        r9, 8
+
+	test       cl, cl
+	jnz        .foundNull
+
+.epilogue:
+	ret                               ; pop return address from stack and jump there
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_copyToBuffer ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f6215943_copyToBuffer:function
+f6215943_copyToBuffer:
+; Parameters:
+;	rdi : char *source
+;	rsi : char *buffer
+;	rdx : uint32_t numBytes
+; Local Variables:
+;	ecx : rep prefix counter register
+;	r8d : temporary variable
+
+.prologue:                            ; functions typically have a prologue
+	test       rdx, rdx               ; if (length == 0)
 	jz         .epilogue
 
-.malloc:
-	push       rdi                    ; save char *source
-	push       rsi                    ; save uint32_t length
-	sub        rsp, 8                 ; align stack frame before calling malloc()
-
-	mov        rdi, rsi               ; malloc(length+1)
-	inc        rdi
-	call       malloc WRT ..plt
-
-	test       rax, rax               ; if (ptr == NULL)
-	je         .fatalError
-
-	add        rsp, 8                 ; unalign stack frame after calling malloc()
-	pop        rdx                    ; retrieve uint32_t length
-	pop        rsi                    ; retrieve char *source
-
 .copyString:
-	mov        rdi, rax               ; rdi = char *destination
+	dec        rdx                    ; numBytes--
+	xchg       rdi, rsi               ; swap rdi and rsi
 	cld                               ; clear direction flag in EFLAGS register
 
 	cmp        edx, 0x08              ; if (length < 8)
@@ -105,21 +144,18 @@ f6215943_copy:
 	shl        r8d, 3
 	sub        edx, r8d               ; edx = length % 8
 
-	rep movsq                         ; move ecx quadwords from char *source to char *destination
+	rep movsq                         ; move ecx quadwords into buffer
 
 	test       edx, edx
 	jz         .epilogue
 
 .copyBytes:
 	mov        ecx, edx
-	rep movsb                         ; move ecx bytes from char *source to char *destination
+	rep movsb                         ; move ecx bytes into buffer
 
 .epilogue:
-	mov        [rdi+1], byte 0x00     ; terminate char *destination
+	mov        [rdi], byte 0x00       ; terminate char *buffer
 	ret                               ; pop return address from stack and jump there
-
-.fatalError:
-	call       abort WRT ..plt
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_hashCode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

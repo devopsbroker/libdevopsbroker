@@ -115,25 +115,23 @@ static inline String *f6215943_createString(const size_t length) {
  *
  * Parameters:
  *   source     The char* instance to copy
- *   length     The number of characters to copy
- * Returns:     A copied instance of the char* and of the specified length
+ *   dest       The char* destination
+ * Returns:     A pointer to the destination string
  * ----------------------------------------------------------------------------
  */
-char *f6215943_copy(char *source, uint32_t length);
+char *f6215943_copy(char *source, char *dest);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f6215943_copy_to_buffer
- * Description: Copies the char* source contents into the buffer
+ * Function:    f6215943_copyToBuffer
+ * Description: Copies at most size-1 bytes into the buffer and adds a terminating null byte
  *
  * Parameters:
  *   source     The char* instance to copy
  *   buffer     The buffer to copy into
- *   bufSize    The size of the buffer
- * Returns:     On success, the actual length copied into the buffer. If the
- *              source string is longer than the buffer size, -1 is returned
+ *   numBytes   The number of bytes to copy from source into the buffer
  * ----------------------------------------------------------------------------
  */
-uint32_t f6215943_copy_to_buffer(const char *source, char *buffer, const uint32_t bufSize);
+void f6215943_copyToBuffer(char *source, char *buffer, uint32_t numBytes);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f6215943_destroyString

@@ -83,6 +83,9 @@ void c47905f7_destroyHashMap(HashMap *hashMap) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void c47905f7_initHashMap(HashMap *hashMap, uint32_t (*hashCode)(void *), bool (*equals)(void *, void *), uint32_t capacity) {
+	// Normalize capacity to be a multiple of eight
+	capacity = ((capacity + 7) >> 3) << 3;
+
 	// Calculate table length
 	hashMap->capacity = capacity;
 	hashMap->length = capacity * 1.375f;
@@ -174,6 +177,12 @@ void *c47905f7_put(HashMap *hashMap, void *key, void *value) {
 	hashMap->table[i] = entry;
 
 	return NULL;
+}
+
+void c47905f7_putAll(HashMap *hashMap, void **elementArray, uint32_t numElements) {
+	for (int i = 0; i < numElements; i += 2) {
+		c47905f7_put(hashMap, elementArray[i], elementArray[i+1]);
+	}
 }
 
 void *c47905f7_remove(HashMap *hashMap, void *key) {
