@@ -156,7 +156,7 @@ void *c47905f7_put(HashMap *hashMap, void *key, void *value);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    c47905f7_putAll
- * Description: Maps the specified key to the specified value
+ * Description: Maps the key/value pairs stored in the elementArray to the HashMap
  *
  * Parameters:
  *   hashMap        A pointer to the HashMap instance to populate
@@ -165,6 +165,18 @@ void *c47905f7_put(HashMap *hashMap, void *key, void *value);
  * ----------------------------------------------------------------------------
  */
 void c47905f7_putAll(HashMap *hashMap, void **elementArray, uint32_t numElements);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    c47905f7_putFromStack
+ * Description: Maps the key/value pairs stored on the stack to the HashMap
+ *
+ * Parameters:
+ *   hashMap        A pointer to the HashMap instance to populate
+ *   stack          A pointer to the stack
+ *   numElements    The number of elements to add
+ * ----------------------------------------------------------------------------
+ */
+void c47905f7_putFromStack(HashMap *hashMap, void **stack, uint32_t numElements);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    c47905f7_remove

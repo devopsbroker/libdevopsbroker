@@ -185,6 +185,12 @@ void c47905f7_putAll(HashMap *hashMap, void **elementArray, uint32_t numElements
 	}
 }
 
+void c47905f7_putFromStack(HashMap *hashMap, void **stack, uint32_t numElements) {
+	for (int i = 0; i < numElements; i += 2) {
+		c47905f7_put(hashMap, stack[i+1], stack[i]);
+	}
+}
+
 void *c47905f7_remove(HashMap *hashMap, void *key) {
 	uint32_t i = hashMap->hashCode(key) % hashMap->length;
 	MapEntry *prev = NULL;
