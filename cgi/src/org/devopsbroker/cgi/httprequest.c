@@ -89,6 +89,11 @@ int a2465172_initHttpRequest(HttpRequest *request, uint32_t numParams) {
 void a2465172_cleanUpHttpRequest(HttpRequest *request) {
 	c47905f7_cleanUpHashMap(&request->parameters);
 
+	// Free the queryString if POST
+	if (f6215943_isEqual(request->method, HTTP_REQUEST_METHOD_POST) && request->queryString != NULL) {
+		free(request->queryString);
+	}
+
 	if (request->paramStr != NULL) {
 		free(request->paramStr);
 	}
@@ -96,12 +101,27 @@ void a2465172_cleanUpHttpRequest(HttpRequest *request) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void a2465172_readPostData(HttpRequest *request, int maxLen) {
+int a2465172_mapPostData(HttpRequest *request, int maxLen) {
+	int retValue = 0;
+
 	// Check CONTENT_LENGTH against maxLen
 	if (request->length > maxLen) {
-		printf("<p>Invalid POST form submission</p>");
-		exit(EXIT_FAILURE);
+		retValue = SYSTEM_ERROR_CODE;
+	} else if (request->length > 0) {
+		int strLen;
+
+		request->queryString = f668c4bd_malloc(request->length+1);
+		if (fgets(request->queryString, request->length+1, stdin) == NULL) {
+			retValue = SYSTEM_ERROR_CODE;
+		} else {
+			a2465172_urldecode(request->queryString, &strLen);
+
+			request->paramStr = f668c4bd_malloc(strLen+1);
+
+			f6215943_copyToBuffer(request->queryString, request->paramStr, strLen+1);
+			retValue = a2465172_mapQueryString(request, request->paramStr);
+		}
 	}
 
-	// TODO: How to read POST data from HTTP request?
+	return retValue;
 }

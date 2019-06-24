@@ -33,6 +33,7 @@
 #include <stdbool.h>
 
 #include "org/devopsbroker/cgi/httprequest.h"
+#include "org/devopsbroker/io/stream.h"
 #include "org/devopsbroker/lang/string.h"
 #include "org/devopsbroker/terminal/ansi.h"
 
@@ -53,8 +54,11 @@ HttpRequest request;
 static void positiveTestChar(char *label, char *expected, char *actual);
 static void positiveTestInt(char *label, int expected, int actual);
 
-static void setupTesting(HttpRequest *request);
-static void tearDownTesting(HttpRequest *request);
+static void setupGetTesting(HttpRequest *request);
+static void tearDownGetTesting(HttpRequest *request);
+
+static void setupPostTesting(HttpRequest *request);
+static void tearDownPostTesting(HttpRequest *request);
 
 static void testUrlDecode();
 static void testParameters(HttpRequest *request);
@@ -62,10 +66,15 @@ static void testParameters(HttpRequest *request);
 // ══════════════════════════════════ main() ══════════════════════════════════
 
 int main(int argc, char *argv[]) {
-	setupTesting(&request);
-	testUrlDecode();
+	setupGetTesting(&request);
 	testParameters(&request);
-	tearDownTesting(&request);
+	tearDownGetTesting(&request);
+
+	setupPostTesting(&request);
+	testParameters(&request);
+	tearDownPostTesting(&request);
+
+	testUrlDecode();
 
 	// Exit with success
 	exit(EXIT_SUCCESS);
@@ -93,8 +102,8 @@ static void positiveTestInt(char *label, int expected, int actual) {
 	}
 }
 
-static void setupTesting(HttpRequest *request) {
-	puts("testHttpRequest Setup:");
+static void setupGetTesting(HttpRequest *request) {
+	puts("setupGetTesting:");
 	setenv(HTTP_REQUEST_METHOD, HTTP_REQUEST_METHOD_GET, true);
 	setenv(HTTP_QUERY_STRING, "foo=bar&bar=baz&baz=XYZ", true);
 	a2465172_initHttpRequest(request, 3);
@@ -106,8 +115,36 @@ static void setupTesting(HttpRequest *request) {
 	printf("\n");
 }
 
-static void tearDownTesting(HttpRequest *request) {
-	puts("a2465172_cleanUpHttpRequest:");
+static void tearDownGetTesting(HttpRequest *request) {
+	puts("tearDownGetTesting:");
+	a2465172_cleanUpHttpRequest(request);
+
+	positiveTestInt("  HashMap capacity = 8\t\t\t\t", 8, request->parameters.capacity);
+	positiveTestInt("  HashMap size = 0\t\t\t\t", 0, request->parameters.size);
+	positiveTestInt("  HashMap length = 11\t\t\t\t", 11, request->parameters.length);
+
+	printf("\n");
+}
+
+static void setupPostTesting(HttpRequest *request) {
+	puts("setupPostTesting:");
+	setenv(HTTP_REQUEST_METHOD, HTTP_REQUEST_METHOD_POST, true);
+	setenv(HTTP_CONTENT_LENGTH, "23", true);
+	a2465172_initHttpRequest(request, 3);
+
+	// Populate STDIN with the HTTP POST data
+	a8d15ebe_ungetString("foo=bar&bar=baz&baz=XYZ", stdin);
+	a2465172_mapPostData(request, 256);
+
+	positiveTestInt("  HashMap capacity = 8\t\t\t\t", 8, request->parameters.capacity);
+	positiveTestInt("  HashMap size = 3\t\t\t\t", 3, request->parameters.size);
+	positiveTestInt("  HashMap length = 11\t\t\t\t", 11, request->parameters.length);
+
+	printf("\n");
+}
+
+static void tearDownPostTesting(HttpRequest *request) {
+	puts("tearDownPostTesting:");
 	a2465172_cleanUpHttpRequest(request);
 
 	positiveTestInt("  HashMap capacity = 8\t\t\t\t", 8, request->parameters.capacity);

@@ -117,8 +117,20 @@ void a2465172_cleanUpHttpRequest(HttpRequest *request);
 char *a2465172_getParameter(HttpRequest *request, char *name);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    a2465172_mapPostData
+ * Description: Maps the content from a POST form submission to the parameter HashMap
+ *
+ * Parameters:
+ *   request    A pointer to the initialized HttpRequest instance
+ *   maxLen     The maximum length to accept for the POST form submission
+ * Returns:     Zero if no issues with data conversion found, SYSTEM_ERROR_CODE otherwise
+ * ----------------------------------------------------------------------------
+ */
+int a2465172_mapPostData(HttpRequest *request, int maxLen);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    a2465172_mapQueryString
- * Description: Maps the query string from a GET form submission to the parameterMap
+ * Description: Maps the query string from a GET form submission to the parameter HashMap
  *
  * Parameters:
  *   request    A pointer to the HttpRequest instance
@@ -127,17 +139,6 @@ char *a2465172_getParameter(HttpRequest *request, char *name);
  * ----------------------------------------------------------------------------
  */
 int a2465172_mapQueryString(HttpRequest *request, char *paramStr);
-
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    a2465172_readPostData
- * Description: Initializes an existing Http struct with POST form submission data
- *
- * Parameters:
- *   request    A pointer to the Http instance to initalize
- *   maxLen     The maximum length to accept for the POST form submission
- * ----------------------------------------------------------------------------
- */
-void a2465172_readPostData(HttpRequest *request, int maxLen);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    a2465172_urldecode
