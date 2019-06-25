@@ -1,7 +1,7 @@
 /*
- * email.c - C source file for the org.devopsbroker.cgi.Email struct
+ * email.c - DevOpsBroker C source file for the org.devopsbroker.cgi.Email struct
  *
- * Copyright (C) 2019 AUTHOR_NAME <email@address.com>
+ * Copyright (C) 2019 Edward Smith <edwardsmith@devopsbroker.org>
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -27,8 +27,6 @@
 
 // ═════════════════════════════════ Includes ═════════════════════════════════
 
-#include <stdlib.h>
-
 #include "email.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
@@ -42,13 +40,37 @@
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
+static char *sanitizeInput(char *string);
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void a9740e57_initEmail(Email *email) {
+void a9740e57_initEmail(Email *email, char *name, char *address, char *subject, char *message) {
+	email->name = sanitizeInput(name);
+	email->address = sanitizeInput(address);
+	email->subject = sanitizeInput(subject);
+	email->message = sanitizeInput(message);
+}
 
-	// TODO: Fill in with struct initialization code
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Private Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+/*
+ * Check for newlines so additional headers are not inserted into the message
+ */
+static char *sanitizeInput(char *string) {
+	register char *start = string;
+	register char ch = (*string);
+
+	while (ch) {
+		if (ch == '\n') {
+			(*string) = '\0';
+			return start;
+		}
+
+		string++;
+		ch = (*string);
+	}
+
+	return start;
 }

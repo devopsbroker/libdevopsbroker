@@ -101,13 +101,16 @@ void a2465172_cleanUpHttpRequest(HttpRequest *request) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-int a2465172_mapPostData(HttpRequest *request, int maxLen) {
+char *a2465172_getString(HttpRequest *request, char *name, uint32_t maxLen) {
+	char *value = c47905f7_get(&request->parameters, name);
+
+	return f6215943_truncate(value, maxLen);
+}
+
+int a2465172_mapPostData(HttpRequest *request) {
 	int retValue = 0;
 
-	// Check CONTENT_LENGTH against maxLen
-	if (request->length > maxLen) {
-		retValue = SYSTEM_ERROR_CODE;
-	} else if (request->length > 0) {
+	if (request->length > 0) {
 		int strLen;
 
 		request->queryString = f668c4bd_malloc(request->length+1);

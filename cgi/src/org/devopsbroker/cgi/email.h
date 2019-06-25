@@ -36,7 +36,7 @@
 
 typedef struct Email {
 	char *name;
-	char *email;
+	char *address;
 	char *subject;
 	char *message;
 } Email;
@@ -55,9 +55,13 @@ static_assert(sizeof(Email) == 32, "Check your assumptions");
  * Description: Initializes an existing Email struct
  *
  * Parameters:
- *   email	A pointer to the Email instance to initalize
+ *   email	    A pointer to the Email instance to initalize
+ *   name       The name of the person
+ *   address    The email address of the person
+ *   subject    The email subject line
+ *   message    The message of the email
  * ----------------------------------------------------------------------------
  */
-void a9740e57_initEmail(Email *email);
+void a9740e57_initEmail(Email *email, char *name, char *address, char *subject, char *message);
 
 #endif /* ORG_DEVOPSBROKER_CGI_EMAIL_H */

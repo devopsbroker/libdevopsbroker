@@ -92,6 +92,21 @@ lib/libdevopsbroker-cgi.a: $(C_OBJECTS) $(ASM_OBJECTS)
 	/usr/bin/ar cr lib/libdevopsbroker-cgi.a $(C_OBJECTS) $(ASM_OBJECTS)
 	/usr/bin/ranlib lib/libdevopsbroker-cgi.a
 
+deploy: lib/libdevopsbroker-cgi.a
+	$(call printInfo,Deploying libdevopsbroker-cgi C header files)
+	$(foreach headerFile, \
+		$(wildcard $(SRC_DIR)/**/*.h), \
+		dirName=$(subst src/,,$(dir $(headerFile))); \
+		sudo mkdir -v --parents /usr/include/$${dirName}; \
+		sudo cp -uv $(headerFile) /usr/include/$${dirName}; \
+	)
+	sudo find /usr/include -type d -exec chmod -c 755 {} \;
+	sudo find /usr/include -type f -exec chmod -c 644 {} \;
+	$(call printInfo,Deploying libdevopsbroker-cgi.a static library)
+	libName=$(subst lib/,,$<);
+	sudo cp -uv $< /usr/lib/
+	sudo chmod -c 644 /usr/lib/$${libName}
+
 printenv:
 	echo "  MAKEFILE_LIST: $(MAKEFILE_LIST)"
 	echo "   MAKECMDGOALS: $(MAKECMDGOALS)"

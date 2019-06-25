@@ -105,16 +105,17 @@ void a2465172_cleanUpHttpRequest(HttpRequest *request);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    a2465172_getParameter
- * Description: Returns the parameter value associated with the given parameter name
+ * Function:    a2465172_getString
+ * Description: Returns the string value associated with the given parameter name
  *
  * Parameters:
  *   request    A pointer to the HttpRequest instance
  *   name       The name of the parameter to retrieve
- * Returns:     The parameter value associate with the parameter name, or NULL if not found
+ *   maxLen     The maximum length of the parameter to retrieve, any excess is truncated
+ * Returns:     The string value associated with the given parameter name, or NULL if not found
  * ----------------------------------------------------------------------------
  */
-char *a2465172_getParameter(HttpRequest *request, char *name);
+char *a2465172_getString(HttpRequest *request, char *name, uint32_t maxLen);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    a2465172_mapPostData
@@ -122,11 +123,10 @@ char *a2465172_getParameter(HttpRequest *request, char *name);
  *
  * Parameters:
  *   request    A pointer to the initialized HttpRequest instance
- *   maxLen     The maximum length to accept for the POST form submission
  * Returns:     Zero if no issues with data conversion found, SYSTEM_ERROR_CODE otherwise
  * ----------------------------------------------------------------------------
  */
-int a2465172_mapPostData(HttpRequest *request, int maxLen);
+int a2465172_mapPostData(HttpRequest *request);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    a2465172_mapQueryString

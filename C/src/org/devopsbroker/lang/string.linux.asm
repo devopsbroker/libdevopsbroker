@@ -28,6 +28,7 @@
 ;   o bool f6215943_isEqual(char *foo, char *bar);
 ;   o char *f6215943_search(char *pattern, char *text);
 ;   o char *f6215943_trim(char *string);
+;   o char *f6215943_truncate(char *string, uint32_t maxLen);
 ; -----------------------------------------------------------------------------
 ;
 
@@ -527,3 +528,48 @@ getNextCharacter:
 
 .epilogue:
 	jmp        r10                    ; jump to the return address
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_truncate ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f6215943_truncate:function
+f6215943_truncate:
+; Parameters:
+;	rdi : char *string
+;	rsi : uint32_t maxLen
+; Local Variables:
+;	cl  : int numChars
+;	r8  : 64-bit character buffer
+
+.prologue:                            ; functions typically have a prologue
+	test       rdi, rdi               ; if (string == NULL)
+	jz         .epilogue
+
+	prefetcht0 [rdi]                  ; prefetch string into the CPU cache
+	mov        cl, 0x08               ; numChars = 8
+	mov        r8, [rdi]
+
+.whileString:
+	test       esi, esi               ; if (maxLen == 0)
+	jz         .truncateString
+
+	test       r8b, r8b
+	jz         .epilogue
+
+	dec        cl                     ; numChars--
+	dec        esi                    ; maxLen--
+	inc        rdi                    ; string++
+	shr        r8, 8
+
+	test       cl, cl
+	jnz        .whileString
+
+.manageCharBuffer:
+	mov        cl, 0x08               ; numChars = 8
+	mov        r8, [rdi]
+	jmp        .whileString
+
+.truncateString:
+	mov        [rdi], byte 0x00       ; Null-terminate string at maxLen
+
+.epilogue:
+	ret                               ; pop return address from stack and jump there

@@ -249,4 +249,16 @@ char *f6215943_startsWith(const char *pattern, char *text);
  */
 char *f6215943_trim(char *string);
 
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f6215943_truncate
+ * Description: Truncates the string, if necessary, to the maximum specified length
+ *
+ * Parameters:
+ *   string     The string to truncate
+ *   maxLen     The maximum length of the string
+ * Returns:     The string, possibly truncated to maxLen
+ * ----------------------------------------------------------------------------
+ */
+char *f6215943_truncate(char *string, uint32_t maxLen);
+
 #endif /* ORG_DEVOPSBROKER_LANG_STRING_H */

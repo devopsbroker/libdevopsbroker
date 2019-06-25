@@ -134,7 +134,7 @@ static void setupPostTesting(HttpRequest *request) {
 
 	// Populate STDIN with the HTTP POST data
 	a8d15ebe_ungetString("foo=bar&bar=baz&baz=XYZ", stdin);
-	a2465172_mapPostData(request, 256);
+	a2465172_mapPostData(request);
 
 	positiveTestInt("  HashMap capacity = 8\t\t\t\t", 8, request->parameters.capacity);
 	positiveTestInt("  HashMap size = 3\t\t\t\t", 3, request->parameters.size);
@@ -191,14 +191,14 @@ static void testParameters(HttpRequest *request) {
 	char *value = NULL;
 
 	puts("testParameters:");
-	value = c47905f7_get(&request->parameters, &"foo");
-	positiveTestChar("  c47905f7_get(request->parameters, &\"foo\")\t", "bar", value);
+	value = a2465172_getString(request, "foo", 16);
+	positiveTestChar("  a2465172_getString(request, \"foo\", 16)\t", "bar", value);
 
-	value = c47905f7_get(&request->parameters, &"bar");
-	positiveTestChar("  c47905f7_get(request->parameters, &\"bar\")\t", "baz", value);
+	value = a2465172_getString(request, "bar", 16);
+	positiveTestChar("  a2465172_getString(request, \"bar\", 16)\t", "baz", value);
 
-	value = c47905f7_get(&request->parameters, &"baz");
-	positiveTestChar("  c47905f7_get(request->parameters, &\"baz\")\t", "XYZ", value);
+	value = a2465172_getString(request, "baz", 16);
+	positiveTestChar("  a2465172_getString(request, \"baz\", 16)\t", "XYZ", value);
 
 	printf("\n");
 }
