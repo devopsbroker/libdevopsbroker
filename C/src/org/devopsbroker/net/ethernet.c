@@ -55,20 +55,7 @@
 void d3843373_initEthernetRequest(EthernetRequest *request, char *deviceName) {
 	f668c4bd_meminit(request, sizeof(EthernetRequest));
 
-	int status = f6215943_copy_to_buffer(deviceName, request->ifr_name, IFNAMSIZ);
-
-	if (status == SYSTEM_ERROR_CODE) {
-		StringBuilder errorMessage;
-		c598a24c_initStringBuilder(&errorMessage);
-
-		c598a24c_append_string(&errorMessage, "Invalid network device name '");
-		c598a24c_append_string(&errorMessage, deviceName);
-		c598a24c_append_char(&errorMessage, '\'');
-
-		c7c88e52_printError_string(errorMessage.buffer);
-		free(errorMessage.buffer);
-		exit(EXIT_FAILURE);
-	}
+	f6215943_copyToBuffer(deviceName, request->ifr_name, IFNAMSIZ);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

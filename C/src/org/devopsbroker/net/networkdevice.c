@@ -74,20 +74,7 @@ void f0185083_initNetworkDevice(NetworkDevice *networkDevice, char* deviceName) 
 void f0185083_initNetworkDeviceRequest(NetworkDevice *networkDevice, NetworkDeviceRequest *request) {
 	f668c4bd_meminit(request, sizeof(NetworkDeviceRequest));
 
-	int status = f6215943_copy_to_buffer(networkDevice->name, request->ifr_name, IFNAMSIZ);
-
-	if (status == SYSTEM_ERROR_CODE) {
-		StringBuilder errorMessage;
-		c598a24c_initStringBuilder(&errorMessage);
-
-		c598a24c_append_string(&errorMessage, "Invalid network device name '");
-		c598a24c_append_string(&errorMessage, networkDevice->name);
-		c598a24c_append_char(&errorMessage, '\'');
-
-		c7c88e52_printError_string(errorMessage.buffer);
-		free(errorMessage.buffer);
-		exit(EXIT_FAILURE);
-	}
+	f6215943_copyToBuffer(networkDevice->name, request->ifr_name, IFNAMSIZ);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

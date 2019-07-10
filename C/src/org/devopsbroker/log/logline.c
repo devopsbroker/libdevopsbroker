@@ -144,7 +144,8 @@ LogLine *b45c9f7e_cloneLogLine(LogLine *logLine) {
 	register LogLine *clone = f668c4bd_malloc(sizeof(LogLine));
 
 	// in
-	clone->in = f6215943_copy(logLine->in, logLine->lineLength);
+	clone->in = f668c4bd_malloc(logLine->lineLength + 1);
+	f6215943_copyToBuffer(logLine->in, clone->in, logLine->lineLength);
 
 	// out
 	clone->out = (clone->in + (logLine->out - logLine->in));
