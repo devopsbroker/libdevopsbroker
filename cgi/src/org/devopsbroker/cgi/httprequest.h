@@ -145,11 +145,10 @@ int a2465172_mapQueryString(HttpRequest *request, char *paramStr);
  * Description: Decodes the query string from a GET form submission
  *
  * Parameters:
- *   paramStr   The GET form submission data to decode
- *   strLen     Populated with the length of the URL decoded string
- * Returns:     The URL decoded string
+ *   queryString    The GET form submission data to decode
+ *   paramStr       The parameter string to populate with URL decoded data
  * ----------------------------------------------------------------------------
  */
-char *a2465172_urldecode(char *paramStr, int *strLen);
+void a2465172_urldecode(char *queryString, char *paramStr);
 
 #endif /* ORG_DEVOPSBROKER_CGI_HTTPREQUEST_H */

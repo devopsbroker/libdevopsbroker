@@ -32,10 +32,11 @@
 
 #include "httprequest.h"
 
-#include "org/devopsbroker/lang/error.h"
-#include "org/devopsbroker/lang/integer.h"
-#include "org/devopsbroker/lang/string.h"
-#include "org/devopsbroker/lang/memory.h"
+#include <org/devopsbroker/lang/error.h>
+#include <org/devopsbroker/lang/integer.h>
+#include <org/devopsbroker/lang/memory.h>
+#include <org/devopsbroker/lang/string.h>
+#include <org/devopsbroker/lang/stringbuilder.h>
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -48,6 +49,7 @@
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
+static char *sanitizeInput(char *string);
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
@@ -63,16 +65,14 @@ int a2465172_initHttpRequest(HttpRequest *request, uint32_t numParams) {
 		request->queryString = getenv(HTTP_QUERY_STRING);
 
 		if (request->queryString != NULL) {
-			int strLen;
-			a2465172_urldecode(request->queryString, &strLen);
+			request->length = f6215943_getLength(request->queryString);
 
-			if (strLen > MAX_URL_SIZE) {
+			if (request->length > MAX_URL_SIZE) {
 				retValue = SYSTEM_ERROR_CODE;
 			} else {
-				strLen++;
-				request->paramStr = f668c4bd_malloc(strLen);
+				request->paramStr = f668c4bd_malloc(request->length+1);
+				a2465172_urldecode(request->queryString, request->paramStr);
 
-				f6215943_copyToBuffer(request->queryString, request->paramStr, strLen);
 				retValue = a2465172_mapQueryString(request, request->paramStr);
 			}
 		}
@@ -108,23 +108,70 @@ char *a2465172_getString(HttpRequest *request, char *name, uint32_t maxLen) {
 }
 
 int a2465172_mapPostData(HttpRequest *request) {
+	StringBuilder strBuilder;
 	int retValue = 0;
 
 	if (request->length > 0) {
-		int strLen;
-
+		c598a24c_initStringBuilder_uint32(&strBuilder, request->length);
 		request->queryString = f668c4bd_malloc(request->length+1);
-		if (fgets(request->queryString, request->length+1, stdin) == NULL) {
-			retValue = SYSTEM_ERROR_CODE;
-		} else {
-			a2465172_urldecode(request->queryString, &strLen);
 
-			request->paramStr = f668c4bd_malloc(strLen+1);
+		while (fgets(request->queryString, request->length+1, stdin) != NULL) {
+			if (strBuilder.length > 0) {
+				c598a24c_append_char(&strBuilder, '&');
+			}
 
-			f6215943_copyToBuffer(request->queryString, request->paramStr, strLen+1);
-			retValue = a2465172_mapQueryString(request, request->paramStr);
+			c598a24c_append_string(&strBuilder, sanitizeInput(request->queryString));
 		}
+
+		f6215943_copyToBuffer(strBuilder.buffer, request->queryString, strBuilder.length+1);
+
+		request->paramStr = f668c4bd_malloc(strBuilder.length+1);
+		a2465172_urldecode(strBuilder.buffer, request->paramStr);
+
+		char *name = request->paramStr;
+		char *value = NULL;
+		char *temp = request->paramStr;
+		while ((*name) != '\0') {
+			for (; (*temp) != '='; temp++);
+
+			(*temp) = '\0';
+			temp++;
+			value = temp;
+
+			for (; (*temp) != '&' && (*temp) != '\0'; temp++);
+
+			if ((*temp) == '&') {
+				(*temp) = '\0';
+				temp++;
+			}
+
+			c47905f7_put(&request->parameters, name, value);
+
+			name = temp;
+		}
+
+//		retValue = a2465172_mapQueryString(request, request->paramStr);
+		c598a24c_cleanUpStringBuilder(&strBuilder);
 	}
 
 	return retValue;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Private Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static char *sanitizeInput(char *string) {
+	register char *start = string;
+	register char ch = (*string);
+
+	while (ch) {
+		if (ch == '\r' || ch == '\n') {
+			(*string) = '\0';
+			return start;
+		}
+
+		string++;
+		ch = (*string);
+	}
+
+	return start;
 }

@@ -157,32 +157,28 @@ static void tearDownPostTesting(HttpRequest *request) {
 static void testUrlDecode() {
 	char queryString1[] = "foo=bar&bar=baz&baz=XYZ";
 	char *urlDecodedStr = NULL;
-	int strLen = 0;
+
+	urlDecodedStr = f668c4bd_malloc(24);
 
 	puts("testUrlDecode:");
-	urlDecodedStr = a2465172_urldecode(queryString1, &strLen);
+	a2465172_urldecode(queryString1, urlDecodedStr);
 	positiveTestChar("  a2465172_urldecode(\"foo=bar&bar=baz&baz=XYZ\")\t\t", queryString1, urlDecodedStr);
-	positiveTestInt("  string length = 23                           \t\t", 23, strLen);
 
 	char queryString2[] = "foo=bar%21";
-	urlDecodedStr = a2465172_urldecode(queryString2, &strLen);
+	a2465172_urldecode(queryString2, urlDecodedStr);
 	positiveTestChar("  a2465172_urldecode(\"foo=bar%21\")\t\t\t", urlDecodedStr, "foo=bar!");
-	positiveTestInt("  string length = 8                 \t\t\t", 8, strLen);
 
 	char queryString3[] = "foo=ba%21";
-	urlDecodedStr = a2465172_urldecode(queryString3, &strLen);
+	a2465172_urldecode(queryString3, urlDecodedStr);
 	positiveTestChar("  a2465172_urldecode(\"foo=ba%21\")\t\t\t", urlDecodedStr, "foo=ba!");
-	positiveTestInt("  string length = 7                \t\t\t", 7, strLen);
 
 	char queryString4[] = "foo=ba%2F";
-	urlDecodedStr = a2465172_urldecode(queryString4, &strLen);
+	a2465172_urldecode(queryString4, urlDecodedStr);
 	positiveTestChar("  a2465172_urldecode(\"foo=ba%2F\")\t\t\t", urlDecodedStr, "foo=ba/");
-	positiveTestInt("  string length = 7                \t\t\t", 7, strLen);
 
 	char queryString5[] = "foo=bar+baz";
-	urlDecodedStr = a2465172_urldecode(queryString5, &strLen);
+	a2465172_urldecode(queryString5, urlDecodedStr);
 	positiveTestChar("  a2465172_urldecode(\"foo=bar+baz\")\t\t\t", urlDecodedStr, "foo=bar baz");
-	positiveTestInt("  string length = 11                 \t\t\t", 11, strLen);
 
 	printf("\n");
 }

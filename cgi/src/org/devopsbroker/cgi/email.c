@@ -58,19 +58,19 @@ void a9740e57_initEmail(Email *email, char *name, char *address, char *subject, 
 /*
  * Check for newlines so additional headers are not inserted into the message
  */
-static char *sanitizeInput(char *string) {
-	register char *start = string;
-	register char ch = (*string);
+ static char *sanitizeInput(char *string) {
+ 	register char *start = string;
+ 	register char ch = (*string);
 
-	while (ch) {
-		if (ch == '\n') {
-			(*string) = '\0';
-			return start;
-		}
+ 	while (ch) {
+ 		if (ch == '\r' || ch == '\n') {
+ 			(*string) = '\0';
+ 			return start;
+ 		}
 
-		string++;
-		ch = (*string);
-	}
+ 		string++;
+ 		ch = (*string);
+ 	}
 
-	return start;
-}
+ 	return start;
+ }

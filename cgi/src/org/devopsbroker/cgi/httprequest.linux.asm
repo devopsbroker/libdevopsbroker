@@ -164,25 +164,19 @@ a2465172_mapQueryString:
 	global  a2465172_urldecode:function
 a2465172_urldecode:
 ; Parameters:
-;	rdi : char *paramStr
-;	rsi : int *strLen
+;	rdi : char *queryString
+;	rsi : char *paramStr
 ; Local Variables:
-;	cx  : outputBufSize (cl) / numChars (ch)
-;	rdx : output buffer pointer
-;	r8  : 64-bit character buffer
-;	r9  : 64-bit output buffer
+;	r8b : input character
+;	r9b : temporary variable
 
 .prologue:                            ; functions typically have a prologue
-	push       rdi                    ; put paramStr onto the stack
-	mov        rdx, rdi               ; rdx = current paramStr value
-	xor        r9, r9                 ; clear output buffer
-	xor        eax, eax               ; strLen = 0
-
-	mov        r8, [rdi]              ; load eight characters into r8
-	add        rdi, 0x08              ; paramStr += 8
-	mov        cx, 0x0800             ; numChars = 8, outputBufSize = 0
+	prefetcht0 [rdi]                  ; prefetch queryString into the CPU cache
 
 .whileChars:
+	mov        r8b, [rdi]             ; ch = *queryString
+	inc        rdi                    ; queryString++
+
 	test       r8b, r8b               ; if (ch == '\0')
 	jz         .epilogue
 
@@ -192,45 +186,19 @@ a2465172_urldecode:
 	cmp        r8b, 0x25              ; if (ch == '%')
 	je         .percentEncoded
 
-	shl        r9, 8                  ; save ch in output buffer
-	inc        cl                     ; outputBufSize++
-	inc        eax                    ; strLen++
-	mov        r9b, r8b
-
-	cmp        cl, 0x08               ; if (outputBufSize == 8)
-	jne        .manageInputBuffer
-
-.manageOutputBuffer:
-	bswap      r9                     ; save 64-bit output buffer to memory
-	mov        [rdx], r9
-	add        rdx, 0x08              ; output buffer pointer += 8
-	xor        cl, cl                 ; outputBufSize = 0
-
-.manageInputBuffer:
-	dec        ch                     ; numChars--
-	shr        r8, 8
-
-	test       ch, ch                 ; if (numChars == 0)
-	jnz        .whileChars
-
-	mov        r8, [rdi]              ; load next eight characters into r8
-	add        rdi, 0x08              ; paramStr += 8
-	mov        ch, 0x08               ; numChars = 8
+	mov        [rsi], r8b             ; put character on output stream
+	inc        rsi
 	jmp        .whileChars
 
 .percentEncoded:
-	shl        r9, 8                  ; save ch in output buffer
-	inc        cl                     ; outputBufSize++
-	inc        eax                    ; strLen++
-
-	lea        r10, [rel $+9]         ; get the next octet block if necessary
-	jmp short  getOctetBlock
+	mov        r8b, [rdi]             ; ch = *queryString
+	inc        rdi                    ; queryString++
 
 	sub        r8b, 0x30              ; r8b -= '0'
 	mov        r9b, r8b               ; put first character into r9b
 
-	lea        r10, [rel $+9]         ; get the next octet block if necessary
-	jmp short  getOctetBlock
+	mov        r8b, [rdi]             ; ch = *queryString
+	inc        rdi                    ; queryString++
 
 	cmp        r8b, 0x3A              ; if (ch < '9')
 	jb         .decimalDigit
@@ -247,62 +215,15 @@ a2465172_urldecode:
 	shl        r9b, 4                 ; convert hex url encoded value to decimal
 	add        r9b, r8b
 
-	cmp        cl, 0x08               ; if (outputBufSize == 8)
-	jne        .manageInputBuffer
-	jmp        .manageOutputBuffer
+	mov        [rsi], r9b             ; put character on output stream
+	inc        rsi
+	jmp        .whileChars
 
 .plusSign:
-	shl        r9, 8                  ; output buffer = ' '
-	mov        r9b, 0x20
-	inc        cl                     ; outputBufSize++
-	inc        eax                    ; strLen++
-
-	cmp        cl, 0x08               ; if (outputBufSize == 8)
-	jne        .manageInputBuffer
-	jmp        .manageOutputBuffer
+	mov        [rsi], byte 0x20       ; put space on output stream
+	inc        rsi
+	jmp        .whileChars
 
 .epilogue:                            ; functions typically have an epilogue
-	movzx      rcx, cl                ; rcx = outputBufSize
-	mov        [rdx+rcx], byte 0x00   ; terminate URL decoded string
-
-	test       cl, cl                 ; if (outputBufSize == 0)
-	jz         .skipWriteOutputBuf
-
-	add        rdx, rcx
-
-.writeOutputBuf:
-	dec        rdx                    ; save partial 64-bit output buffer to memory
-	dec        cl
-	mov        [rdx], r9b
-	shr        r9, 8
-
-	test       cl, cl                 ; if (outputBufSize != 0)
-	jnz        .writeOutputBuf
-
-.skipWriteOutputBuf:
-	mov        [rsi], eax             ; strLen = eax
-
-	pop        rax                    ; retrieve paramStr from the stack
+	mov        [rsi], byte 0x00       ; terminate URL decoded string
 	ret                               ; pop return address from stack and jump there
-
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ getOctetBlock ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-getOctetBlock:
-; Parameters:
-;	rdi : char *paramStr
-;	ch  : numChars
-;	r8  : 64-bit character buffer
-
-	dec        ch                     ; numChars--
-	shr        r8, 8
-
-	test       ch, ch                 ; if (numChars == 0)
-	jnz        .epilogue
-
-.retrieveData:
-	mov        r8, [rdi]              ; load next eight characters into r8
-	add        rdi, 0x08              ; paramStr += 8
-	mov        ch, 0x08               ; numChars = 8
-
-.epilogue:                            ; functions typically have an epilogue
-	jmp        r10                    ; jump to the return address
