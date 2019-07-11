@@ -1,7 +1,7 @@
 # DevOpsBroker
 DevOpsBroker delivers enterprise-level software tools to maximize individual and organizational ability to deliver applications and services at high velocity
 
-## libdevopsbroker-dev [New Release](images/new-icon.png)
+## libdevopsbroker-dev ![New Release](images/new-icon.png)
 
 libdevopsbroker-dev is a static C / x86-64 library used by DevOpsBroker to develop
 command-line utilities and applications.
