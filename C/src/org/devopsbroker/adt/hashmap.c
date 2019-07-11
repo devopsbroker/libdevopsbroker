@@ -94,7 +94,9 @@ void c47905f7_initHashMap(HashMap *hashMap, uint32_t (*hashCode)(void *), bool (
 		hashMap->length++;
 	}
 
+	// Create initialized memory block for table
 	hashMap->table = f668c4bd_malloc_size_size(sizeof(MapEntry *), hashMap->length);
+	f668c4bd_meminit(hashMap->table, sizeof(MapEntry *) * hashMap->length);
 
 	// Set hashCode and equals methods for the key
 	hashMap->hashCode = hashCode;
@@ -230,6 +232,7 @@ static uint32_t resize(HashMap *hashMap, const uint32_t hashCode) {
 	}
 
 	hashMap->table = f668c4bd_malloc_size_size(sizeof(MapEntry *), hashMap->length);
+	f668c4bd_meminit(hashMap->table, sizeof(MapEntry *) * hashMap->length);
 
 	MapEntry *entry, *next;
 	uint32_t index;
