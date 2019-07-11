@@ -1,0 +1,14 @@
+Package: libdevopsbroker-dev
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Essential: no
+Depends:
+Installed-Size: 0
+Maintainer: DevOpsBroker Developers <developers@devopsbroker.org>
+Description: Development files for the DevOpsBroker library
+ .
+ This package contains headers and libraries which are needed for building
+ DevOpsBroker utilities and applications.
+Homepage: https://www.devopsbroker.org/
