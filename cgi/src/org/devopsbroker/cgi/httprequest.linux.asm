@@ -59,10 +59,7 @@ a2465172_mapQueryString:
 ;	rdi : HttpRequest *request
 ;	rsi : char *paramStr
 ; Local Variables:
-;	al  : zero
-;	cl  : loop counter
-;	r8  : 64-bit character buffer
-;	edx : Number of key/value pairs
+;	edx : int numElements
 
 .prologue:                            ; functions typically have a prologue
 	push      rbp                     ; save the caller frame pointer on the stack
@@ -71,78 +68,45 @@ a2465172_mapQueryString:
 	test       rsi, rsi               ; if (paramStr == NULL)
 	jz         .epilogue
 
+	prefetcht0 [rsi]                  ; prefetch paramStr into the CPU cache
 	push       rsi                    ; put char *name onto stack
-	xor        eax, eax               ; al = 0
 	xor        edx, edx               ; numElements = 0
 
-.whileString:
-	mov        r8, [rsi]              ; load eight characters into r8
-	mov        cl, 0x08               ; numChars = 8
+	mov        r8b, [rsi]             ; ch = (*paramStr)
 
 .findName:
-	cmp        r8b, 0x00              ; if (ch == '\0')
-	je         .invalidParamStr
-
 	cmp        r8b, 0x3D              ; if (ch == '=')
 	je         .foundName
 
 	inc        rsi                    ; paramStr++
-	dec        cl                     ; numChars--
-	shr        r8, 8
-
-	test       cl, cl                 ; if (numChars == 0)
-	jnz        .findName
-
-	mov        r8, [rsi]              ; load next eight characters into r8
-	mov        cl, 0x08               ; numChars = 8
+	mov        r8b, [rsi]             ; ch = (*paramStr)
 	jmp        .findName
 
 .foundName:
-	mov        [rsi], al              ; ch = '\0'
+	mov        [rsi], byte 0x00       ; ch = '\0'
 	inc        edx                    ; numElements++
 
 	inc        rsi                    ; paramStr++
-	dec        cl                     ; numChars--
-	shr        r8, 8
+	mov        r8b, [rsi]             ; ch = (*paramStr)
 	push       rsi                    ; put char *value onto stack
 
-	test       cl, cl                 ; if (numChars == 0)
-	jnz        .findValue
-
-	mov        r8, [rsi]              ; load next eight characters into r8
-	mov        cl, 0x08               ; numChars = 8
-
 .findValue:
-	cmp        r8b, 0x00              ; if (ch == '\0')
-	je         .putFromStack
-
 	cmp        r8b, 0x26              ; if (ch == '&')
 	je         .foundValue
 
+	cmp        r8b, 0x00              ; if (ch == '\0')
+	je         .putFromStack
+
 	inc        rsi                    ; paramStr++
-	dec        cl                     ; numChars--
-	shr        r8, 8
-
-	test       cl, cl                 ; if (numChars == 0)
-	jnz        .findValue
-
-	mov        r8, [rsi]              ; load next eight characters into r8
-	mov        cl, 0x08               ; numChars = 8
-	jmp        .findName
+	mov        r8b, [rsi]             ; ch = (*paramStr)
+	jmp        .findValue
 
 .foundValue:
-	mov        [rsi], al              ; ch = '\0'
+	mov        [rsi], byte 0x00       ; ch = '\0'
 
 	inc        rsi                    ; paramStr++
-	dec        cl                     ; numChars--
-	shr        r8, 8
+	mov        r8b, [rsi]             ; ch = (*paramStr)
 	push       rsi                    ; put char *name onto stack
-
-	test       cl, cl                 ; if (numChars == 0)
-	jnz        .findName
-
-	mov        r8, [rsi]              ; load next eight characters into r8
-	mov        cl, 0x08               ; numChars = 8
 	jmp        .findName
 
 .putFromStack:
@@ -152,11 +116,6 @@ a2465172_mapQueryString:
 
 .epilogue:                            ; functions typically have an epilogue
 	leave                             ; mov rsp, rbp / pop rbp
-	ret                               ; pop return address from stack and jump there
-
-.invalidParamStr:
-	mov        eax, ERROR_CODE        ; Set return value to ERROR_CODE
-	leave                             ; movq rsp, rbp / popq rbp
 	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ a2465172_urldecode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

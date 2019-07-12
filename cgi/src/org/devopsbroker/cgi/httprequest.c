@@ -128,29 +128,7 @@ int a2465172_mapPostData(HttpRequest *request) {
 		request->paramStr = f668c4bd_malloc(strBuilder.length+1);
 		a2465172_urldecode(strBuilder.buffer, request->paramStr);
 
-		char *name = request->paramStr;
-		char *value = NULL;
-		char *temp = request->paramStr;
-		while ((*name) != '\0') {
-			for (; (*temp) != '='; temp++);
-
-			(*temp) = '\0';
-			temp++;
-			value = temp;
-
-			for (; (*temp) != '&' && (*temp) != '\0'; temp++);
-
-			if ((*temp) == '&') {
-				(*temp) = '\0';
-				temp++;
-			}
-
-			c47905f7_put(&request->parameters, name, value);
-
-			name = temp;
-		}
-
-//		retValue = a2465172_mapQueryString(request, request->paramStr);
+		retValue = a2465172_mapQueryString(request, request->paramStr);
 		c598a24c_cleanUpStringBuilder(&strBuilder);
 	}
 
