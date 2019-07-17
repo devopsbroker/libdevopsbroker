@@ -70,7 +70,7 @@ int a2465172_initHttpRequest(HttpRequest *request, uint32_t numParams) {
 			if (request->length > MAX_URL_SIZE) {
 				retValue = SYSTEM_ERROR_CODE;
 			} else {
-				request->paramStr = f668c4bd_malloc(request->length+1);
+				request->paramStr = f668c4bd_stralloc(request->length);
 				a2465172_urldecode(request->queryString, request->paramStr);
 
 				retValue = a2465172_mapQueryString(request, request->paramStr);
@@ -113,7 +113,7 @@ int a2465172_mapPostData(HttpRequest *request) {
 
 	if (request->length > 0) {
 		c598a24c_initStringBuilder_uint32(&strBuilder, request->length);
-		request->queryString = f668c4bd_malloc(request->length+1);
+		request->queryString = f668c4bd_stralloc(request->length);
 
 		while (fgets(request->queryString, request->length+1, stdin) != NULL) {
 			if (strBuilder.length > 0) {
@@ -125,7 +125,7 @@ int a2465172_mapPostData(HttpRequest *request) {
 
 		f6215943_copyToBuffer(strBuilder.buffer, request->queryString, strBuilder.length+1);
 
-		request->paramStr = f668c4bd_malloc(strBuilder.length+1);
+		request->paramStr = f668c4bd_stralloc(strBuilder.length);
 		a2465172_urldecode(strBuilder.buffer, request->paramStr);
 
 		retValue = a2465172_mapQueryString(request, request->paramStr);

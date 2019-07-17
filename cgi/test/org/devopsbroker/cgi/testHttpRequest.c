@@ -156,9 +156,7 @@ static void tearDownPostTesting(HttpRequest *request) {
 
 static void testUrlDecode() {
 	char queryString1[] = "foo=bar&bar=baz&baz=XYZ";
-	char *urlDecodedStr = NULL;
-
-	urlDecodedStr = f668c4bd_malloc(24);
+	char urlDecodedStr[24] = {'\0'};
 
 	puts("testUrlDecode:");
 	a2465172_urldecode(queryString1, urlDecodedStr);
