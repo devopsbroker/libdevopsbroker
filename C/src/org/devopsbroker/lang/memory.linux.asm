@@ -26,6 +26,7 @@
 ;   o void f668c4bd_memcopy(void *source, void *dest, size_t numBytes);
 ;   o void f668c4bd_meminit(void *ptr, size_t size);
 ;   o void *f668c4bd_realloc(void *ptr, size_t origSize, size_t newSize);
+;   o void *f668c4bd_stralloc(size_t size);
 ; -----------------------------------------------------------------------------
 ;
 
@@ -245,6 +246,34 @@ f668c4bd_realloc:
 
 .epilogue:                            ; functions typically have an epilogue
 	pop        rax                    ; retrieve void *newPtr
+	ret                               ; pop return address from stack and jump there
+
+.fatalError:
+	call       abort WRT ..plt
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f668c4bd_stralloc ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f668c4bd_stralloc:function
+f668c4bd_stralloc:
+; Parameters:
+;	rdi : size_t size
+; Local Variables:
+;	rax : void *ptr
+
+.prologue:                            ; functions typically have a prologue
+	sub        rsp, 8                 ; align stack frame before calling malloc()
+
+.malloc:
+	shr        rdi, 3                 ; size = ((size / 8) + 1) * 8
+	inc        rdi
+	shl        rdi, 3
+	call       malloc WRT ..plt
+
+	test       rax, rax               ; if (ptr == NULL)
+	je         .fatalError
+
+.epilogue:                            ; functions typically have an epilogue
+	add        rsp, 8                 ; re-align stack frame before return
 	ret                               ; pop return address from stack and jump there
 
 .fatalError:

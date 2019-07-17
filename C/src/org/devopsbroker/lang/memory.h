@@ -134,4 +134,15 @@ void *f668c4bd_realloc_void_size(void *ptr, const size_t newSize);
  */
 void *f668c4bd_realloc_void_size_size(void *ptr, const size_t typeSize, const size_t numBlocks);
 
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f668c4bd_stralloc
+ * Description: Performs an 8-byte aligned malloc() operation for strings
+ *
+ * Parameters:
+ *   size       The size of the memory block to allocate
+ * Returns:     A pointer to the allocated memory block
+ * ----------------------------------------------------------------------------
+ */
+void *f668c4bd_stralloc(size_t size);
+
 #endif /* ORG_DEVOPSBROKER_LANG_MEMORY_H */
