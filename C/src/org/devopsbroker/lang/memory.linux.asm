@@ -26,6 +26,7 @@
 ;   o void f668c4bd_memcopy(void *source, void *dest, size_t numBytes);
 ;   o void f668c4bd_meminit(void *ptr, size_t size);
 ;   o void *f668c4bd_realloc(void *ptr, size_t origSize, size_t newSize);
+;   o void *f668c4bd_resizeArray(void *arrayPtr, uint32_t arrayLen, uint32_t typeSize, uint32_t numBlocks);
 ;   o void *f668c4bd_stralloc(size_t size);
 ; -----------------------------------------------------------------------------
 ;
@@ -246,6 +247,71 @@ f668c4bd_realloc:
 
 .epilogue:                            ; functions typically have an epilogue
 	pop        rax                    ; retrieve void *newPtr
+	ret                               ; pop return address from stack and jump there
+
+.fatalError:
+	call       abort WRT ..plt
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~ f668c4bd_resizeArray ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f668c4bd_resizeArray:function
+f668c4bd_resizeArray:
+; Parameters:
+;	rdi : void *arrayPtr
+;	esi : uint32_t arrayLen
+;	edx : uint32_t typeSize
+;	ecx : uint32_t numBlocks
+; Local Variables:
+;	eax : multiply register
+
+.prologue:                            ; functions typically have a prologue
+	sub        rsp, 8                 ; align stack frame before calling malloc()
+	push       r12                    ; preserve r12 register
+	push       r13                    ; preserve r13 register
+
+	mov        r12, rdi               ; save arrayPtr into r12
+
+.calcNumBytesToCopy:
+	mov        eax, esi               ; numBytes = (arrayLen * numBlocks)
+	mul        eax, ecx
+
+	test       edx, edx               ; if (multiply overflow) then fatalError
+	jnz        .fatalError
+
+	mov        r13d, eax              ; save numBytes into r13d
+
+.calcMemSize:
+	mov        eax, edx               ; memSize = (typeSize * numBlocks)
+	mul        eax, ecx
+
+	test       edx, edx               ; if (multiply overflow) then fatalError
+	jnz        .fatalError
+
+.malloc:
+	mov        rdi, rax               ; malloc(memSize)
+	call       malloc WRT ..plt
+
+	test       rax, rax               ; if (ptr == NULL) then fatalError
+	je         .fatalError
+
+.copyData:
+	mov        rsi, r12               ; set up rsi with arrayPtr value for movsb
+	mov        rdi, rax               ; set up rdi with malloc() value for movsb
+	mov        ecx, r13d              ; set up ecx with numBytes value for movsb
+
+	rep movsb                         ; move ecx bytes from rsi into rdi
+
+.freeOrigArray:
+	mov        rdi, r12               ; free(arrayPtr)
+	mov        r13, rax               ; save malloc() value into r13
+
+	call       free WRT ..plt
+
+.epilogue:                            ; functions typically have an epilogue
+	mov        rax, r13               ; return malloc() value
+	pop        r13                    ; restore r13 register
+	pop        r12                    ; restore r12 register
+	add        rsp, 8                 ; re-align stack frame before return
 	ret                               ; pop return address from stack and jump there
 
 .fatalError:
