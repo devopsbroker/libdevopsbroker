@@ -25,7 +25,6 @@
 ;   o void b196167f_add(ListArray *listArray, void *element);
 ;   o void b196167f_addAll(ListArray *listArray, void **elementArray, uint32_t numElements);
 ;   o void b196167f_destroyAllElements(ListArray *listArray);
-;   o void b196167f_initListArray(ListArray *listArray);
 ; -----------------------------------------------------------------------------
 ;
 
@@ -35,8 +34,7 @@
 ; ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
 ; Constants
-%define DEFAULT_SIZE   0x08
-%define MALLOC_SIZE    0x40
+%define SIZEOF_PTR    0x08
 
 ; ═════════════════════════════ Initialized Data ═════════════════════════════
 
@@ -56,6 +54,7 @@ extern  reallocarray
 extern  malloc
 extern  free
 extern  abort
+extern  f668c4bd_resizeArray
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ b196167f_add ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -141,6 +140,78 @@ b196167f_addAll:
 .epilogue:                            ; functions typically have an epilogue
 	ret                               ; pop return address from stack and jump there
 
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~ b196167f_addFromStack ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  b196167f_addFromStack:function
+b196167f_addFromStack:
+; Parameters:
+;	rdi : ListArray *listArray
+;	rsi : void **stack
+;	rdx : uint32_t numElements
+; Local Variables:
+;	rdi : listArray->values destination
+;	rsi : void **elementArray source
+;	rdx : listArray->values
+;	ecx : original uint32_t numElements value
+;	r8d : listArray->size
+;	r9d : newLength
+
+.prologue:                            ; functions typically have a prologue
+	test       rsi, rsi               ; if (elementArray == NULL)
+	jz         .epilogue
+
+	test       rdx, rdx               ; if (numElements == 0)
+	jz         .epilogue
+
+.shouldWeResize:
+	mov        ecx, edx               ; ecx = numElements
+	add        edx, [rdi+8]           ; newLength = listArray->length + numElements
+	cmp        edx, [rdi+12]          ; if (newLength > listArray->size)
+	jbe        .addElements
+
+.resizeArray:
+	push       rdi                    ; save listArray
+	push       rsi                    ; save stack
+	push       rdx                    ; save newLength
+	push       rcx                    ; save numElements
+
+	sub        rsp, 8                 ; align stack frame before calling f668c4bd_resizeArray()
+	mov        esi, [rdi+8]           ; f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), newSize)
+	mov        ecx, edx               ; newSize = (newLength * 1.5)
+	shr        edx, 1
+	add        ecx, edx
+	mov        [rdi+12], ecx
+	mov        edx, SIZEOF_PTR
+
+	call       f668c4bd_resizeArray
+
+	add        rsp, 8                 ; re-align stack frame after function call
+	pop        rcx                    ; retrieve numElements
+	pop        rdx                    ; retrieve newLength
+	pop        rsi                    ; retrieve stack
+	pop        rdi                    ; retrieve listArray
+
+	mov        [rdi], rax             ; listArray->values = f668c4bd_resizeArray()
+
+.addElements:
+	mov        rdi, [rdi]             ; set up rdi with listArray->values for movsb
+	xchg       edx, [rdi+8]           ; swap newLength with listArray->length
+	shl        edx, 3                 ; rdi += (listArray->length *= 8)
+	add        rdi, rdx
+
+.whileElements:
+	dec        ecx                    ; numElements--
+	mov        rax, [rsi]             ; listArray->values[i] = stack[j]
+	mov        [rdi], rax
+	sub        rsi, SIZEOF_PTR        ; j--
+	add        rdi, SIZEOF_PTR        ; i++
+
+	test       ecx, ecx               ; if (numElements > 0)
+	jnz        .whileElements
+
+.epilogue:                            ; functions typically have an epilogue
+	ret                               ; pop return address from stack and jump there
+
 ; ~~~~~~~~~~~~~~~~~~~~~~~ b196167f_destroyAllElements ~~~~~~~~~~~~~~~~~~~~~~~~
 
 	global  b196167f_destroyAllElements:function
@@ -184,35 +255,6 @@ b196167f_destroyAllElements:
 
 .emptyListArray:
 	ret                               ; pop return address from stack and jump there
-
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~ b196167f_initListArray ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	global  b196167f_initListArray:function
-b196167f_initListArray:
-; Parameters:
-;	rdi : ListArray *listArray
-
-.prologue:                            ; functions typically have a prologue
-	push       rdi                    ; save ListArray *listArray
-
-.malloc:                              ; malloc(sizeof(void*) * DEFAULT_SIZE)
-	mov        rdi, MALLOC_SIZE
-	call       malloc WRT ..plt
-
-	test       rax, rax               ; if (ptr == NULL)
-	jz         .fatalError
-	pop        rdi                    ; retrieve ListArray *listArray
-
-.initListArray:
-	mov        [rdi], rax                     ; listArray->values
-	mov        [rdi+8], dword 0x00            ; listArray->length = 0
-	mov        [rdi+12], dword DEFAULT_SIZE   ; listArray->size = 8
-
-.epilogue:                            ; functions typically have an epilogue
-	ret                               ; pop return address from stack and jump there
-
-.fatalError:
-	call       abort WRT ..plt
 
 ; ═════════════════════════════ Private Routines ═════════════════════════════
 

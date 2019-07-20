@@ -61,7 +61,7 @@ static_assert(sizeof(ListArray) == 16, "Check your assumptions");
 ListArray *b196167f_createListArray();
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    b196167f_createListArray_uint32
+ * Function:    b196167f_createListArray_size
  * Description: Creates a ListArray struct with the specified list size
  *
  * Parameters:
@@ -69,7 +69,7 @@ ListArray *b196167f_createListArray();
  * Returns:     A ListArray struct with the specified list size
  * ---------------------------------------------------------------------
  */
-ListArray *b196167f_createListArray_uint32(const uint32_t size);
+ListArray *b196167f_createListArray_size(const uint32_t size);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_destroyListArray
@@ -104,7 +104,7 @@ void b196167f_destroyAllElements(ListArray *listArray);
 void b196167f_initListArray(ListArray *listArray);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    b196167f_initListArray_uint32
+ * Function:    b196167f_initListArray_size
  * Description: Initializes a ListArray struct with the specified list size
  *
  * Parameters:
@@ -112,7 +112,7 @@ void b196167f_initListArray(ListArray *listArray);
  *   size       The size of the list to allocate
  * ----------------------------------------------------------------------------
  */
-void b196167f_initListArray_uint32(ListArray *listArray, const uint32_t size);
+void b196167f_initListArray_sizeS(ListArray *listArray, const uint32_t size);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -138,5 +138,48 @@ void b196167f_add(ListArray *listArray, void *element);
  * ----------------------------------------------------------------------------
  */
 void b196167f_addAll(ListArray *listArray, void **elementArray, uint32_t numElements);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b196167f_addFromStack
+ * Description: Adds the values stored on the stack to the ListArray
+ *
+ * Parameters:
+ *   listArray      A pointer to the ListArray instance to populate
+ *   stack          A pointer to the stack
+ *   numElements    The number of elements to add
+ * ----------------------------------------------------------------------------
+ */
+void b196167f_addFromStack(ListArray *listArray, void **stack, uint32_t numElements);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b196167f_clear
+ * Description: Removes all elements from the list
+ *
+ * Parameters:
+ *   listArray      A pointer to the ListArray instance
+ * ----------------------------------------------------------------------------
+ */
+void b196167f_clear(ListArray *listArray);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b196167f_get
+ * Description: Retrieves the elements at the specified index
+ *
+ * Parameters:
+ *   listArray      A pointer to the ListArray instance
+ *   index          The index of the element to retrieve
+ * ----------------------------------------------------------------------------
+ */
+void *b196167f_get(ListArray *listArray, uint32_t index);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b196167f_last
+ * Description: Retrieves the last element in the list
+ *
+ * Parameters:
+ *   listArray      A pointer to the ListArray instance
+ * ----------------------------------------------------------------------------
+ */
+void *b196167f_last(ListArray *listArray);
 
 #endif /* ORG_DEVOPSBROKER_ADT_LISTARRAY_H */
