@@ -36,6 +36,9 @@
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
 
+#define F106C0AB_DEFAULT_SIZE 8
+
+
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
 
@@ -50,23 +53,56 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 StackArray *f106c0ab_createStackArray() {
-	StackArray *stackArray = malloc(sizeof(StackArray));
+	StackArray *stackArray = f668c4bd_malloc(sizeof(StackArray));
 
-	// TODO: Fill in with struct initialization code
+	stackArray->values = f668c4bd_malloc(sizeof(void*) * F106C0AB_DEFAULT_SIZE);
+	stackArray->size = F106C0AB_DEFAULT_SIZE;
+	stackArray->length = 0;
+
+	return stackArray;
+}
+
+StackArray *f106c0ab_createStackArray_size(uint32_t size) {
+	StackArray *stackArray = f668c4bd_malloc(sizeof(StackArray));
+
+	// Enforce minimum size value of eight
+	if (size < F106C0AB_DEFAULT_SIZE) {
+		size = F106C0AB_DEFAULT_SIZE;
+	}
+
+	stackArray->values = f668c4bd_malloc(sizeof(void*) * size);
+	stackArray->size = size;
+	stackArray->length = 0;
 
 	return stackArray;
 }
 
 void f106c0ab_destroyStackArray(StackArray *stackArray) {
-	free(stackArray);
+	f668c4bd_free(stackArray->values);
+	f668c4bd_free(stackArray);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+void f106c0ab_cleanUpStackArray(StackArray *stackArray) {
+	f668c4bd_free(stackArray->values);
+}
+
 void f106c0ab_initStackArray(StackArray *stackArray) {
+	stackArray->values = f668c4bd_malloc(sizeof(void*) * F106C0AB_DEFAULT_SIZE);
+	stackArray->size = F106C0AB_DEFAULT_SIZE;
+	stackArray->length = 0;
+}
 
-	// TODO: Fill in with struct initialization code
+void f106c0ab_initStackArray_size(StackArray *stackArray, uint32_t size) {
+	// Enforce minimum size value of eight
+	if (size < F106C0AB_DEFAULT_SIZE) {
+		size = F106C0AB_DEFAULT_SIZE;
+	}
 
+	stackArray->values = f668c4bd_malloc(sizeof(void*) * size);
+	stackArray->size = size;
+	stackArray->length = 0;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

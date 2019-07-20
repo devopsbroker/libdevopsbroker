@@ -273,7 +273,7 @@ f668c4bd_resizeArray:
 
 .calcNumBytesToCopy:
 	mov        eax, esi               ; numBytes = (arrayLen * numBlocks)
-	mul        eax, ecx
+	mul        ecx                    ; eax * ecx
 
 	test       edx, edx               ; if (multiply overflow) then fatalError
 	jnz        .fatalError
@@ -282,7 +282,7 @@ f668c4bd_resizeArray:
 
 .calcMemSize:
 	mov        eax, edx               ; memSize = (typeSize * numBlocks)
-	mul        eax, ecx
+	mul        ecx                    ; eax * ecx
 
 	test       edx, edx               ; if (multiply overflow) then fatalError
 	jnz        .fatalError

@@ -56,17 +56,28 @@ static_assert(sizeof(StackArray) == 16, "Check your assumptions");
  * Function:    f106c0ab_createStackArray
  * Description: Creates a StackArray struct instance
  *
- * Returns:     A StackArray struct instance
+ * Returns: A StackArray struct instance
  * ----------------------------------------------------------------------------
  */
 StackArray *f106c0ab_createStackArray();
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f106c0ab_createStackArray_size
+ * Description: Creates a StackArray struct instance with the specified size
+ *
+ * Parameters:
+ *   size   The size of the StackArray instance to initalize
+ * Returns: A StackArray struct instance
+ * ----------------------------------------------------------------------------
+ */
+StackArray *f106c0ab_createStackArray_size(uint32_t size);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f106c0ab_destroyStackArray
  * Description: Frees the memory allocated to the StackArray struct pointer
  *
  * Parameters:
- *   stackArray	A pointer to the StackArray instance to destroy
+ *   stackArray     A pointer to the StackArray instance to destroy
  * ----------------------------------------------------------------------------
  */
 void f106c0ab_destroyStackArray(StackArray *stackArray);
@@ -74,14 +85,35 @@ void f106c0ab_destroyStackArray(StackArray *stackArray);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f106c0ab_cleanUpStackArray
+ * Description: Frees dynamically allocated memory within the StackArray instance
+ *
+ * Parameters:
+ *   stackArray     A pointer to the StackArray instance to clean up
+ * ----------------------------------------------------------------------------
+ */
+void f106c0ab_cleanUpStackArray(StackArray *stackArray);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f106c0ab_initStackArray
  * Description: Initializes an existing StackArray struct
  *
  * Parameters:
- *   stackArray	A pointer to the StackArray instance to initalize
+ *   stackArray     A pointer to the StackArray instance to initalize
  * ----------------------------------------------------------------------------
  */
 void f106c0ab_initStackArray(StackArray *stackArray);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f106c0ab_initStackArray_size
+ * Description: Initializes an existing StackArray struct with the specified size
+ *
+ * Parameters:
+ *   stackArray	    A pointer to the StackArray instance to initalize
+ *   size           The size of the StackArray instance to initalize
+ * ----------------------------------------------------------------------------
+ */
+void f106c0ab_initStackArray_size(StackArray *stackArray, uint32_t size);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
