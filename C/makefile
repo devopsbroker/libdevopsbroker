@@ -82,6 +82,7 @@ prepare:
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/socket
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/sysfs
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/terminal
+	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/test
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/text
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/time
 	/bin/mkdir --parents --mode=750 $(LIB_DIR)
@@ -120,6 +121,10 @@ $(OBJ_DIR)/sysfs/%.o: $(SRC_DIR)/sysfs/%.c $(SRC_DIR)/sysfs/%.h | prepare
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/terminal/%.o: $(SRC_DIR)/terminal/%.c $(SRC_DIR)/terminal/%.h | prepare
+	$(call printInfo,Compiling $(@F))
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/test/%.o: $(SRC_DIR)/test/%.c $(SRC_DIR)/test/%.h | prepare
 	$(call printInfo,Compiling $(@F))
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -165,6 +170,10 @@ $(OBJ_DIR)/sysfs/%.o: $(SRC_DIR)/sysfs/%.asm | prepare
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(OBJ_DIR)/terminal/%.o: $(SRC_DIR)/terminal/%.asm | prepare
+	$(call printInfo,Compiling $(@F))
+	$(ASM) $(ASMFLAGS) $< -o $@
+
+$(OBJ_DIR)/test/%.o: $(SRC_DIR)/test/%.asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 

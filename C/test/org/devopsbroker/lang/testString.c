@@ -32,12 +32,10 @@
 #include <stdio.h>
 
 #include "org/devopsbroker/lang/string.h"
-#include "org/devopsbroker/terminal/ansi.h"
+#include "org/devopsbroker/test/unittest.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
-#define PASS "[" ANSI_BOLD ANSI_GREEN "pass" ANSI_RESET "]\n"
-#define FAIL "[" ANSI_BOLD ANSI_RED "fail" ANSI_RESET "]\n"
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -46,9 +44,6 @@
 
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
-
-static void positiveTest(char *label, int expected, int actual);
-static void positiveTestBool(char *label, bool expected, bool actual);
 
 static void testCopy();
 static void testCopyToBuffer();
@@ -67,31 +62,11 @@ int main(int argc, char *argv[]) {
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
-static void positiveTest(char *label, int expected, int actual) {
-	printf("%s", label);
-
-	if (expected == actual) {
-		printf(PASS);
-	} else {
-		printf(FAIL);
-	}
-}
-
-static void positiveTestBool(char *label, bool expected, bool actual) {
-	printf("%s", label);
-
-	if (expected == actual) {
-		printf(PASS);
-	} else {
-		printf(FAIL);
-	}
-}
-
 static void testCopy() {
 	char *foo = NULL;
 	char dest[8];
 
-	puts("testCopy:");
+	printTestName("testCopy");
 	foo = f6215943_copy("foo", dest);
 	positiveTestBool("  f6215943_copy(\"foo\", dest)\t\t", true, f6215943_isEqual("foo", foo));
 
@@ -107,7 +82,7 @@ static void testCopy() {
 static void testCopyToBuffer() {
 	char dest[16];
 
-	puts("testCopyToBuffer:");
+	printTestName("testCopyToBuffer");
 	f6215943_copyToBuffer("foo", dest, 4);
 	positiveTestBool("  f6215943_copyToBuffer(\"foo\", dest, 4)\t\t\t", true, f6215943_isEqual("foo", dest));
 
@@ -127,12 +102,12 @@ static void testCopyToBuffer() {
 }
 
 static void testHashCode() {
-	puts("testHashCode:");
-	positiveTest("  f6215943_hashCode(\"foo\")\t\t", 6807, f6215943_hashCode("foo"));
-	positiveTest("  f6215943_hashCode(\"bar\")\t\t", 7162, f6215943_hashCode("bar"));
-	positiveTest("  f6215943_hashCode(\"XYZ\")\t\t", 5266, f6215943_hashCode("XYZ"));
-	positiveTest("  f6215943_hashCode(\"123\")\t\t", 3555, f6215943_hashCode("123"));
-	positiveTest("  f6215943_hashCode(\"international\")\t", 1450727140, f6215943_hashCode("international"));
+	printTestName("testHashCode");
+	positiveTestInt("  f6215943_hashCode(\"foo\")\t\t", 6807, f6215943_hashCode("foo"));
+	positiveTestInt("  f6215943_hashCode(\"bar\")\t\t", 7162, f6215943_hashCode("bar"));
+	positiveTestInt("  f6215943_hashCode(\"XYZ\")\t\t", 5266, f6215943_hashCode("XYZ"));
+	positiveTestInt("  f6215943_hashCode(\"123\")\t\t", 3555, f6215943_hashCode("123"));
+	positiveTestInt("  f6215943_hashCode(\"international\")\t", 1450727140, f6215943_hashCode("international"));
 
 	printf("\n");
 }

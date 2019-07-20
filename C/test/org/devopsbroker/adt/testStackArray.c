@@ -33,13 +33,10 @@
 #include <stdbool.h>
 
 #include "org/devopsbroker/adt/stackarray.h"
-#include "org/devopsbroker/lang/string.h"
-#include "org/devopsbroker/terminal/ansi.h"
+#include "org/devopsbroker/test/unittest.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
-#define PASS "[" ANSI_BOLD ANSI_GREEN "pass" ANSI_RESET "]\n"
-#define FAIL "[" ANSI_BOLD ANSI_RED "fail" ANSI_RESET "]\n"
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -49,9 +46,6 @@
 StackArray stackArray;
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
-
-static void positiveTestInt(char *label, int expected, int actual);
-static void positiveTestVoid(char *label, void *expected, void *actual);
 
 static void setupTesting(StackArray *stackArray);
 static void tearDownTesting(StackArray *stackArray);
@@ -77,28 +71,8 @@ int main(int argc, char *argv[]) {
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
-static void positiveTestInt(char *label, int expected, int actual) {
-	printf("%s", label);
-
-	if (expected == actual) {
-		printf(PASS);
-	} else {
-		printf(FAIL);
-	}
-}
-
-static void positiveTestVoid(char *label, void *expected, void *actual) {
-	printf("%s", label);
-
-	if (expected == actual) {
-		printf(PASS);
-	} else {
-		printf(FAIL);
-	}
-}
-
 static void setupTesting(StackArray *stackArray) {
-	puts("testStackArray Setup:");
+	printTestName("testStackArray Setup");
 	f106c0ab_initStackArray(stackArray);
 
 	positiveTestInt("  StackArray size = 8\t\t\t\t", 8, stackArray->size);
@@ -108,7 +82,7 @@ static void setupTesting(StackArray *stackArray) {
 }
 
 static void tearDownTesting(StackArray *stackArray) {
-	puts("f106c0ab_clear:");
+	printTestName("f106c0ab_clear");
 	f106c0ab_clear(stackArray);
 	positiveTestInt("  StackArray size = 16\t\t\t\t", 16, stackArray->size);
 	positiveTestInt("  StackArray length = 0\t\t\t\t", 0, stackArray->length);
@@ -119,20 +93,20 @@ static void tearDownTesting(StackArray *stackArray) {
 }
 
 static void testPush(StackArray *stackArray) {
-	puts("f106c0ab_push:");
-	puts("f106c0ab_push(stackArray, \"foo\")..."); f106c0ab_push(stackArray, "foo");
-	puts("f106c0ab_push(stackArray, \"bar\")..."); f106c0ab_push(stackArray, "bar");
-	puts("f106c0ab_push(stackArray, \"baz\")..."); f106c0ab_push(stackArray, "baz");
-	puts("f106c0ab_push(stackArray, \"XYZ\")..."); f106c0ab_push(stackArray, "XYZ");
-	puts("f106c0ab_push(stackArray, \"123\")..."); f106c0ab_push(stackArray, "123");
-	puts("f106c0ab_push(stackArray, \"234\")..."); f106c0ab_push(stackArray, "234");
-	puts("f106c0ab_push(stackArray, \"345\")..."); f106c0ab_push(stackArray, "345");
-	puts("f106c0ab_push(stackArray, \"456\")..."); f106c0ab_push(stackArray, "456");
+	printTestName("f106c0ab_push");
+	puts("  f106c0ab_push(stackArray, \"foo\")..."); f106c0ab_push(stackArray, "foo");
+	puts("  f106c0ab_push(stackArray, \"bar\")..."); f106c0ab_push(stackArray, "bar");
+	puts("  f106c0ab_push(stackArray, \"baz\")..."); f106c0ab_push(stackArray, "baz");
+	puts("  f106c0ab_push(stackArray, \"XYZ\")..."); f106c0ab_push(stackArray, "XYZ");
+	puts("  f106c0ab_push(stackArray, \"123\")..."); f106c0ab_push(stackArray, "123");
+	puts("  f106c0ab_push(stackArray, \"234\")..."); f106c0ab_push(stackArray, "234");
+	puts("  f106c0ab_push(stackArray, \"345\")..."); f106c0ab_push(stackArray, "345");
+	puts("  f106c0ab_push(stackArray, \"456\")..."); f106c0ab_push(stackArray, "456");
 	printf("\n");
 	positiveTestInt("  StackArray size = 8\t\t\t\t", 8, stackArray->size);
 	positiveTestInt("  StackArray length = 8\t\t\t\t", 8, stackArray->length);
 	printf("\n");
-	puts("f106c0ab_push(stackArray, \"567\")..."); f106c0ab_push(stackArray, "567");
+	puts("  f106c0ab_push(stackArray, \"567\")..."); f106c0ab_push(stackArray, "567");
 	printf("\n");
 	positiveTestInt("  StackArray size = 16\t\t\t\t", 16, stackArray->size);
 	positiveTestInt("  StackArray length = 9\t\t\t\t", 9, stackArray->length);
@@ -141,7 +115,7 @@ static void testPush(StackArray *stackArray) {
 }
 
 static void testPeek(StackArray *stackArray) {
-	puts("f106c0ab_peek:");
+	printTestName("f106c0ab_peek");
 	positiveTestVoid("  f106c0ab_peek(stackArray) = 567\t\t", "567", f106c0ab_peek(stackArray));
 	printf("\n");
 	positiveTestInt("  StackArray size = 16\t\t\t\t", 16, stackArray->size);
@@ -151,7 +125,7 @@ static void testPeek(StackArray *stackArray) {
 }
 
 static void testPop(StackArray *stackArray) {
-	puts("f106c0ab_pop:");
+	printTestName("f106c0ab_pop");
 	positiveTestVoid("  f106c0ab_pop(stackArray) = 567\t\t", "567", f106c0ab_pop(stackArray));
 	positiveTestVoid("  f106c0ab_pop(stackArray) = 456\t\t", "456", f106c0ab_pop(stackArray));
 	positiveTestVoid("  f106c0ab_pop(stackArray) = 345\t\t", "345", f106c0ab_pop(stackArray));
