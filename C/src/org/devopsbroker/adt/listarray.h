@@ -61,7 +61,7 @@ static_assert(sizeof(ListArray) == 16, "Check your assumptions");
 ListArray *b196167f_createListArray();
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    b196167f_createListArray_size
+ * Function:    b196167f_createListArrayWithSize
  * Description: Creates a ListArray struct with the specified list size
  *
  * Parameters:
@@ -69,7 +69,7 @@ ListArray *b196167f_createListArray();
  * Returns:     A ListArray struct with the specified list size
  * ---------------------------------------------------------------------
  */
-ListArray *b196167f_createListArray_size(const uint32_t size);
+ListArray *b196167f_createListArrayWithSize(const uint32_t size);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_destroyListArray
@@ -94,6 +94,16 @@ void b196167f_destroyAllElements(ListArray *listArray);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b196167f_cleanUpListArray
+ * Description: Frees dynamically allocated memory within the ListArray instance
+ *
+ * Parameters:
+ *   listArray      A pointer to the ListArray instance to clean up
+ * ----------------------------------------------------------------------------
+ */
+void b196167f_cleanUpListArray(ListArray *listArray);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_initListArray
  * Description: Initializes a ListArray struct with the default list size
  *
@@ -104,7 +114,7 @@ void b196167f_destroyAllElements(ListArray *listArray);
 void b196167f_initListArray(ListArray *listArray);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    b196167f_initListArray_size
+ * Function:    b196167f_initListArrayWithSize
  * Description: Initializes a ListArray struct with the specified list size
  *
  * Parameters:
@@ -112,7 +122,7 @@ void b196167f_initListArray(ListArray *listArray);
  *   size       The size of the list to allocate
  * ----------------------------------------------------------------------------
  */
-void b196167f_initListArray_sizeS(ListArray *listArray, const uint32_t size);
+void b196167f_initListArrayWithSize(ListArray *listArray, const uint32_t size);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -137,7 +147,7 @@ void b196167f_add(ListArray *listArray, void *element);
  *   numElements    The number of elements to add
  * ----------------------------------------------------------------------------
  */
-void b196167f_addAll(ListArray *listArray, void **elementArray, uint32_t numElements);
+void b196167f_addAll(ListArray *listArray, void *elementArray, uint32_t numElements);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_addFromStack
@@ -149,7 +159,7 @@ void b196167f_addAll(ListArray *listArray, void **elementArray, uint32_t numElem
  *   numElements    The number of elements to add
  * ----------------------------------------------------------------------------
  */
-void b196167f_addFromStack(ListArray *listArray, void **stack, uint32_t numElements);
+void b196167f_addFromStack(ListArray *listArray, void *stack, uint32_t numElements);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_clear

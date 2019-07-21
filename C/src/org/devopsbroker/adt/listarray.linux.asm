@@ -50,10 +50,7 @@ section .bss                ; RESX directives
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ External Resources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-extern  reallocarray
-extern  malloc
 extern  free
-extern  abort
 extern  f668c4bd_resizeArray
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ b196167f_add ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,29 +61,46 @@ b196167f_add:
 ;	rdi : ListArray *listArray
 ;	rsi : void *element
 ; Local Variables:
-;	rdx : listArray->values
-;	ecx : listArray->length
-;	r8d : listArray->size
+;	edx : listArray->length
+;	ecx : listArray->size
+;	rcx : listArray->values
 
 .prologue:                            ; functions typically have a prologue
-	mov        rdx, [rdi]             ; load listArray->values into rdx
-	mov        ecx, [rdi+8]           ; load listArray->length into ecx
-	mov        r8d, [rdi+12]          ; load listArray->size into r8d
+	test       rsi, rsi               ; if (element == NULL)
+	jz         .epilogue
 
 .shouldWeResize:
-	cmp        ecx, r8d               ; if (listArray->length <= listArray->size)
-	jbe        .addElement
+	mov        edx, [rdi+8]           ; edx = listArray->length
+	mov        ecx, [rdi+12]          ; ecx = listArray->size
+	cmp        edx, ecx               ; if (listArray->length == listArray->size)
+	jne        .addElement
 
-.resize:
-	shl        r8d, 1                 ; listArray->size *= 2
-	mov        [rdi+12], r8d
+.resizeArray:
+	push       rdi                    ; save listArray
+	push       rsi                    ; save element
+	push       rdx                    ; save listArray->length
 
-	call       resizeArray
+	; f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), newSize)
+	shl        ecx, 1                 ; newSize = (size * size)
+	mov        [rdi+12], ecx
+
+	mov        edx, SIZEOF_PTR
+	mov        esi, edx
+	mov        rdi, [rdi]
+
+	call       f668c4bd_resizeArray
+
+	pop        rdx                    ; retrieve listArray->length
+	pop        rsi                    ; retrieve element
+	pop        rdi                    ; retrieve listArray
+
+	mov        [rdi], rax             ; listArray->values = f668c4bd_resizeArray()
 
 .addElement:
-	mov        [rdx + rcx*8], rsi     ; save element into values[length]
-	inc        ecx                    ; listArray->length++
-	mov        [rdi+8], ecx
+	mov        rcx, [rdi]             ; set up rcx with listArray->values
+	mov        [rcx + rdx*8], rsi     ; listArray->values[listArray->length] = element
+	inc        edx                    ; listArray->length++
+	mov        [rdi+8], edx
 
 .epilogue:                            ; functions typically have an epilogue
 	ret                               ; pop return address from stack and jump there
@@ -100,12 +114,6 @@ b196167f_addAll:
 ;	rsi : void **elementArray
 ;	rdx : uint32_t numElements
 ; Local Variables:
-;	rdi : listArray->values destination
-;	rsi : void **elementArray source
-;	rdx : listArray->values
-;	ecx : original uint32_t numElements value
-;	r8d : listArray->size
-;	r9d : newLength
 
 .prologue:                            ; functions typically have a prologue
 	test       rsi, rsi               ; if (elementArray == NULL)
@@ -114,27 +122,45 @@ b196167f_addAll:
 	test       rdx, rdx               ; if (numElements == 0)
 	jz         .epilogue
 
-	mov        ecx, edx               ; move numElements to ecx
-	mov        r9d, edx               ; move numElements to r9d
-	mov        rdx, [rdi]             ; load listArray->values into rdx
-	add        r9d, [rdi+8]           ; newLength = listArray->length + numElements
-	mov        r8d, [rdi+12]          ; load listArray->size into r8d
-
 .shouldWeResize:
-	mov        [rdi+8], r9d           ; listArray->length = newLength
-	cmp        r9d, r8d               ; if (newLength <= listArray->size)
+	mov        ecx, edx               ; ecx = numElements
+	add        edx, [rdi+8]           ; newLength = listArray->length + numElements
+	cmp        edx, [rdi+12]          ; if (newLength > listArray->size)
 	jbe        .addElements
 
-.resize:
-	mov        r8d, r9d               ; listArray->size = (newLength + newLength / 2)
-	shr        r8d, 1
-	add        r8d, r9d
-	mov        [rdi+12], r8d
+.resizeArray:
+	push       rdi                    ; save listArray
+	push       rsi                    ; save elementArray
+	push       rdx                    ; save newLength
+	push       rcx                    ; save numElements
+	sub        rsp, 8                 ; align stack frame before calling f668c4bd_resizeArray()
 
-	call       resizeArray
+	; f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), newSize)
+	mov        ecx, edx               ; newSize = (newLength * 1.5)
+	shr        edx, 1
+	add        ecx, edx
+	mov        [rdi+12], ecx
+
+	mov        edx, SIZEOF_PTR
+	mov        esi, [rdi+8]
+	mov        rdi, [rdi]
+
+	call       f668c4bd_resizeArray
+
+	add        rsp, 8                 ; re-align stack frame after function call
+	pop        rcx                    ; retrieve numElements
+	pop        rdx                    ; retrieve newLength
+	pop        rsi                    ; retrieve stack
+	pop        rdi                    ; retrieve listArray
+
+	mov        [rdi], rax             ; listArray->values = f668c4bd_resizeArray()
 
 .addElements:
-	mov        rdi, rdx               ; rdi = listArray->values
+	xchg       edx, [rdi+8]           ; swap newLength with listArray->length
+	mov        rdi, [rdi]             ; set up rdi with listArray->values for movsq
+	shl        edx, 3                 ; rdi += (listArray->length *= 8)
+	add        rdi, rdx
+
 	rep movsq                         ; move ecx quadwords from void **elementArray to listArray->values
 
 .epilogue:                            ; functions typically have an epilogue
@@ -174,14 +200,17 @@ b196167f_addFromStack:
 	push       rsi                    ; save stack
 	push       rdx                    ; save newLength
 	push       rcx                    ; save numElements
-
 	sub        rsp, 8                 ; align stack frame before calling f668c4bd_resizeArray()
-	mov        esi, [rdi+8]           ; f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), newSize)
+
+	; f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), newSize)
 	mov        ecx, edx               ; newSize = (newLength * 1.5)
 	shr        edx, 1
 	add        ecx, edx
 	mov        [rdi+12], ecx
+
 	mov        edx, SIZEOF_PTR
+	mov        esi, [rdi+8]
+	mov        rdi, [rdi]
 
 	call       f668c4bd_resizeArray
 
@@ -194,8 +223,8 @@ b196167f_addFromStack:
 	mov        [rdi], rax             ; listArray->values = f668c4bd_resizeArray()
 
 .addElements:
-	mov        rdi, [rdi]             ; set up rdi with listArray->values for movsb
 	xchg       edx, [rdi+8]           ; swap newLength with listArray->length
+	mov        rdi, [rdi]             ; set up rdi with listArray->values
 	shl        edx, 3                 ; rdi += (listArray->length *= 8)
 	add        rdi, rdx
 
@@ -257,40 +286,3 @@ b196167f_destroyAllElements:
 	ret                               ; pop return address from stack and jump there
 
 ; ═════════════════════════════ Private Routines ═════════════════════════════
-
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ resizeArray ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-resizeArray:
-; Parameters:
-;	rdi : ListArray *listArray
-;	rsi : void *element
-; Local Variables:
-;	rdx : listArray->values
-;	ecx : listArray->length
-;	r8d : listArray->size
-
-	push       rsi                    ; save void *element
-	push       rcx                    ; save listArray->length
-	push       rdi                    ; save ListArray *listArray
-	sub        rsp, 8                 ; align stack frame before calling reallocarray()
-
-	mov        rdi, rdx               ; reallocarray(values, size, sizeof(void*))
-	mov        esi, r8d
-	mov        edx, 0x08
-	call       reallocarray WRT ..plt
-
-	test       rax, rax               ; if (ptr == NULL)
-	jz         .fatalError
-
-	add        rsp, 8                 ; unalign stack frame after calling reallocarray()
-	pop        rdi                    ; retrieve ListArray *listArray
-	pop        rcx                    ; retrieve listArray->length
-	pop        rsi                    ; retrieve void *element
-
-.epilogue:
-	mov        [rdi], rax             ; listArray->values = reallocarray()
-	mov        rdx, rax               ; rdx = newPtr
-	ret                               ; pop return address from stack and jump there
-
-.fatalError:
-	call       abort WRT ..plt

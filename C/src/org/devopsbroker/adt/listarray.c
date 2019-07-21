@@ -59,7 +59,7 @@ ListArray *b196167f_createListArray() {
 	return listArray;
 }
 
-ListArray *b196167f_createListArray_size(const uint32_t size) {
+ListArray *b196167f_createListArrayWithSize(const uint32_t size) {
 	ListArray *listArray = f668c4bd_malloc(sizeof(ListArray));
 
 	listArray->values = f668c4bd_malloc(sizeof(void*) * size);
@@ -76,13 +76,17 @@ void b196167f_destroyListArray(ListArray *listArray) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+void b196167f_cleanUpListArray(ListArray *listArray) {
+	f668c4bd_free(listArray->values);
+}
+
 void b196167f_initListArray(ListArray *listArray) {
 	listArray->values = f668c4bd_malloc(sizeof(void*) * B196167F_DEFAULT_SIZE);
 	listArray->size = B196167F_DEFAULT_SIZE;
 	listArray->length = 0;
 }
 
-void b196167f_initListArray_size(ListArray *listArray, const uint32_t size) {
+void b196167f_initListArrayWithSize(ListArray *listArray, const uint32_t size) {
 	listArray->values = f668c4bd_malloc(sizeof(void*) * size);
 	listArray->size = size;
 	listArray->length = 0;
