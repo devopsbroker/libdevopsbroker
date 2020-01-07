@@ -1,7 +1,7 @@
 /*
  * string.h - DevOpsBroker C header file for string constants and functions
  *
- * Copyright (C) 2018-2019 Edward Smith <edwardsmith@devopsbroker.org>
+ * Copyright (C) 2018-2020 Edward Smith <edwardsmith@devopsbroker.org>
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -145,6 +145,18 @@ static inline void f6215943_destroyString(String *string) {
 	f668c4bd_free(string->value);
 	f668c4bd_free(string);
 }
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f6215943_endsWith
+ * Description: Determines if text ends with the pattern
+ *
+ * Parameters:
+ *   pattern    The pattern to search for at the end of the text
+ *   text       The text to search
+ * Returns:     True if the string ends with the pattern, false otherwise
+ * ----------------------------------------------------------------------------
+ */
+bool f6215943_endsWith(const char *pattern, char *text);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f6215943_getLength

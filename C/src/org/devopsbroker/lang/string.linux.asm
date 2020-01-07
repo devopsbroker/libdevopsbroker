@@ -1,7 +1,7 @@
 ;
 ; string.linux.asm - DevOpsBroker NASM file for string-related functionality
 ;
-; Copyright (C) 2019 Edward Smith <edwardsmith@devopsbroker.org>
+; Copyright (C) 2019-2020 Edward Smith <edwardsmith@devopsbroker.org>
 ;
 ; This program is free software: you can redistribute it and/or modify it under
 ; the terms of the GNU General Public License as published by the Free Software
@@ -156,6 +156,98 @@ f6215943_copyToBuffer:
 
 .epilogue:
 	mov        [rdi], byte 0x00       ; terminate char *buffer
+	ret                               ; pop return address from stack and jump there
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_endsWith ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f6215943_endsWith:function
+f6215943_endsWith:
+; Parameters:
+;	rdi : char *pattern
+;	rsi : char *text
+; Local Variables:
+;	cx  : loop variable
+;	rdx : add operand
+;	r8  : 64-bit character buffer
+;	r9  : 64-bit character buffer
+;	r10 : original char *pattern value
+
+.prologue:                            ; functions typically have a prologue
+	prefetcht0 [rdi]                  ; prefetch pattern into the CPU cache
+	prefetcht0 [rsi]                  ; prefetch text into the CPU cache
+	mov        cl, 0x08               ; loop counter = 8
+	mov        r10, rdi               ; save pattern value into r10
+	xor        rax, rax               ; return value = false
+
+	test       rdi, rdi               ; if (pattern == NULL)
+	jz         .epilogue
+
+	test       rsi, rsi               ; if (text == NULL)
+	jz         .epilogue
+
+	mov        r8, [rdi]              ; load eight characters from pattern into r8
+	mov        r9, [rsi]              ; load eight characters from text into r9
+
+.whileText:
+	cmp        r8b, r9b               ; if (pattern[i] == text[j])
+	je         .compareEndsWith
+
+	test       r9b, r9b               ; if (text[j] == '\0')
+	jz         .epilogue
+
+.manageTextBuffer:
+	inc        rsi                    ; text++
+	shr        r9, 8
+
+	dec        cl                     ; text loop counter--
+	jnz        .whileText
+
+	mov        r9, [rsi]              ; load eight characters from text into r9
+	mov        cl, 0x08               ; text loop counter = 8
+	jmp        .whileText
+
+.compareEndsWith:
+	mov        r9, [rsi]              ; load eight characters from text into r9
+	mov        r11, rsi               ; save current value of text into r11
+	mov        cl, 0x08               ; text loop counter = 8
+
+.whileEqual:
+	cmp        r8b, r9b               ; if (foo[i] != bar[i])
+	jne        .charNotEqual
+
+	test       r9b, r9b               ; if (foo[i] == '\0')
+	jz         .returnTrue
+
+.manageEqualsBuffers:
+	inc        rdi                    ; pattern++
+	inc        rsi                    ; text++
+	shr        r8, 8
+	shr        r9, 8
+	dec        cl                     ; loop counter--
+	jnz        .whileEqual
+
+	mov        r8, [rdi]              ; load eight characters from pattern into r8
+	mov        r9, [rsi]              ; load eight characters from text into r9
+	mov        cl, 0x08               ; text loop counter = 8
+	jmp        .whileEqual
+
+.charNotEqual:
+	test       r9b, r9b               ; if (text[j] == '\0')
+	jz         .epilogue
+
+	mov        rdi, r10               ; pattern = original value
+	mov        rsi, r11               ; text = last current value
+	inc        rsi                    ; increment to next text character
+
+	mov        r8, [rdi]              ; load eight characters from pattern into r8
+	mov        r9, [rsi]              ; load eight characters from text into r9
+	mov        cl, 0x08               ; text loop counter = 8
+	jmp        .whileText
+
+.returnTrue:
+	inc        al                     ; set return value to true
+
+.epilogue:
 	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_hashCode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

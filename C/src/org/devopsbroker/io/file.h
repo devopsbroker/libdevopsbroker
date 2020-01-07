@@ -1,7 +1,7 @@
 /*
  * file.h - DevOpsBroker C header file for providing file-handling functionality
  *
- * Copyright (C) 2018-2019 Edward Smith <edwardsmith@devopsbroker.org>
+ * Copyright (C) 2018-2020 Edward Smith <edwardsmith@devopsbroker.org>
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -28,6 +28,7 @@
 // ═════════════════════════════════ Includes ═════════════════════════════════
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <fcntl.h>
 #include <unistd.h>

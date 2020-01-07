@@ -1,7 +1,7 @@
 /*
  * testString.c - DevOpsBroker C source file for testing org/devopsbroker/lang/string.h
  *
- * Copyright (C) 2019 Edward Smith <edwardsmith@devopsbroker.org>
+ * Copyright (C) 2019-2020 Edward Smith <edwardsmith@devopsbroker.org>
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -47,6 +47,7 @@
 
 static void testCopy();
 static void testCopyToBuffer();
+static void testEndsWith();
 static void testHashCode();
 
 // ══════════════════════════════════ main() ══════════════════════════════════
@@ -54,6 +55,7 @@ static void testHashCode();
 int main(int argc, char *argv[]) {
 	testCopy();
 	testCopyToBuffer();
+	testEndsWith();
 	testHashCode();
 
 	// Exit with success
@@ -97,6 +99,26 @@ static void testCopyToBuffer() {
 
 	f6215943_copyToBuffer("international", dest, 9);
 	positiveTestBool("  f6215943_copyToBuffer(\"international\", dest, 9)\t", true, f6215943_isEqual("internat", dest));
+
+	printf("\n");
+}
+
+static void testEndsWith() {
+	char pattern[5] = ".asm";
+	char text[16];
+
+	printTestName("testEndsWith");
+	f6215943_copyToBuffer("foo.c", text, 6);
+	positiveTestBool("  f6215943_endsWith(\".asm\", \"foo.c\")\t\t\t", false, f6215943_endsWith(pattern, "foo.c"));
+
+	f6215943_copyToBuffer("foo.asm.linux", text, 14);
+	positiveTestBool("  f6215943_endsWith(\".asm\", \"foo.asm.linux\")\t\t", false, f6215943_endsWith(pattern, "foo.asm.linux"));
+
+	f6215943_copyToBuffer("foo.linux.asm", text, 14);
+	positiveTestBool("  f6215943_endsWith(\".asm\", \"foo.linux.asm\")\t\t", true, f6215943_endsWith(pattern, "foo.linux.asm"));
+
+	f6215943_copyToBuffer("foo.linux..asm", text, 15);
+	positiveTestBool("  f6215943_endsWith(\".asm\", \"foo.linux..asm\")\t\t", true, f6215943_endsWith(pattern, "foo.linux..asm"));
 
 	printf("\n");
 }
