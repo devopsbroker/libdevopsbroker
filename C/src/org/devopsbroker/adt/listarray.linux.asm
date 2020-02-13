@@ -80,13 +80,13 @@ b196167f_add:
 	push       rsi                    ; save element
 	push       rdx                    ; save listArray->length
 
-	; f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), newSize)
-	shl        ecx, 1                 ; newSize = (size * size)
+	; f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), newLength)
+	shl        ecx, 1                 ; newLength = (size * size)
 	mov        [rdi+12], ecx
 
-	mov        edx, SIZEOF_PTR
-	mov        esi, edx
-	mov        rdi, [rdi]
+	mov        rdi, [rdi]             ; listArray->values
+	mov        esi, edx               ; listArray->length
+	mov        edx, SIZEOF_PTR        ; sizeof(void*)
 
 	call       f668c4bd_resizeArray
 
