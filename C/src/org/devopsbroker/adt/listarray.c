@@ -30,6 +30,7 @@
 
 #include "listarray.h"
 
+#include "../lang/array.h"
 #include "../lang/memory.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
@@ -112,4 +113,10 @@ void *b196167f_last(ListArray *listArray) {
 	}
 
 	return NULL;
+}
+
+void b196167f_sort(ListArray *listArray, int compare(void *a, void *b)) {
+	if (listArray->length > 0) {
+		b33b0483_sortPtrArray(listArray->values, 0, listArray->length-1, compare);
+	}
 }

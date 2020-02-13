@@ -192,4 +192,15 @@ void *b196167f_get(ListArray *listArray, uint32_t index);
  */
 void *b196167f_last(ListArray *listArray);
 
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b196167f_sort
+ * Description: Sorts the ListArray using the compare() function
+ *
+ * Parameters:
+ *   listArray  A pointer to the ListArray instance
+ *   compare    The compare() function to use during sorting
+ * ----------------------------------------------------------------------------
+ */
+void b196167f_sort(ListArray *listArray, int compare(void *a, void *b));
+
 #endif /* ORG_DEVOPSBROKER_ADT_LISTARRAY_H */

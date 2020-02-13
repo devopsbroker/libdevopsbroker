@@ -1,7 +1,7 @@
 /*
- * array.c - C source file for the org.devopsbroker.lang.Array struct
+ * array.c - DevOpsBroker C source file for array-related functionality
  *
- * Copyright (C) 2019 AUTHOR_NAME <email@address.com>
+ * Copyright (C) 2019-2020 Edward Smith <edwardsmith@devopsbroker.org>
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -45,24 +45,56 @@
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Array *b33b0483_createArray() {
-	Array *array = malloc(sizeof(Array));
+void b33b0483_sortPtrArray(void **array, int l, int h, int compare(void *a, void *b)) {
+	void *highPtr, *currentPtr, *tempPtr;
+	int pivot;
 
-	// TODO: Fill in with struct initialization code
+	// Create an auxiliary stack
+	int stack[h - l + 1];
+	int top = 0;
 
-	return array;
-}
+	stack[top++] = l;
+	stack[top++] = h;
 
-void b33b0483_destroyArray(Array *array) {
-	free(array);
-}
+	while (top > 0) {
+		h = stack[--top];
+		l = stack[--top];
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Partition the array around the pivot point
+		highPtr = array[h];
+		pivot = (l - 1);
 
-void b33b0483_initArray(Array *array) {
+		for (int j = l; j < h; j++) {
+			currentPtr = array[j];
 
-	// TODO: Fill in with struct initialization code
+			if (compare(currentPtr, highPtr) <= 0) {
+				pivot++;
 
+				// Swap pivot pointer with current pointer
+				tempPtr = array[pivot];
+				array[pivot] = currentPtr;
+				array[j] = tempPtr;
+			}
+		}
+
+		// Swap pivot pointer with high pointer
+		pivot++;
+		tempPtr = array[pivot];
+		array[pivot] = highPtr;
+		array[h] = tempPtr;
+
+		// Push left side of pivot to stack, if present
+		if ((pivot - 1) > l) {
+			stack[top++] = l;
+			stack[top++] = pivot - 1;
+		}
+
+		// Push right side of pivot to stack, if present
+		if ((pivot + 1) < h) {
+			stack[top++] = pivot + 1;
+			stack[top++] = h;
+		}
+	}
 }

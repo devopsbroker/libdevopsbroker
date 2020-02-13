@@ -1,7 +1,7 @@
 /*
- * array.h - DevOpsBroker C header file for the org.devopsbroker.lang.Array struct
+ * array.h - DevOpsBroker C header file for array-related functionality
  *
- * Copyright (C) 2019 Edward Smith <edwardsmith@devopsbroker.org>
+ * Copyright (C) 2019-2020 Edward Smith <edwardsmith@devopsbroker.org>
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -36,50 +36,25 @@
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
-typedef struct Array {
-	void **values;
-	uint32_t length;
-	uint32_t size;
-} Array;
-
-static_assert(sizeof(Array) == 16, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
 
 // ═══════════════════════════ Function Declarations ══════════════════════════
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    b33b0483_createArray
- * Description: Creates a Array struct instance
- *
- * Returns:     An Array struct instance
- * ----------------------------------------------------------------------------
- */
-Array *b33b0483_createArray();
-
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    b33b0483_destroyArray
- * Description: Frees the memory allocated to the Array struct pointer
+ * Function:    b33b0483_sortPtrArray
+ * Description: Uses an iterative quicksort to sort the array of pointers
  *
  * Parameters:
- *   array      A pointer to the Array instance to destroy
- * ----------------------------------------------------------------------------
+ *   array      The array of pointers to be sorted
+ *   l          The lowest index of the array to begin sorting
+ *   h          The highest index of the array to end sorting
+ *   compare    The compare() function to use during sorting
+ * ---------------------------------------------------------------------
  */
-void b33b0483_destroyArray(Array *array);
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    b33b0483_initArray
- * Description: Initializes an existing Array struct
- *
- * Parameters:
- *   array      A pointer to the Array instance to initalize
- * ----------------------------------------------------------------------------
- */
-void b33b0483_initArray(Array *array);
+void b33b0483_sortPtrArray(void **array, int l, int h, int compare(void *a, void *b));
 
 #endif /* ORG_DEVOPSBROKER_LANG_ARRAY_H */
