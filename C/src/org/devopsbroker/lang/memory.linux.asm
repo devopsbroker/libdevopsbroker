@@ -260,20 +260,22 @@ f668c4bd_resizeArray:
 ;	rdi : void *arrayPtr
 ;	esi : uint32_t arrayLen
 ;	edx : uint32_t typeSize
-;	ecx : uint32_t numBlocks
+;	ecx : uint32_t newLength
 ; Local Variables:
 ;	eax : multiply register
+;   r8d : save typeSize for calculations
 
 .prologue:                            ; functions typically have a prologue
 	sub        rsp, 8                 ; align stack frame before calling malloc()
 	push       r12                    ; preserve r12 register
 	push       r13                    ; preserve r13 register
 
+	mov        r8d, edx               ; save typeSize into r8d
 	mov        r12, rdi               ; save arrayPtr into r12
 
 .calcNumBytesToCopy:
-	mov        eax, esi               ; numBytes = (arrayLen * numBlocks)
-	mul        ecx                    ; eax * ecx
+	mov        eax, esi               ; numBytes = (arrayLen * typeSize)
+	mul        r8d                    ; eax *= r8d
 
 	test       edx, edx               ; if (multiply overflow) then fatalError
 	jnz        .fatalError
@@ -281,8 +283,8 @@ f668c4bd_resizeArray:
 	mov        r13d, eax              ; save numBytes into r13d
 
 .calcMemSize:
-	mov        eax, edx               ; memSize = (typeSize * numBlocks)
-	mul        ecx                    ; eax * ecx
+	mov        eax, r8d               ; memSize = (typeSize * newLength)
+	mul        ecx                    ; eax *= ecx
 
 	test       edx, edx               ; if (multiply overflow) then fatalError
 	jnz        .fatalError
