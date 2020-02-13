@@ -22,6 +22,7 @@
 ; This file implements the following x86-64 assembly language functions for the
 ; org.devopsbroker.lang.string.h header file:
 ;
+;   o int f6215943_compare(char *first, char *second);
 ;   o char *f6215943_copy(char *source, uint32_t length);
 ;   o void f6215943_copyToBuffer(char *source, char *buffer, uint32_t numBytes);
 ;   o uint32_t f6215943_hashCode(const char *string);
@@ -59,6 +60,86 @@ extern  malloc
 extern  abort
 
 extern  b196167f_addAll
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_compare ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f6215943_compare:function
+f6215943_compare:
+; Parameters:
+;	rdi : char *first
+;	rsi : char *second
+; Local Variables:
+;   eax : byte storage for first string
+;   edx : byte storage for second string
+;   ecx : loop counter variable
+;	r8  : 64-bit character buffer (first)
+;	r9  : 64-bit character buffer (second)
+
+.prologue:                            ; functions typically have a prologue
+	prefetcht0 [rdi]                  ; prefetch first into the CPU cache
+	prefetcht0 [rsi]                  ; prefetch second into the CPU cache
+
+	xor        eax, eax               ; set return value to zero
+	xor        edx, edx               ; clear edx register
+
+	cmp        rdi, rsi               ; if (first == second)
+	je         .epilogue
+
+	test       rdi, rdi               ; if (first == NULL)
+	jz         .returnFirstNull
+
+	test       rsi, rsi               ; if (second == NULL)
+	jz         .returnSecondNull
+
+.whileEqual:
+	mov        r8, [rdi]              ; load eight characters into r8
+	mov        r9, [rsi]              ; load eight characters into r9
+
+	mov        ecx, 0x08              ; loop counter = 8
+	add        rdi, rcx               ; first += 8
+	add        rsi, rcx               ; second += 8
+
+.firstChar:
+	mov        al, r8b                ; al = first[i]
+	mov        dl, r9b                ; dl = second[i]
+
+	sub        ax, dx                 ; if (first[i] != second[i])
+	jne        .returnNotEqual
+
+	test       r8b, r8b               ; if (first[i] == '\0')
+	jz         .epilogue
+	dec        cl                     ; loop counter--
+
+.nextChars:
+	shr        r8, 8
+	shr        r9, 8
+
+	mov        al, r8b                ; al = first[i]
+	mov        dl, r9b                ; dl = second[i]
+
+	sub        ax, dx                 ; if (first[i] != second[i])
+	jne        .returnNotEqual
+
+	test       r8b, r8b               ; if (first[i] == '\0')
+	jz         .epilogue
+
+	dec        cl                     ; loop counter--
+	jnz        .nextChars             ; if (cl > 0)
+	jmp        .whileEqual
+
+.returnNotEqual:                      ; set return value to (first[i] - second[i])
+	cwde                              ; sign-extend AX word to EAX doubleword
+
+.epilogue:
+	ret                               ; pop return address from stack and jump there
+
+.returnFirstNull:
+	dec        eax                    ; set return value to -1
+	ret                               ; pop return address from stack and jump there
+
+.returnSecondNull:
+	inc        eax                    ; set return value to 1
+	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_copy ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

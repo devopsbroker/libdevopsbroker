@@ -80,6 +80,21 @@ extern const char f6215943_digitHex[16];
 String *f6215943_cloneString(String *string);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f6215943_compare
+ * Description: Compares the two char* strings lexicographically. If both strings
+ *              are equal, the value 0 is returned. If the first string is
+ *              greater than the second string then a positive integer is
+ *              returned. Otherwise, a negative integer is returned.
+ *
+ * Parameters:
+ *   first      The first char* instance to evaluate
+ *   second     The second char* instance to evaluate
+ * Returns:     0, positive integer, or negative integer
+ * ----------------------------------------------------------------------------
+ */
+int f6215943_compare(char *first, char *second);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f6215943_concatenate
  * Description: Concatenates the char* strings into one char* string
  *        NOTE: Use NULL as the last parameter to indicate the end of the varargs
