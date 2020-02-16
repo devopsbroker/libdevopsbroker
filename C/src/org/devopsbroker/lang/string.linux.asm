@@ -25,6 +25,8 @@
 ;   o int f6215943_compare(char *first, char *second);
 ;   o char *f6215943_copy(char *source, uint32_t length);
 ;   o void f6215943_copyToBuffer(char *source, char *buffer, uint32_t numBytes);
+;   o bool f6215943_endsWith(const char *pattern, char *text);
+;   o uint32_t f6215943_getLength(char *string);
 ;   o uint32_t f6215943_hashCode(const char *string);
 ;   o bool f6215943_isEqual(char *foo, char *bar);
 ;   o char *f6215943_search(char *pattern, char *text);
@@ -204,39 +206,37 @@ f6215943_copyToBuffer:
 ;	rsi : char *buffer
 ;	rdx : uint32_t numBytes
 ; Local Variables:
-;	ecx : rep prefix counter register
-;	r8d : temporary variable
+;	al  : source byte buffer
 
 .prologue:                            ; functions typically have a prologue
-	test       rdx, rdx               ; if (length == 0)
+	prefetcht0 [rdi]                  ; prefetch source into the CPU cache
+
+	test       rdi, rdi               ; if (source == NULL)
 	jz         .epilogue
 
-.copyString:
-	dec        rdx                    ; numBytes--
-	xchg       rdi, rsi               ; swap rdi and rsi
-	cld                               ; clear direction flag in EFLAGS register
-
-	cmp        edx, 0x08              ; if (length < 8)
-	jb         .copyBytes
-
-.copyEightBytes:
-	mov        ecx, edx               ; calculate how many eight byte chunks to copy
-	shr        ecx, 3                 ; ecx = length / 8
-	mov        r8d, ecx
-	shl        r8d, 3
-	sub        edx, r8d               ; edx = length % 8
-
-	rep movsq                         ; move ecx quadwords into buffer
-
-	test       edx, edx
+	test       rsi, rsi               ; if (buffer == NULL)
 	jz         .epilogue
 
-.copyBytes:
-	mov        ecx, edx
-	rep movsb                         ; move ecx bytes into buffer
+	test       edx, edx               ; if (length == 0)
+	jz         .epilogue
+
+.copyToBuffer:
+	dec        edx                    ; if (--numBytes == 0)
+	jz         .terminateBuffer
+
+	mov        al, [rdi]              ; copy byte from source address into al
+	inc        rdi                    ; source++
+	mov        [rsi], al              ; copy al into buffer address
+	inc        rsi                    ; buffer++
+
+	test       al, al                 ; if (source character != '\0')
+	jnz        .copyToBuffer
 
 .epilogue:
-	mov        [rdi], byte 0x00       ; terminate char *buffer
+	ret                               ; pop return address from stack and jump there
+
+.terminateBuffer:
+	mov        [rsi], byte 0x00       ; terminate char *buffer
 	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_endsWith ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -327,6 +327,49 @@ f6215943_endsWith:
 
 .returnTrue:
 	inc        al                     ; set return value to true
+
+.epilogue:
+	ret                               ; pop return address from stack and jump there
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_getLength ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f6215943_getLength:function
+f6215943_getLength:
+; Parameters:
+;	rdi : char *string
+; Local Variables:
+;	xmm0 : 128-bit character buffer
+;	xmm1 : all zeroes SSE2 register
+;	ecx  : bitmask register
+
+.prologue:                            ; functions typically have a prologue
+	xor        eax, eax               ; return value = 0
+	pxor       xmm1, xmm1             ; zero the comparison register
+
+	test       rdi, rdi               ; if (foo == NULL)
+	jz         .epilogue
+
+.firstChunk:
+	movdqu     xmm0, [rdi]            ; unaligned read of 16 bytes into xmm0
+	pcmpeqb    xmm0, xmm1             ; look for zero byte
+	pmovmskb   ecx, xmm0              ; create 16-bit bitmask from xmm0
+
+	test       ecx, ecx               ; if (bitmask != 0)
+	jnz        .addBitIndexToLength
+
+.whileString:
+	add        eax, 16                ; add 16 to the string length
+	movdqu     xmm0, [rdi + rax]      ; unaligned read of 16 bytes into xmm0
+
+	pcmpeqb    xmm0, xmm1             ; look for zero byte
+	pmovmskb   ecx, xmm0              ; create 16-bit bitmask from xmm0
+
+	test       ecx, ecx               ; if (bitmask == 0)
+	jz         .whileString
+
+.addBitIndexToLength:
+	bsf        ecx, ecx               ; find index of first set bit
+	add        eax, ecx               ; add the bit index value to the string length
 
 .epilogue:
 	ret                               ; pop return address from stack and jump there

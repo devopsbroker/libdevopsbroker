@@ -182,15 +182,7 @@ bool f6215943_endsWith(const char *pattern, char *text);
  * Returns:     The length of the char* instance, excluding the null-termination character
  * ----------------------------------------------------------------------------
  */
-static inline uint32_t f6215943_getLength(register const char *string) {
-	register const char *startPos = string;
-
-	while (*string) {
-		string++;
-	}
-
-	return (string - startPos);
-}
+uint32_t f6215943_getLength(char *string);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f6215943_hashCode

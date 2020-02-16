@@ -48,6 +48,7 @@
 static void testCopy();
 static void testCopyToBuffer();
 static void testEndsWith();
+static void testGetLength();
 static void testHashCode();
 
 // ══════════════════════════════════ main() ══════════════════════════════════
@@ -56,6 +57,7 @@ int main(int argc, char *argv[]) {
 	testCopy();
 	testCopyToBuffer();
 	testEndsWith();
+	testGetLength();
 	testHashCode();
 
 	// Exit with success
@@ -70,13 +72,13 @@ static void testCopy() {
 
 	printTestName("testCopy");
 	foo = f6215943_copy("foo", dest);
-	positiveTestBool("  f6215943_copy(\"foo\", dest)\t\t", true, f6215943_isEqual("foo", foo));
+	positiveTestBool("  f6215943_copy(\"foo\", dest)\t\t\t\t", true, f6215943_isEqual("foo", foo));
 
 	foo = f6215943_copy("bar", dest);
-	positiveTestBool("  f6215943_copy(\"bar\", dest)\t\t", true, f6215943_isEqual("bar", foo));
+	positiveTestBool("  f6215943_copy(\"bar\", dest)\t\t\t\t", true, f6215943_isEqual("bar", foo));
 
 	foo = f6215943_copy("XYZ", dest);
-	positiveTestBool("  f6215943_copy(\"XYZ\", dest)\t\t", true, f6215943_isEqual("XYZ", foo));
+	positiveTestBool("  f6215943_copy(\"XYZ\", dest)\t\t\t\t", true, f6215943_isEqual("XYZ", foo));
 
 	printf("\n");
 }
@@ -123,13 +125,23 @@ static void testEndsWith() {
 	printf("\n");
 }
 
+static void testGetLength() {
+	printTestName("testGetLength");
+	positiveTestInt("  f6215943_getLength(NULL)\t\t\t\t", 0, f6215943_getLength(NULL));
+	positiveTestInt("  f6215943_getLength(\"foo.c\")\t\t\t\t", 5, f6215943_getLength("foo.c"));
+	positiveTestInt("  f6215943_getLength(\"foobar.asm\")\t\t\t", 10, f6215943_getLength("foobar.asm"));
+	positiveTestInt("  f6215943_getLength(\"internationalization\")\t\t", 20, f6215943_getLength("internationalization"));
+
+	printf("\n");
+}
+
 static void testHashCode() {
 	printTestName("testHashCode");
-	positiveTestInt("  f6215943_hashCode(\"foo\")\t\t", 6807, f6215943_hashCode("foo"));
-	positiveTestInt("  f6215943_hashCode(\"bar\")\t\t", 7162, f6215943_hashCode("bar"));
-	positiveTestInt("  f6215943_hashCode(\"XYZ\")\t\t", 5266, f6215943_hashCode("XYZ"));
-	positiveTestInt("  f6215943_hashCode(\"123\")\t\t", 3555, f6215943_hashCode("123"));
-	positiveTestInt("  f6215943_hashCode(\"international\")\t", 1450727140, f6215943_hashCode("international"));
+	positiveTestInt("  f6215943_hashCode(\"foo\")\t\t\t\t", 6807, f6215943_hashCode("foo"));
+	positiveTestInt("  f6215943_hashCode(\"bar\")\t\t\t\t", 7162, f6215943_hashCode("bar"));
+	positiveTestInt("  f6215943_hashCode(\"XYZ\")\t\t\t\t", 5266, f6215943_hashCode("XYZ"));
+	positiveTestInt("  f6215943_hashCode(\"123\")\t\t\t\t", 3555, f6215943_hashCode("123"));
+	positiveTestInt("  f6215943_hashCode(\"international\")\t\t\t", 1450727140, f6215943_hashCode("international"));
 
 	printf("\n");
 }
