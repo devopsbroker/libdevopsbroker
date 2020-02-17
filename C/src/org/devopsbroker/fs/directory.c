@@ -33,6 +33,7 @@
 
 #include "../lang/error.h"
 #include "../lang/string.h"
+#include "../terminal/ansi.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -224,6 +225,40 @@ void d0059b5b_listContents(Directory *directory, DirPath *dirPath, bool isRecurs
 				d0059b5b_listContents(subdir, dirPath, isRecursive);
 				c598a24c_reduceLength(dirPath, dirPathLen);
 			}
+		}
+	}
+}
+
+void d0059b5b_printDirectory(Directory *directory, DirPath *dirPath) {
+	Directory *subdir;
+	File *file;
+	uint32_t i, dirPathLen;
+
+	printf("%s:\n", dirPath->buffer);
+	printf(ANSI_BLUE);
+	for (i=0; i < directory->subdirList.length; i++) {
+		subdir = directory->subdirList.values[i];
+		puts(subdir->name);
+	}
+
+	printf(ANSI_RESET);
+	for (i=0; i < directory->fileList.length; i++) {
+		file = directory->fileList.values[i];
+		puts(file->name);
+	}
+
+	printf("\n");
+
+	if (directory->subdirList.length > 0) {
+		dirPathLen = dirPath->length + 1;
+
+		c598a24c_append_char(dirPath, '/');
+		for (i=0; i < directory->subdirList.length; i++) {
+			subdir = directory->subdirList.values[i];
+
+			c598a24c_append_string(dirPath, subdir->name);
+			d0059b5b_printDirectory(subdir, dirPath);
+			c598a24c_reduceLength(dirPath, dirPathLen);
 		}
 	}
 }

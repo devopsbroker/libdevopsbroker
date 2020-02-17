@@ -177,7 +177,8 @@ void d0059b5b_initDirPath(DirPath *dirPath, char *path);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    d0059b5b_listContents
- * Description: Lists the contents of the specified Directory
+ * Description: Populates the Directory instance with the list of its contents
+ *              starting from the DirPath instance
  *
  * Parameters:
  *   directory      A pointer to the Directory instance to list
@@ -186,5 +187,16 @@ void d0059b5b_initDirPath(DirPath *dirPath, char *path);
  * ----------------------------------------------------------------------------
  */
 void d0059b5b_listContents(Directory *directory, DirPath *dirPath, bool isRecursive);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    d0059b5b_printDirectory
+ * Description: Prints the Directory instance with the list of its contents
+ *
+ * Parameters:
+ *   directory      A pointer to the Directory instance to print
+ *   dirPath        A pointer of the DirPath to print
+ * ----------------------------------------------------------------------------
+ */
+void d0059b5b_printDirectory(Directory *directory, DirPath *dirPath);
 
 #endif /* ORG_DEVOPSBROKER_FS_DIRECTORY_H */
