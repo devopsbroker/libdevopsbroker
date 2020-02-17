@@ -252,4 +252,15 @@ void c598a24c_append_stringArray(StringBuilder *strBuilder, char *const array[])
  */
 void c598a24c_append_string_uint32(StringBuilder *strBuilder, const char *source, const uint32_t length);
 
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    c598a24c_reduceLength
+ * Description: Reduces the length of the StringBuilder instance to newLength
+ *
+ * Parameters:
+ *   strBuilder     A pointer to the StringBuilder instance to reduce its length
+ *   newLength      The new length to set the StringBuilder instance
+ * ----------------------------------------------------------------------------
+ */
+void c598a24c_reduceLength(StringBuilder *strBuilder, uint32_t newLength);
+
 #endif /* ORG_DEVOPSBROKER_LANG_STRINGBUILDER_H */

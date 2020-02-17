@@ -303,3 +303,10 @@ void c598a24c_append_string_uint32(register StringBuilder *strBuilder, register 
 
 	*target = '\0';
 }
+
+void c598a24c_reduceLength(StringBuilder *strBuilder, uint32_t newLength) {
+	if (newLength < strBuilder->length) {
+		strBuilder->buffer[newLength] = '\0';
+		strBuilder->length = newLength;
+	}
+}
