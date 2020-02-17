@@ -32,6 +32,7 @@
 #include "directory.h"
 
 #include "../lang/error.h"
+#include "../lang/memory.h"
 #include "../lang/string.h"
 #include "../terminal/ansi.h"
 
@@ -47,6 +48,9 @@
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
+static void addSubdir(Directory *directory, Directory *subdir);
+static void addFile(Directory *directory, File *file);
+
 static int compareDirectory(void *first, void *second);
 static int compareFile(void *first, void *second);
 
@@ -60,9 +64,8 @@ Directory *d0059b5b_createDirectory(char *name) {
 	// Copy directory name into directory->name
 	f6215943_copy(name, directory->name);
 
-	// Initialize the subdirectory list and file list
-	b196167f_initListArray(&directory->subdirList);
-	b196167f_initListArray(&directory->fileList);
+	// Lazy init the subdirectory list and file list later
+	f668c4bd_meminit(&directory->subdirList, sizeof(ListArray) * 2);
 
 	return directory;
 }
@@ -172,7 +175,7 @@ void d0059b5b_listContents(Directory *directory, DirPath *dirPath, bool isRecurs
 		abort();
 	} else {
 		// 2. Read the contents of the directory
-		Directory *subDir;
+		Directory *subdir;
 		File *file;
 		errno = 0;
 
@@ -194,12 +197,12 @@ void d0059b5b_listContents(Directory *directory, DirPath *dirPath, bool isRecurs
 					|| (dirEntry->d_name[0] == '.' && dirEntry->d_name[1] == '.' && dirEntry->d_name[2] == '\0')) {
 					// Skip the current directory and previous directory
 				} else {
-					subDir = d0059b5b_createDirectory(dirEntry->d_name);
-					b196167f_add(&directory->subdirList, subDir);
+					subdir = d0059b5b_createDirectory(dirEntry->d_name);
+					addSubdir(directory, subdir);
 				}
 			} else if (dirEntry->d_type == DT_REG) {
 				file = d0059b5b_createFile(dirEntry->d_name);
-				b196167f_add(&directory->fileList, file);
+				addFile(directory, file);
 			}
 		} while(true);
 
@@ -264,6 +267,24 @@ void d0059b5b_printDirectory(Directory *directory, DirPath *dirPath) {
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Static Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static void addSubdir(Directory *directory, Directory *subdir) {
+	// Lazy init the subdirectory list, if necessary
+	if (directory->subdirList.values == NULL) {
+		b196167f_initListArray(&directory->subdirList);
+	}
+
+	b196167f_add(&directory->subdirList, subdir);
+}
+
+static void addFile(Directory *directory, File *file) {
+	// Lazy init the file list, if necessary
+	if (directory->fileList.values == NULL) {
+		b196167f_initListArray(&directory->fileList);
+	}
+
+	b196167f_add(&directory->fileList, file);
+}
 
 static int compareDirectory(void *first, void *second) {
 	return f6215943_compare(((Directory *)first)->name, ((Directory *)second)->name);

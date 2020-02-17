@@ -71,14 +71,18 @@ ListArray *b196167f_createListArrayWithSize(const uint32_t size) {
 }
 
 void b196167f_destroyListArray(ListArray *listArray) {
-	f668c4bd_free(listArray->values);
+	if (listArray->values != NULL) {
+		f668c4bd_free(listArray->values);
+	}
 	f668c4bd_free(listArray);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void b196167f_cleanUpListArray(ListArray *listArray) {
-	f668c4bd_free(listArray->values);
+	if (listArray->values != NULL) {
+		f668c4bd_free(listArray->values);
+	}
 }
 
 void b196167f_initListArray(ListArray *listArray) {

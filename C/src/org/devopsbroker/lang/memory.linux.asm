@@ -187,44 +187,53 @@ f668c4bd_memcopy:
 
 	global  f668c4bd_meminit:function
 f668c4bd_meminit:
+; Parameters:
+;	rdi : void *ptr
+;	rsi : size_t size
+;	    : num bytes to copy
+; Local Variables:
+;	rax : number of 64-bit blocks to initialize
+;	rcx : loop counter
+;	rdx : temporary variable
+;	r8  : zero value register
 
 .prologue:                            ; functions typically have a prologue
-	xor        rax, rax               ; zero out rax for memory initialization
-
-	cmp        rsi, 0x08
-	jae        .eightBytes
-	cmp        sil, 0x04
-	jae        .fourBytes
-	jnz        .bytes
+	test       rdi, rdi               ; if (ptr == NULL)
 	jz         .epilogue
 
-.eightBytes:
-	mov        [rdi], rax
-
-	sub        rsi, 0x08
+	test       rsi, rsi               ; if (size == 0)
 	jz         .epilogue
 
-	add        rdi, 0x08
+	xor        rcx, rcx               ; set loop counter to zero
+	xor        r8, r8                 ; zero out r8 for memory initialization
 
-	cmp        rsi, 0x08
-	jae        .eightBytes
-	cmp        sil, 0x04
-	jb         .bytes
+.calcNumBlocksToInit:
+	mov        rax, rsi               ; numBlocks = numBytes / 8
+	shr        rax, 3
+	jz         .initBytes             ; if (numBlocks == 0)
 
-.fourBytes:
-	mov        [rdi], eax
+	mov        rdx, rax               ; numBytes -= (numBlocks * 8)
+	shl        rdx, 3
+	sub        rsi, rdx
 
-	sub        sil, 0x04
+.initBlocks:
+	mov        [rdi + 8*rcx], r8      ; copy zero into ptr address
+
+	inc        rcx                    ; loopCounter++
+	dec        rax                    ; numBlocks--
+	jnz        .initBlocks
+
+	test       rsi, rsi               ; if (numBytes == 0)
 	jz         .epilogue
 
-	add        rdi, 0x04
+	shl        rcx, 3                 ; ptr += (numBlocks * 8)
+	add        rdi, rcx
 
-.bytes:
-	mov        [rdi], al
-	inc        rdi
-	dec        sil
-
-	jnz        .bytes
+.initBytes:
+	mov        [rdi], r8b             ; copy zero into ptr address
+	inc        rdi                    ; ptr++
+	dec        sil                    ; numBytes--
+	jnz        .initBytes             ; if (numBytes != 0)
 
 .epilogue:                            ; functions typically have an epilogue
 	ret                               ; pop return address from stack and jump there
