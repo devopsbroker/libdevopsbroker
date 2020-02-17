@@ -74,6 +74,7 @@ clean:
 
 prepare:
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/adt
+	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/fs
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/info
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/io
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/lang
@@ -89,6 +90,10 @@ prepare:
 
 # Obtain object files for the C utilities
 $(OBJ_DIR)/adt/%.o: $(SRC_DIR)/adt/%.c $(SRC_DIR)/adt/%.h | prepare
+	$(call printInfo,Compiling $(@F))
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/fs/%.o: $(SRC_DIR)/fs/%.c $(SRC_DIR)/fs/%.h | prepare
 	$(call printInfo,Compiling $(@F))
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -138,6 +143,10 @@ $(OBJ_DIR)/time/%.o: $(SRC_DIR)/time/%.c $(SRC_DIR)/time/%.h | prepare
 
 # Obtain object files for the ASM libraries
 $(OBJ_DIR)/adt/%.o: $(SRC_DIR)/adt/%.asm | prepare
+	$(call printInfo,Compiling $(@F))
+	$(ASM) $(ASMFLAGS) $< -o $@
+
+$(OBJ_DIR)/fs/%.o: $(SRC_DIR)/fs/%.asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
