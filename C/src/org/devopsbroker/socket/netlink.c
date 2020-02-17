@@ -37,6 +37,7 @@
 #include "socket.h"
 
 #include "../lang/error.h"
+#include "../lang/memory.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -61,7 +62,7 @@ typedef struct DebugNetlinkAttribute {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 NetlinkSocket *e7173ad4_createNetlinkSocket(NetlinkFamily family, size_t ioBufLen) {
-	NetlinkSocket *netlinkSocket = malloc(sizeof(NetlinkSocket));
+	NetlinkSocket *netlinkSocket = f668c4bd_malloc(sizeof(NetlinkSocket));
 
 	f668c4bd_meminit(&netlinkSocket->addr, sizeof(NetlinkAddress));
 	netlinkSocket->addr.nl_family = AF_NETLINK;

@@ -79,7 +79,7 @@ static inline void appendNull(StringBuilder* strBuilder, char *target) {
 StringBuilder *c598a24c_createStringBuilder() {
 	register StringBuilder *strBuilder = f668c4bd_malloc(sizeof(StringBuilder));
 
-	strBuilder->buffer = f668c4bd_malloc_size_size(sizeof(char), STRINGBUILDER_DEFAULT_SIZE);
+	strBuilder->buffer = f668c4bd_mallocArray(sizeof(char), STRINGBUILDER_DEFAULT_SIZE);
 	strBuilder->buffer[0] = '\0';
 	strBuilder->length = 0;
 	strBuilder->size = STRINGBUILDER_DEFAULT_SIZE;
@@ -90,7 +90,7 @@ StringBuilder *c598a24c_createStringBuilder() {
 StringBuilder *c598a24c_createStringBuilder_uint32(const uint32_t bufSize) {
 	register StringBuilder *strBuilder = f668c4bd_malloc(sizeof(StringBuilder));
 
-	strBuilder->buffer = f668c4bd_malloc_size_size(sizeof(char), bufSize);
+	strBuilder->buffer = f668c4bd_mallocArray(sizeof(char), bufSize);
 	strBuilder->buffer[0] = '\0';
 	strBuilder->length = 0;
 	strBuilder->size = bufSize;
@@ -110,14 +110,14 @@ void c598a24c_cleanUpStringBuilder(StringBuilder *strBuilder) {
 }
 
 void c598a24c_initStringBuilder(StringBuilder *strBuilder) {
-	strBuilder->buffer = f668c4bd_malloc_size_size(sizeof(char), STRINGBUILDER_DEFAULT_SIZE);
+	strBuilder->buffer = f668c4bd_mallocArray(sizeof(char), STRINGBUILDER_DEFAULT_SIZE);
 	strBuilder->buffer[0] = '\0';
 	strBuilder->length = 0;
 	strBuilder->size = STRINGBUILDER_DEFAULT_SIZE;
 }
 
 void c598a24c_initStringBuilder_uint32(StringBuilder *strBuilder, const uint32_t bufSize) {
-	strBuilder->buffer = f668c4bd_malloc_size_size(sizeof(char), bufSize);
+	strBuilder->buffer = f668c4bd_mallocArray(sizeof(char), bufSize);
 	strBuilder->buffer[0] = '\0';
 	strBuilder->length = 0;
 	strBuilder->size = bufSize;

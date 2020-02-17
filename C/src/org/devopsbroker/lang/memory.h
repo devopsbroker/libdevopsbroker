@@ -51,15 +51,28 @@
 void f668c4bd_free(void *ptr);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f668c4bd_meminit
- * Description: Initializes the block of memory to zeroes
+ * Function:    f668c4bd_malloc
+ * Description: Performs a 16-byte aligned malloc() operation
  *
  * Parameters:
- *   ptr        A pointer to the memory block to initialize
- *   size       The size of the memory block to initialize
+ *   size       The size of the memory block to allocate
+ * Returns:     A pointer to the allocated memory block
  * ----------------------------------------------------------------------------
  */
-void f668c4bd_meminit(void *ptr, size_t size);
+void *f668c4bd_malloc(size_t size);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f668c4bd_mallocArray
+ * Description: Performs a 16-byte aligned malloc() operation using the type size
+ *              and number of blocks
+ *
+ * Parameters:
+ *   typeSize       The size of the type being allocated (using sizeof())
+ *   numBlocks      The number of blocks of type to allocate
+ * Returns:         A pointer to the allocated memory block
+ * ----------------------------------------------------------------------------
+ */
+void *f668c4bd_mallocArray(size_t typeSize, size_t numBlocks);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f668c4bd_memcopy
@@ -74,27 +87,15 @@ void f668c4bd_meminit(void *ptr, size_t size);
 void f668c4bd_memcopy(void *source, void *dest, size_t numBytes);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f668c4bd_malloc
- * Description: Performs a 16-byte aligned malloc() operation
+ * Function:    f668c4bd_meminit
+ * Description: Initializes the block of memory to zeroes
  *
  * Parameters:
- *   size       The size of the memory block to allocate
- * Returns:     A pointer to the allocated memory block
+ *   ptr        A pointer to the memory block to initialize
+ *   size       The size of the memory block to initialize
  * ----------------------------------------------------------------------------
  */
-void *f668c4bd_malloc(size_t size);
-
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f668c4bd_malloc_size_size
- * Description: Performs the malloc() operation with error-checking and memory block calculation
- *
- * Parameters:
- *   typeSize       The size of the type being allocated (using sizeof())
- *   numBlocks      The number of blocks of type to allocate
- * Returns:         A pointer to the allocated memory block
- * ----------------------------------------------------------------------------
- */
-void *f668c4bd_malloc_size_size(const size_t typeSize, const size_t numBlocks);
+void f668c4bd_meminit(void *ptr, size_t size);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f668c4bd_realloc
@@ -147,7 +148,7 @@ void *f668c4bd_realloc_void_size_size(void *ptr, const size_t typeSize, const si
  * Returns:         A pointer to the new resized array
  * ----------------------------------------------------------------------------
  */
-void *f668c4bd_resizeArray(void *arrayPtr, uint32_t arrayLen, uint32_t typeSize, uint32_t numBlocks);
+void *f668c4bd_resizeArray(void *arrayPtr, uint32_t arrayLen, size_t typeSize, size_t numBlocks);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f668c4bd_stralloc

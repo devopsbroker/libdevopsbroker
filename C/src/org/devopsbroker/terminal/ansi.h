@@ -67,6 +67,6 @@
  *   double     True to print a double-line box, false to print a single-line box
  * ----------------------------------------------------------------------------
  */
-void d99c60f5_printBox(const char *message, const bool useDoubleLine);
+void d99c60f5_printBox(char *message, const bool useDoubleLine);
 
 #endif /* ORG_DEVOPSBROKER_TERMINAL_ANSI_H */

@@ -58,9 +58,6 @@ section .bss                ; RESX directives
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ External Resources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-extern  malloc
-extern  abort
-
 extern  b196167f_addAll
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_compare ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

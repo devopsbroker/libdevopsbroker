@@ -53,7 +53,7 @@ const wchar_t doubleLineList[] = { L'╔', L'═', L'╗', L'║', L'╚', L'╝
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
-void d99c60f5_printBox(const char *message, const bool useDoubleLine) {
+void d99c60f5_printBox(char *message, const bool useDoubleLine) {
 	register const wchar_t *lineList = (useDoubleLine) ? doubleLineList : singleLineList;
 	register const uint32_t msgLength = f6215943_getLength(message) + 2;
 	wchar_t boxLine[msgLength + 1];

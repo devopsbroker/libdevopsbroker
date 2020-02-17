@@ -166,7 +166,7 @@ ssize_t e2f74138_readFile(const int fd, void *buffer, size_t count, const char *
 char *e2f74138_readlink(const char *pathName, const ssize_t fileSize) {
 	const ssize_t bufSize = (fileSize == 0) ? PATH_MAX : fileSize;
 
-	char *realPathName = f668c4bd_malloc_size_size(sizeof(char), bufSize + 1);
+	char *realPathName = f668c4bd_mallocArray(sizeof(char), bufSize + 1);
 
 	if (readlink(pathName, realPathName, bufSize) == SYSTEM_ERROR_CODE) {
 		StringBuilder *errorMessage = c598a24c_createStringBuilder();

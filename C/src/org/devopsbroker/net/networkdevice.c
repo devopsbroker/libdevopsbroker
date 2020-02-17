@@ -52,7 +52,7 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 NetworkDevice *f0185083_createNetworkDevice(char* deviceName) {
-	NetworkDevice *networkDevice = malloc(sizeof(NetworkDevice));
+	NetworkDevice *networkDevice = f668c4bd_malloc(sizeof(NetworkDevice));
 
 	networkDevice->name = deviceName;
 	networkDevice->index = 0;

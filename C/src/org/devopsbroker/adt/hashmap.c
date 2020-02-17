@@ -51,7 +51,7 @@ static uint32_t resize(HashMap *hashMap, const uint32_t hashCode);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 HashMap *c47905f7_createHashMap(uint32_t (*hashCode)(void *), bool (*equals)(void *, void *), uint32_t capacity) {
-	HashMap *hashMap = malloc(sizeof(HashMap));
+	HashMap *hashMap = f668c4bd_malloc(sizeof(HashMap));
 
 	// Calculate table length
 	hashMap->capacity = capacity;
@@ -61,7 +61,7 @@ HashMap *c47905f7_createHashMap(uint32_t (*hashCode)(void *), bool (*equals)(voi
 		hashMap->length++;
 	}
 
-	hashMap->table = f668c4bd_malloc_size_size(sizeof(MapEntry *), hashMap->length);
+	hashMap->table = f668c4bd_mallocArray(sizeof(MapEntry *), hashMap->length);
 
 	// Set hashCode and equals methods for the key
 	hashMap->hashCode = hashCode;
@@ -95,7 +95,7 @@ void c47905f7_initHashMap(HashMap *hashMap, uint32_t (*hashCode)(void *), bool (
 	}
 
 	// Create initialized memory block for table
-	hashMap->table = f668c4bd_malloc_size_size(sizeof(MapEntry *), hashMap->length);
+	hashMap->table = f668c4bd_mallocArray(sizeof(MapEntry *), hashMap->length);
 	f668c4bd_meminit(hashMap->table, sizeof(MapEntry *) * hashMap->length);
 
 	// Set hashCode and equals methods for the key
@@ -231,7 +231,7 @@ static uint32_t resize(HashMap *hashMap, const uint32_t hashCode) {
 		hashMap->length++;
 	}
 
-	hashMap->table = f668c4bd_malloc_size_size(sizeof(MapEntry *), hashMap->length);
+	hashMap->table = f668c4bd_mallocArray(sizeof(MapEntry *), hashMap->length);
 	f668c4bd_meminit(hashMap->table, sizeof(MapEntry *) * hashMap->length);
 
 	MapEntry *entry, *next;

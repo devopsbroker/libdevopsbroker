@@ -116,9 +116,9 @@ char *f6215943_concatenate(char *string, ...);
  * ----------------------------------------------------------------------------
  */
 static inline String *f6215943_createString(const size_t length) {
-	String *string = malloc(sizeof(String));
+	String *string = f668c4bd_malloc(sizeof(String));
 
-	string->value = f668c4bd_malloc_size_size(sizeof(char), length + 1);
+	string->value = f668c4bd_mallocArray(sizeof(char), length + 1);
 	string->length = length;
 
 	return string;
