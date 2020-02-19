@@ -45,6 +45,10 @@ typedef StringBuilder DirPath;
 
 static_assert(sizeof(DirPath) == 16, "Check your assumptions");
 
+typedef ListArray FilePathList;
+
+static_assert(sizeof(FilePathList) == 16, "Check your assumptions");
+
 typedef struct File {
 	char name[256];
 } File;
@@ -100,6 +104,15 @@ DirPath *d0059b5b_createDirPath(char *path);
 File *d0059b5b_createFile(char *name);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    d0059b5b_createFilePathList
+ * Description: Creates a FilePathList struct instance
+ *
+ * Returns:     A FilePathList struct instance
+ * ----------------------------------------------------------------------------
+ */
+FilePathList *d0059b5b_createFilePathList();
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    d0059b5b_destroyDirectory
  * Description: Frees the memory allocated to the Directory struct pointer
  *
@@ -129,6 +142,16 @@ void d0059b5b_destroyDirPath(DirPath *dirPath);
  */
 void d0059b5b_destroyFile(File *file);
 
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    d0059b5b_destroyFilePathList
+ * Description: Frees the memory allocated to the FilePathList struct pointer
+ *
+ * Parameters:
+ *   filePathList	A pointer to the FilePathList instance to destroy
+ * ----------------------------------------------------------------------------
+ */
+void d0059b5b_destroyFilePathList(FilePathList *filePathList);
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
@@ -152,6 +175,16 @@ void d0059b5b_cleanUpDirectory(Directory *directory);
 void d0059b5b_cleanUpDirPath(DirPath *dirPath);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    d0059b5b_cleanUpFilePathList
+ * Description: Frees dynamically allocated memory within the FilePathList instance
+ *
+ * Parameters:
+ *   filePathList	A pointer to the FilePathList instance to clean up
+ * ----------------------------------------------------------------------------
+ */
+void d0059b5b_cleanUpFilePathList(FilePathList *filePathList);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    d0059b5b_initDirectory
  * Description: Initializes an existing Directory struct
  *
@@ -173,6 +206,16 @@ void d0059b5b_initDirectory(Directory *directory, char *name);
  */
 void d0059b5b_initDirPath(DirPath *dirPath, char *path);
 
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    d0059b5b_initFilePathList
+ * Description: Initializes an existing FilePathList struct
+ *
+ * Parameters:
+ *   filePathList	A pointer to the FilePathList instance to initalize
+ * ----------------------------------------------------------------------------
+ */
+void d0059b5b_initFilePathList(FilePathList *filePathList);
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
@@ -189,6 +232,20 @@ void d0059b5b_initDirPath(DirPath *dirPath, char *path);
 void d0059b5b_listContents(Directory *directory, DirPath *dirPath, bool isRecursive);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    d0059b5b_find
+ * Description: Searches for files in a directory hierarchy starting from the
+ *              DirPath instance
+ *
+ * Parameters:
+ *   filePathList   A pointer to the FilePathList instance to populate
+ *   dirPath        A pointer of the DirPath to search
+ *   isMatch        A function pointer to the logic that determines whether a
+ *                  filename is a match or not
+ * ----------------------------------------------------------------------------
+ */
+void d0059b5b_find(FilePathList *filePathList, DirPath *dirPath, bool isMatch(char *filename));
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    d0059b5b_printDirectory
  * Description: Prints the Directory instance with the list of its contents
  *
@@ -198,5 +255,15 @@ void d0059b5b_listContents(Directory *directory, DirPath *dirPath, bool isRecurs
  * ----------------------------------------------------------------------------
  */
 void d0059b5b_printDirectory(Directory *directory, DirPath *dirPath);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    d0059b5b_printFilePathList
+ * Description: Prints the FilePathList instance
+ *
+ * Parameters:
+ *   filePathList   A pointer to the FilePathList instance to print
+ * ----------------------------------------------------------------------------
+ */
+void d0059b5b_printFilePathList(FilePathList *filePathList);
 
 #endif /* ORG_DEVOPSBROKER_FS_DIRECTORY_H */

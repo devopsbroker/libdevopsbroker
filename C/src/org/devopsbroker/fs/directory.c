@@ -39,6 +39,7 @@
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
 #define DIRPATH_BUFFER 64
+#define FILEPATHLIST_SIZE 64
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -53,6 +54,8 @@ static void addFile(Directory *directory, File *file);
 
 static int compareDirectory(void *first, void *second);
 static int compareFile(void *first, void *second);
+
+static void readDirectory(Directory *directory, DirPath *dirPath);
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
@@ -90,6 +93,16 @@ File *d0059b5b_createFile(char *name) {
 	return file;
 }
 
+FilePathList *d0059b5b_createFilePathList() {
+	FilePathList *filePathList = f668c4bd_malloc(sizeof(FilePathList));
+
+	filePathList->values = f668c4bd_mallocArray(sizeof(void*), FILEPATHLIST_SIZE);
+	filePathList->size = FILEPATHLIST_SIZE;
+	filePathList->length = 0;
+
+	return filePathList;
+}
+
 void d0059b5b_destroyDirectory(Directory *directory) {
 	// Clean up the subdirectory list
 	for (int i=0; i < directory->subdirList.length; i++) {
@@ -117,6 +130,11 @@ void d0059b5b_destroyFile(File *file) {
 	free(file);
 }
 
+void d0059b5b_destroyFilePathList(FilePathList *filePathList) {
+	b196167f_destroyAllElements(filePathList);
+	b196167f_destroyListArray(filePathList);
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void d0059b5b_cleanUpDirectory(Directory *directory) {
@@ -137,13 +155,16 @@ void d0059b5b_cleanUpDirPath(DirPath *dirPath) {
 	free(dirPath->buffer);
 }
 
+void d0059b5b_cleanUpFilePathList(FilePathList *filePathList) {
+	free(filePathList->values);
+}
+
 void d0059b5b_initDirectory(Directory *directory, char *name) {
 	// Copy directory name into directory->name
 	f6215943_copy(name, directory->name);
 
-	// Initialize the subdirectory list and file list
-	b196167f_initListArray(&directory->subdirList);
-	b196167f_initListArray(&directory->fileList);
+	// Lazy init the subdirectory list and file list later
+	f668c4bd_meminit(&directory->subdirList, sizeof(ListArray) * 2);
 }
 
 void d0059b5b_initDirPath(DirPath *dirPath, char *path) {
@@ -153,83 +174,83 @@ void d0059b5b_initDirPath(DirPath *dirPath, char *path) {
 	f6215943_copyToBuffer(path, dirPath->buffer, dirPath->size);
 }
 
+void d0059b5b_initFilePathList(FilePathList *filePathList) {
+	filePathList->values = f668c4bd_mallocArray(sizeof(void*), FILEPATHLIST_SIZE);
+	filePathList->size = FILEPATHLIST_SIZE;
+	filePathList->length = 0;
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void d0059b5b_listContents(Directory *directory, DirPath *dirPath, bool isRecursive) {
-	DIR *dirStream;
-	struct dirent *dirEntry;
+	// 1. Read the contents of the directory
+	readDirectory(directory, dirPath);
 
-	// 1. Open directory
-	dirStream = opendir(dirPath->buffer);
+	// 2. Search recursively, if necessary
+	c598a24c_append_char(dirPath, '/');
+	uint32_t dirPathLen = dirPath->length;
 
-	if (dirStream == NULL) {
-		StringBuilder errorMessage;
-		c598a24c_initStringBuilder(&errorMessage);
-
-		c598a24c_append_string(&errorMessage, "Cannot open directory stream for path '");
-		c598a24c_append_string(&errorMessage, dirPath->buffer);
-		c598a24c_append_char(&errorMessage, '\'');
-
-		c7c88e52_printLibError(errorMessage.buffer, errno);
-		c598a24c_destroyStringBuilder(&errorMessage);
-		abort();
-	} else {
-		// 2. Read the contents of the directory
+	if (isRecursive && directory->subdirList.length > 0) {
 		Directory *subdir;
-		File *file;
-		errno = 0;
 
-		do {
-			dirEntry = readdir(dirStream);
+		for (uint32_t i=0; i < directory->subdirList.length; i++) {
+			subdir = directory->subdirList.values[i];
 
-			if (dirEntry == NULL) {
-				if (errno == 0) {
-					break;
-				}
-
-				c7c88e52_printLibError("Cannot read directory entry", errno);
-				abort();
-			}
-
-			// TODO: Handle symbolic links properly
-			if (dirEntry->d_type == DT_DIR) {
-				if ((dirEntry->d_name[0] == '.' && dirEntry->d_name[1] == '\0')
-					|| (dirEntry->d_name[0] == '.' && dirEntry->d_name[1] == '.' && dirEntry->d_name[2] == '\0')) {
-					// Skip the current directory and previous directory
-				} else {
-					subdir = d0059b5b_createDirectory(dirEntry->d_name);
-					addSubdir(directory, subdir);
-				}
-			} else if (dirEntry->d_type == DT_REG) {
-				file = d0059b5b_createFile(dirEntry->d_name);
-				addFile(directory, file);
-			}
-		} while(true);
-
-		if (closedir(dirStream) == SYSTEM_ERROR_CODE) {
-			c7c88e52_printLibError("Cannot close directory stream", errno);
-			abort();
+			c598a24c_append_string(dirPath, subdir->name);
+			d0059b5b_listContents(subdir, dirPath, isRecursive);
+			c598a24c_reduceLength(dirPath, dirPathLen);
 		}
+	}
 
-		// 3. Sort the subdirectory list and file list
-		b196167f_sort(&directory->subdirList, compareDirectory);
-		b196167f_sort(&directory->fileList, compareFile);
+	c598a24c_reduceLength(dirPath, dirPathLen - 1);
+}
 
-		// 4. Search recursively, if necessary
-		if (isRecursive && directory->subdirList.length > 0) {
-			Directory *subdir;
-			uint32_t dirPathLen = dirPath->length + 1;
+void d0059b5b_find(FilePathList *filePathList, DirPath *dirPath, bool isMatch(char *filename)) {
+	Directory currentDir;
 
-			c598a24c_append_char(dirPath, '/');
-			for (uint32_t i=0; i < directory->subdirList.length; i++) {
-				subdir = directory->subdirList.values[i];
+	// 1. Read the contents of the directory
+	d0059b5b_initDirectory(&currentDir, dirPath->buffer);
+	readDirectory(&currentDir, dirPath);
 
-				c598a24c_append_string(dirPath, subdir->name);
-				d0059b5b_listContents(subdir, dirPath, isRecursive);
-				c598a24c_reduceLength(dirPath, dirPathLen);
+	c598a24c_append_char(dirPath, '/');
+	uint32_t dirPathLen = dirPath->length;
+
+	// 2. Search recursively, if necessary
+	if (currentDir.subdirList.length > 0) {
+		Directory *subdir;
+
+		for (uint32_t i=0; i < currentDir.subdirList.length; i++) {
+			subdir = currentDir.subdirList.values[i];
+
+			c598a24c_append_string(dirPath, subdir->name);
+			d0059b5b_find(filePathList, dirPath, isMatch);
+			c598a24c_reduceLength(dirPath, dirPathLen);
+		}
+	}
+
+	// 3. Find files in the current directory that match the expression
+	if (currentDir.fileList.length > 0) {
+		File *file;
+		char *filePath;
+
+		for (uint32_t i=0; i < currentDir.fileList.length; i++) {
+			file = currentDir.fileList.values[i];
+
+			if (isMatch(file->name)) {
+				filePath = c598a24c_createString(dirPath, file->name);
+
+				// Lazy init the FilePathList
+				if (filePathList == NULL) {
+					filePathList = d0059b5b_createFilePathList();
+				}
+
+				b196167f_add(filePathList, filePath);
 			}
 		}
 	}
+
+	c598a24c_reduceLength(dirPath, dirPathLen - 1);
+	d0059b5b_cleanUpDirectory(&currentDir);
 }
 
 void d0059b5b_printDirectory(Directory *directory, DirPath *dirPath) {
@@ -266,6 +287,12 @@ void d0059b5b_printDirectory(Directory *directory, DirPath *dirPath) {
 	}
 }
 
+void d0059b5b_printFilePathList(FilePathList *filePathList) {
+	for (uint32_t i=0; i < filePathList->length; i++) {
+		puts(filePathList->values[i]);
+	}
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Static Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 static void addSubdir(Directory *directory, Directory *subdir) {
@@ -292,4 +319,65 @@ static int compareDirectory(void *first, void *second) {
 
 static int compareFile(void *first, void *second) {
 	return f6215943_compare(((File *)first)->name, ((File *)second)->name);
+}
+
+static void readDirectory(Directory *directory, DirPath *dirPath) {
+	DIR *dirStream;
+	struct dirent *dirEntry;
+	Directory *subdir;
+	File *file;
+	errno = 0;
+
+	// 1. Open directory
+	dirStream = opendir(dirPath->buffer);
+
+	// 2. Read the contents of the directory
+	if (dirStream == NULL) {
+		StringBuilder errorMessage;
+		c598a24c_initStringBuilder(&errorMessage);
+
+		c598a24c_append_string(&errorMessage, "Cannot open directory stream for path '");
+		c598a24c_append_string(&errorMessage, dirPath->buffer);
+		c598a24c_append_char(&errorMessage, '\'');
+
+		c7c88e52_printLibError(errorMessage.buffer, errno);
+		c598a24c_destroyStringBuilder(&errorMessage);
+		abort();
+	} else {
+		do {
+			dirEntry = readdir(dirStream);
+
+			if (dirEntry == NULL) {
+				if (errno == 0) {
+					break;
+				}
+
+				c7c88e52_printLibError("Cannot read directory entry", errno);
+				abort();
+			}
+
+			// TODO: Handle symbolic links properly
+			if (dirEntry->d_type == DT_DIR) {
+				if ((dirEntry->d_name[0] == '.' && dirEntry->d_name[1] == '\0')
+					|| (dirEntry->d_name[0] == '.' && dirEntry->d_name[1] == '.' && dirEntry->d_name[2] == '\0')) {
+					// Skip the current directory and previous directory
+				} else {
+					subdir = d0059b5b_createDirectory(dirEntry->d_name);
+					addSubdir(directory, subdir);
+				}
+			} else if (dirEntry->d_type == DT_REG) {
+				file = d0059b5b_createFile(dirEntry->d_name);
+				addFile(directory, file);
+			}
+		} while(true);
+
+		if (closedir(dirStream) == SYSTEM_ERROR_CODE) {
+			c7c88e52_printLibError("Cannot close directory stream", errno);
+			abort();
+		}
+
+		// 3. Sort the subdirectory list and file list
+		b196167f_sort(&directory->subdirList, compareDirectory);
+		b196167f_sort(&directory->fileList, compareFile);
+	}
 }
