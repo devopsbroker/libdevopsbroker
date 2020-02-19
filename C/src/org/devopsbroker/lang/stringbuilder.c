@@ -36,6 +36,7 @@
 #include "integer.h"
 #include "long.h"
 #include "memory.h"
+#include "string.h"
 #include "stringbuilder.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
@@ -302,6 +303,26 @@ void c598a24c_append_string_uint32(register StringBuilder *strBuilder, register 
 	}
 
 	*target = '\0';
+}
+
+char *c598a24c_createString(StringBuilder *strBuilder, char *suffix) {
+	char *string = NULL;
+
+	if (strBuilder->length > 0) {
+		if (suffix == NULL) {
+			string = f668c4bd_stralloc(strBuilder->length);
+			f6215943_copy(strBuilder->buffer, string);
+		} else {
+			uint32_t origLength = strBuilder->length;
+
+			c598a24c_append_string(strBuilder, suffix);
+			string = f668c4bd_stralloc(strBuilder->length);
+			f6215943_copy(strBuilder->buffer, string);
+			c598a24c_reduceLength(strBuilder, origLength);
+		}
+	}
+
+	return string;
 }
 
 void c598a24c_reduceLength(StringBuilder *strBuilder, uint32_t newLength) {

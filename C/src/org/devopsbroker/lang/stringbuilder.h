@@ -253,6 +253,18 @@ void c598a24c_append_stringArray(StringBuilder *strBuilder, char *const array[])
 void c598a24c_append_string_uint32(StringBuilder *strBuilder, const char *source, const uint32_t length);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    c598a24c_createString
+ * Description: Generates a new char* string from the internal buffer and the
+ *              char* string suffix parameter
+ *
+ * Parameters:
+ *   strBuilder     A pointer to the StringBuilder instance
+ *   suffix         The suffix to append to the new string, NULL is acceptable
+ * ----------------------------------------------------------------------------
+ */
+char *c598a24c_createString(StringBuilder *strBuilder, char *suffix);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    c598a24c_reduceLength
  * Description: Reduces the length of the StringBuilder instance to newLength
  *
