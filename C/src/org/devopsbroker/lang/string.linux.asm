@@ -26,6 +26,7 @@
 ;   o char *f6215943_copy(char *source, uint32_t length);
 ;   o void f6215943_copyToBuffer(char *source, char *buffer, uint32_t numBytes);
 ;   o bool f6215943_endsWith(const char *pattern, char *text);
+;   o char *f6215943_findLastChar(char *string, char ch);
 ;   o uint32_t f6215943_getLength(char *string);
 ;   o uint32_t f6215943_hashCode(const char *string);
 ;   o bool f6215943_isEqual(char *foo, char *bar);
@@ -324,6 +325,47 @@ f6215943_endsWith:
 
 .returnTrue:
 	inc        al                     ; set return value to true
+
+.epilogue:
+	ret                               ; pop return address from stack and jump there
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_findLastChar ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f6215943_findLastChar:function
+f6215943_findLastChar:
+; Parameters:
+;	rdi : char *string
+;	rsi : char ch
+; Local Variables:
+;	dl  :
+;	cl  : loop counter
+;	r8  : 64-bit character buffer
+
+.prologue:                            ; functions typically have a prologue
+	xor        rax, rax               ; set return value to NULL
+	mov        cl, 0x08               ; initialize loop counter
+
+	test       rdi, rdi               ; if (string == NULL)
+	jz         .epilogue
+
+	mov        r8, [rdi]              ; load eight characters from string into r8
+
+.whileString:
+	test       r8b, r8b               ; if (string[i] == '\0')
+	jz         .epilogue
+
+	xor        r8b, sil               ; if (string[i] == ch)
+	cmove      rax, rdi
+
+	shr        r8, 8                  ; buffer++
+	inc        rdi                    ; string++
+	dec        cl                     ; loop counter--
+	jnz        .whileString
+
+.manageCharBuffer:
+	mov        r8, [rdi]              ; load eight characters from string into r8
+	mov        cl, 0x08               ; set loop counter = 8
+	jmp        .whileString
 
 .epilogue:
 	ret                               ; pop return address from stack and jump there

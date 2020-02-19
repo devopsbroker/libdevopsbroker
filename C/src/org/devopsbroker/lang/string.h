@@ -174,6 +174,20 @@ static inline void f6215943_destroyString(String *string) {
 bool f6215943_endsWith(const char *pattern, char *text);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f6215943_findLastChar
+ * Description: Returns a pointer to the last occurence of the character, or
+ *              NULL if not found
+ *
+ * Parameters:
+ *   string     The char* instance to examine
+ *   ch         The character to find in the string
+ * Returns:     A pointer to the last occurence of the character, or NULL if
+ *              not found
+ * ----------------------------------------------------------------------------
+ */
+char *f6215943_findLastChar(char *string, char ch);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f6215943_getLength
  * Description: Determines the length of the char* contents
  *
