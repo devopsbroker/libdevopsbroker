@@ -123,7 +123,7 @@ f668c4bd_mallocArray:
 	call       aligned_alloc WRT ..plt
 
 	test       rax, rax               ; if (ptr == NULL)
-	je         .fatalError
+	jz         .fatalError
 
 .epilogue:                            ; functions typically have an epilogue
 	add        rsp, 8                 ; re-align stack frame before return
@@ -409,20 +409,29 @@ f668c4bd_resizeArray:
 f668c4bd_stralloc:
 ; Parameters:
 ;	rdi : size_t size
+;	    : size_t alignment parameter for aligned_alloc
 ; Local Variables:
-;	rax : void *ptr
+;	rsi : size_t size parameter for aligned_alloc
+; Notes:
+;   I always want an extra 16-byte block when the value is a multiple of 16
+;   which is why I calculate the aligned_alloc size parameter the way I do
 
 .prologue:                            ; functions typically have a prologue
-	sub        rsp, 8                 ; align stack frame before calling malloc()
+	sub        rsp, 8                 ; align stack frame before calling aligned_alloc()
+	mov        rsi, rdi               ; set size parameter for aligned_alloc
+	mov        edi, 0x10              ; set alignment parameter for aligned_alloc
 
-.malloc:
-	shr        rdi, 3                 ; size = ((size / 8) + 1) * 8
-	inc        rdi
-	shl        rdi, 3
-	call       malloc WRT ..plt
+.calcAllocSize:                       ; size must be a multiple of 16-byte alignment
+	shr        rsi, 4                 ; size = ((size / 16) + 1) * 16
+	inc        rsi
+	shl        rsi, 4
+	jz         .fatalError            ; fatal error if overflow
+
+.aligned_alloc:
+	call       aligned_alloc WRT ..plt
 
 	test       rax, rax               ; if (ptr == NULL)
-	je         .fatalError
+	jz         .fatalError
 
 .epilogue:                            ; functions typically have an epilogue
 	add        rsp, 8                 ; re-align stack frame before return
