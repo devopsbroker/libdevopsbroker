@@ -248,41 +248,38 @@ b196167f_destroyAllElements:
 ; Parameters:
 ;	rdi : ListArray *listArray
 ; Local Variables:
-;	rsi : listArray->values
-;	rdx : listArray->length
+;	r12  : listArray->values
+;	r13d : listArray->length
+;	r14d : loop counter
 
 .prologue:                            ; functions typically have a prologue
-	mov        rsi, [rdi]             ; load listArray->values into rsi
-	mov        edx, [rdi+8]           ; load listArray->length into edx
+	push       r12                    ; preserve r12 register
+	push       r13                    ; preserve r13 register
+	push       r14                    ; preserve r14 register
 
-	test       edx, edx               ; if (listArray->length == 0)
-	jz         .emptyListArray
+	mov        r12, [rdi]             ; load listArray->values into r12
+	mov        r13d, [rdi+8]          ; load listArray->length into r13d
+	xor        r14, r14               ; set loop counter to zero
+	prefetcht0 [r12]                  ; prefetch listArray->values into the CPU cache
 
-	sub        rsp, 8                 ; align stack frame before calling free()
+	test       r13d, r13d             ; if (listArray->length == 0)
+	jz         .epilogue
 
-.whileData:
-	lodsq                             ; load quadword from listArray->values
-	dec        edx                    ; listArray->length--
+	mov        [rdi+8], r14           ; set listArray->length to zero
 
-.free:                                ; free(listArray->values[i])
-	push       rsi                    ; save listArray->values
-	push       rdx                    ; save listArray->length
+.freeData:
+	mov        rdi, [r12 + 8*r14]     ; copy qword from listArray->values address into rdi
 
-	mov        rdi, rax
-	call       free WRT ..plt
+	call       free WRT ..plt         ; free(listArray->values[i])
 
-	pop        rdx                    ; retrieve listArray->length
-	pop        rsi                    ; retrieve listArray->values
-
-	test       edx, edx               ; if (listArray->length != 0)
-	jnz        .whileData
+	inc        r14                    ; loopCounter++
+	dec        r13d                   ; listArray->length--
+	jnz        .freeData
 
 .epilogue:
-	add        rsp, 8                 ; unalign stack frame after calling free()
-	mov        [rdi+8], edx           ; save listArray->length
-	ret                               ; pop return address from stack and jump there
-
-.emptyListArray:
+	pop        r14                    ; restore r14 register
+	pop        r13                    ; restore r13 register
+	pop        r12                    ; restore r12 register
 	ret                               ; pop return address from stack and jump there
 
 ; ═════════════════════════════ Private Routines ═════════════════════════════
