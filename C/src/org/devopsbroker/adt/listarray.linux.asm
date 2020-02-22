@@ -1,7 +1,7 @@
 ;
 ; listarray.linux.asm - DevOpsBroker NASM file for the ListArray struct
 ;
-; Copyright (C) 2019 Edward Smith <edwardsmith@devopsbroker.org>
+; Copyright (C) 2019-2020 Edward Smith <edwardsmith@devopsbroker.org>
 ;
 ; This program is free software: you can redistribute it and/or modify it under
 ; the terms of the GNU General Public License as published by the Free Software
@@ -24,6 +24,7 @@
 ;
 ;   o void b196167f_add(ListArray *listArray, void *element);
 ;   o void b196167f_addAll(ListArray *listArray, void **elementArray, uint32_t numElements);
+;   o void b196167f_addFromStack(ListArray *listArray, void *stack, uint32_t numElements);
 ;   o void b196167f_destroyAllElements(ListArray *listArray);
 ; -----------------------------------------------------------------------------
 ;
@@ -66,6 +67,9 @@ b196167f_add:
 ;	rcx : listArray->values
 
 .prologue:                            ; functions typically have a prologue
+	test       rdi, rdi               ; if (listArray == NULL)
+	jz         .epilogue
+
 	test       rsi, rsi               ; if (element == NULL)
 	jz         .epilogue
 
