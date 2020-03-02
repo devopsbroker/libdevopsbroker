@@ -47,11 +47,99 @@
 // sys/stat.h
 typedef struct stat FileStatus;
 
+/*
+ * File Access Modes
+ *   - O_RDONLY       Open file as read-only
+ *   - O_RDWR         Open file as read-write
+ *   - O_WRONLY       Open file as write-only
+ */
 typedef enum FileAccessMode {                                       // open(2)
-	MODE_READONLY = O_RDONLY,    // Open file as read-only
-	MODE_WRITEONLY = O_WRONLY,   // Open file as write-only
-	MODE_READWRITE = O_RDWR      // Open file as read-write
+	FOPEN_READONLY = O_RDONLY,
+	FOPEN_READWRITE = O_RDWR,
+	FOPEN_WRITEONLY = O_WRONLY
 } FileAccessMode;
+
+/*
+ * File Creation Flags
+ *   - O_CLOEXEC      Enable the close-on-exec flag for the new file descriptor
+ *   - O_CREAT        If pathname does not exist, create it as a regular file
+ *   - O_DIRECTORY    If pathname is not a directory, cause the open to fail
+ *   - O_EXCL         Ensure that this call creates the file; used with O_CREAT
+ *   - O_NOCTTY       If pathname refers to a terminal device, don't become
+ *                    process's controlling terminal
+ *   - O_NOFOLLOW     If pathname is a symbolic link, then open fails with the
+ *                    error ELOOP
+ *   - O_TMPFILE      Create an unnamed temporary regular file
+ *   - O_TRUNC        If the file already exists and is a regular file and the
+ *                    access mode allows writing (i.e., is O_RDWR or O_WRONLY)
+ *                    it will be truncated to length 0
+ */
+typedef enum FileCreationFlag {                                     // open(2)
+	FCREAT_CLOEXEC = O_CLOEXEC,
+	FCREAT_CREATE = O_CREAT,
+	FCREAT_DIRECTORY = O_DIRECTORY,
+	FCREAT_FAIL_ON_EXIST = O_EXCL,
+	FCREAT_NOCTTY = O_NOCTTY,
+	FCREAT_NOFOLLOW = O_NOFOLLOW,
+	FCREAT_TMPFILE = O_TMPFILE,
+	FCREAT_TRUNC = O_TRUNC
+} FileCreationFlag;
+
+/*
+ * File Status Flags
+ *   - O_APPEND       The file is opened in append mode
+ *   - O_ASYNC        Enable signal-driven I/O; only available for terminals,
+ *                    pseudoterminals, sockets, pipes and FIFOs
+ *   - O_DIRECT       Minimize cache effects of the I/O to and from this file.
+ *                    File I/O is done directly to/from user-space buffers. The
+ *                    O_DIRECT flag on its own makes an effort to transfer data
+ *                    synchronously, but does not give the guarantees of the
+ *                    O_SYNC flag that data and necessary metadata are
+ *                    transferred. To guarantee synchronous I/O, O_SYNC must be
+ *                    used in addition to O_DIRECT.
+ *   - O_DSYNC        Write operations on the file will complete according to
+ *                    the requirements of synchronized I/O data integrity
+ *                    completion. Same as though each write(2) was followed by
+ *                    a call to fdatasync(2).
+ *   - O_LARGEFILE    Allow files whose sizes cannot be represented in an off_t
+ *                    (but can be represented in an off64_t) to be opened. The
+ *                    _LARGEFILE64_SOURCE macro must be defined (before
+ *                    including any header files) in order to obtain this
+ *                    definition. Setting the _FILE_OFFSET_BITS feature test
+ *                    macro to 64 (rather than using O_LARGEFILE) is the
+ *                    preferred method of accessing large files on 32-bit
+ *                    systems.
+ *   - O_NOATIME      Do not update the file last access time (st_atime in the
+ *                    inode) when the file is read(2).
+ *   - O_NONBLOCK     The file is opened in nonblocking mode. This flag has no
+ *                    effect on the operation of poll(2), select(2), epoll(7),
+ *                    and similar.
+ *   - O_PATH         Obtain a file descriptor that can be used for two
+ *                    purposes: to indicate a location in the filesystem tree
+ *                    and to perform operations that act purely at the file
+ *                    descriptor level. The file itself is not opened, and the
+ *                    file operations read(2), write(2), fchmod(2), fchown(2),
+ *                    fgetxattr(2), ioctl(2), mmap(2) fail with the error
+ *                    EBADF. The operations close(2), fchdir(2), fstat(2),
+ *                    fstatfs(2), dup(2), fcntl(2) F_DUPFD, fcntl(2) F_GETFD
+ *                    and F_SETFD, fcntl(2) F_GETFL can be performed on the
+ *                    resulting file descriptor
+ *   - O_SYNC         Write operations on the file will complete according to
+ *                    the requirements of synchronized I/O file integrity
+ *                    completion. Same as though each write(2) was followed by
+ *                    a call to fsync(2).
+ */
+typedef enum FileStatusFlag {                                     // open(2)
+	FSTATUS_APPEND = O_APPEND,
+	FSTATUS_ASYNC = O_ASYNC,
+	FSTATUS_DIRECT = O_DIRECT,
+	FSTATUS_DSYNC = O_DSYNC,
+	FSTATUS_LARGEFILE = O_LARGEFILE,
+	FSTATUS_NOATIME = O_NOATIME,
+	FSTATUS_NONBLOCK = O_NONBLOCK,
+	FSTATUS_PATH = O_PATH,
+	FSTATUS_SYNC = O_SYNC
+} FileStatusFlag;
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
