@@ -59,6 +59,8 @@
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 int e2f74138_openFile(const char *pathName, const int flags) {
 	const int fd = open(pathName, flags);
 
@@ -218,4 +220,23 @@ char *e2f74138_realpath(const char *pathName) {
 	}
 
 	return realPathName;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Error Handling Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+void e2f74138_printOpenError(char *pathName, int errorNum) {
+	if (errorNum == EISDIR) {
+		c7c88e52_printLibError(pathName, errorNum);
+	} else {
+		StringBuilder errorMessage;
+
+		c598a24c_initStringBuilder(&errorMessage);
+
+		c598a24c_append_string(&errorMessage, "Cannot open '");
+		c598a24c_append_string(&errorMessage, pathName);
+		c598a24c_append_char(&errorMessage, '\'');
+
+		c7c88e52_printLibError(errorMessage.buffer, errorNum);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
+	}
 }
