@@ -24,6 +24,7 @@
 ;
 ;   o void *f668c4bd_malloc(size_t size);
 ;   o void *f668c4bd_mallocArray(size_t typeSize, size_t numBlocks);
+;   o void *f668c4bd_mallocFlexibleStruct(size_t structSize, size_t typeSize, size_t numBlocks);
 ;   o void f668c4bd_memcopy(void *source, void *dest, size_t numBytes);
 ;   o void f668c4bd_meminit(void *ptr, size_t size);
 ;   o void *f668c4bd_realloc(void *ptr, size_t origSize, size_t newSize);
@@ -120,6 +121,54 @@ f668c4bd_mallocArray:
 
 .aligned_alloc:
 	inc        dil                    ; alignment++
+	call       aligned_alloc WRT ..plt
+
+	test       rax, rax               ; if (ptr == NULL)
+	jz         .fatalError
+
+.epilogue:                            ; functions typically have an epilogue
+	add        rsp, 8                 ; re-align stack frame before return
+	ret                               ; pop return address from stack and jump there
+
+.fatalError:
+	call       abort WRT ..plt
+
+; ~~~~~~~~~~~~~~~~~~~~~~~ f668c4bd_mallocFlexibleStruct ~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f668c4bd_mallocFlexibleStruct:function
+f668c4bd_mallocFlexibleStruct:
+; Parameters:
+;	rdi : size_t structSize
+;	      alignment parameter for aligned_alloc
+;	rsi : size_t typeSize
+;	      size parameter for aligned_alloc
+;	rdx : size_t numBlocks
+;	      high-quadword destination for mul
+; Local Variables:
+;	rax : source 1 for mul operation
+;	      low-quadword destination for mul
+
+.prologue:                            ; functions typically have a prologue
+	sub        rsp, 8                 ; align stack frame before calling aligned_alloc()
+
+.calcAllocSize:                       ; size must be a multiple of 16-byte alignment
+	mov        rax, rsi               ; set mul source 1 to typeSize
+
+	mul        rdx                    ; allocSize = (typeSize * numBlocks)
+	jo         .fatalError            ; fatal error if overflow
+
+	add        rax, rdi               ; allocSize += structSize
+	jo         .fatalError            ; fatal error if overflow
+
+	mov        edi, 0x0F              ; size = ((size + 15) / 16) * 16
+	add        rax, rdi
+	jo         .fatalError            ; fatal error if overflow
+	shr        rax, 4
+	shl        rax, 4
+
+.aligned_alloc:
+	inc        dil                    ; alignment = 16
+	mov        rsi, rax               ; rsi = 16-byte aligned size
 	call       aligned_alloc WRT ..plt
 
 	test       rax, rax               ; if (ptr == NULL)

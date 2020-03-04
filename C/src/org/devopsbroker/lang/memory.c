@@ -33,6 +33,7 @@
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
+#define F668C4BD_MEMORY_ALIGNMENT 16
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -58,6 +59,8 @@ static void printErrorMessage(register const size_t size) {
 
 
 // ═════════════════════════ Function Implementations ═════════════════════════
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void f668c4bd_free(void *ptr) {
 	if (malloc_usable_size(ptr) > 0) {

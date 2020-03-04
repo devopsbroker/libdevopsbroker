@@ -40,6 +40,8 @@
 
 // ═══════════════════════════ Function Declarations ══════════════════════════
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f668c4bd_free
  * Description: Performs the free() operation *only* on pointers with space to free
@@ -73,6 +75,21 @@ void *f668c4bd_malloc(size_t size);
  * ----------------------------------------------------------------------------
  */
 void *f668c4bd_mallocArray(size_t typeSize, size_t numBlocks);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f668c4bd_mallocFlexibleStruct
+ * Description: Performs a 16-byte aligned malloc() operation using the struct
+ *              size, the flexible array member type size, and the number of
+ *              blocks to allocate
+ *
+ * Parameters:
+ *   structSize     The size of the struct being allocated (using sizeof())
+ *   typeSize       The size of the flexible array type (using sizeof())
+ *   numBlocks      The number of blocks of the flexible array type to allocate
+ * Returns:         A pointer to the allocated memory block
+ * ----------------------------------------------------------------------------
+ */
+void *f668c4bd_mallocFlexibleStruct(size_t structSize, size_t typeSize, size_t numBlocks);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f668c4bd_memcopy
