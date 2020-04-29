@@ -54,6 +54,7 @@ static void tearDownTesting(ListArray *listArray);
 static void testAdd(ListArray *listArray);
 static void testAddAll(ListArray *listArray);
 static void testAddFromStack(ListArray *listArray);
+static void testEnsureCapacity(ListArray *listArray);
 static void testLast(ListArray *listArray);
 
 // ══════════════════════════════════ main() ══════════════════════════════════
@@ -64,6 +65,7 @@ int main(int argc, char *argv[]) {
 	testAdd(&listArray);
 	testAddAll(&listArray);
 	testAddFromStack(&listArray);
+	testEnsureCapacity(&listArray);
 	testLast(&listArray);
 
 	tearDownTesting(&listArray);
@@ -87,7 +89,7 @@ static void setupTesting(ListArray *listArray) {
 static void tearDownTesting(ListArray *listArray) {
 	printTestName("b196167f_clear");
 	b196167f_clear(listArray);
-	positiveTestInt("  ListArray size = 25\t\t\t\t", 25, listArray->size);
+	positiveTestInt("  ListArray size = 32\t\t\t\t", 32, listArray->size);
 	positiveTestInt("  ListArray length = 0\t\t\t\t", 0, listArray->length);
 
 	b196167f_cleanUpListArray(listArray);
@@ -166,6 +168,21 @@ static void testAddFromStack(ListArray *listArray) {
 	positiveTestVoid("  b196167f_get(listArray, 14) = test\t\t", "test", b196167f_get(listArray, 14));
 	positiveTestVoid("  b196167f_get(listArray, 15) = cmp\t\t", "cmp", b196167f_get(listArray, 15));
 	positiveTestVoid("  b196167f_get(listArray, 16) = shr\t\t", "shr", b196167f_get(listArray, 16));
+
+	printf("\n");
+}
+
+static void testEnsureCapacity(ListArray *listArray) {
+	printTestName("b196167f_ensureCapacity");
+	puts("  b196167f_ensureCapacity(listArray, 12)..."); b196167f_ensureCapacity(listArray, 12);
+	printf("\n");
+	positiveTestInt("  ListArray size = 25\t\t\t\t", 25, listArray->size);
+	positiveTestInt("  ListArray length = 17\t\t\t\t", 17, listArray->length);
+	printf("\n");
+	puts("  b196167f_ensureCapacity(listArray, 26)..."); b196167f_ensureCapacity(listArray, 26);
+	printf("\n");
+	positiveTestInt("  ListArray size = 32\t\t\t\t", 32, listArray->size);
+	positiveTestInt("  ListArray length = 17\t\t\t\t", 17, listArray->length);
 
 	printf("\n");
 }

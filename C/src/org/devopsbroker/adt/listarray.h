@@ -172,6 +172,18 @@ void b196167f_addFromStack(ListArray *listArray, void *stack, uint32_t numElemen
 void b196167f_clear(ListArray *listArray);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b196167f_ensureCapacity
+ * Description: Makes sure the ListArray can hold at least as many elements as
+ *              specified
+ *
+ * Parameters:
+ *   listArray  A pointer to the ListArray instance
+ *   capacity   The requested capacity
+ * ----------------------------------------------------------------------------
+ */
+void b196167f_ensureCapacity(ListArray *listArray, uint32_t capacity);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_get
  * Description: Retrieves the elements at the specified index
  *

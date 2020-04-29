@@ -76,7 +76,7 @@ void *b8da7268_dequeue(QueueBounded *queue) {
 
 		// Increment queue head
 		queue->head++;
-		if (queue->head == queue->length) {
+		if (queue->head == queue->capacity) {
 			queue->head = 0;
 		}
 	}
@@ -95,7 +95,7 @@ bool b8da7268_enqueue(QueueBounded *queue, void *value) {
 
 	// Increment queue tail
 	queue->tail++;
-	if (queue->tail == queue->length) {
+	if (queue->tail == queue->capacity) {
 		queue->tail = 0;
 	}
 
@@ -112,4 +112,32 @@ bool b8da7268_isFull(QueueBounded *queue) {
 
 void *b8da7268_peek(QueueBounded *queue) {
 	return (queue->length > 0) ? queue->values[queue->head] : NULL;
+}
+
+void b8da7268_reset(QueueBounded *queue) {
+	queue->head = 0;
+	queue->tail = 0;
+	queue->length = 0;
+}
+
+void **b8da7268_toArray(QueueBounded *queue) {
+	void **array = f668c4bd_mallocArray(sizeof(void*), queue->length);
+	void *arrayPtr;
+
+	if (queue->head > queue->tail) {
+		uint32_t firstSectionLength = (queue->capacity - queue->head);
+
+		arrayPtr = (queue->values + queue->head);
+		f668c4bd_memcopy(arrayPtr, array, firstSectionLength * sizeof(void*));
+
+		if (firstSectionLength < queue->length) {
+			arrayPtr = (array + firstSectionLength);
+			f668c4bd_memcopy(queue->values, arrayPtr, queue->tail * sizeof(void*));
+		}
+	} else {
+		arrayPtr = (queue->values + queue->head);
+		f668c4bd_memcopy(arrayPtr, array, queue->length * sizeof(void*));
+	}
+
+	return array;
 }

@@ -103,6 +103,16 @@ void b196167f_clear(ListArray *listArray) {
 	listArray->length = 0;
 }
 
+void b196167f_ensureCapacity(ListArray *listArray, uint32_t capacity) {
+	if (listArray->size < capacity) {
+		// Ensure the new capacity is a multiple of 8
+		capacity = ((capacity + 7) >> 3) << 3;
+
+		listArray->values = f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), capacity);
+		listArray->size = capacity;
+	}
+}
+
 void *b196167f_get(ListArray *listArray, uint32_t index) {
 	if (listArray->length > index) {
 		return listArray->values[index];

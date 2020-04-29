@@ -140,4 +140,25 @@ bool b8da7268_isFull(QueueBounded *queue);
  */
 void *b8da7268_peek(QueueBounded *queue);
 
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b8da7268_reset
+ * Description: Resets the queue to zero length
+ *
+ * Parameters:
+ *   queue      A pointer to the QueueBounded instance
+ * ----------------------------------------------------------------------------
+ */
+void b8da7268_reset(QueueBounded *queue);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b8da7268_toArray
+ * Description: Extracts a dynamic array of void* pointers from the queue
+ *
+ * Parameters:
+ *   queue      A pointer to the QueueBounded instance
+ * Returns:     The head of the queue value, or NULL if the queue is empty
+ * ----------------------------------------------------------------------------
+ */
+void **b8da7268_toArray(QueueBounded *queue);
+
 #endif /* ORG_DEVOPSBROKER_ADT_QUEUEBOUNDED_H */
