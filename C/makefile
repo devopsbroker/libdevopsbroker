@@ -74,14 +74,17 @@ clean:
 
 prepare:
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/adt
+	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/compress
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/fs
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/info
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/io
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/lang
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/log
+	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/memory
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/net
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/socket
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/sysfs
+	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/system
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/terminal
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/test
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/text
@@ -90,6 +93,10 @@ prepare:
 
 # Obtain object files for the C utilities
 $(OBJ_DIR)/adt/%.o: $(SRC_DIR)/adt/%.c $(SRC_DIR)/adt/%.h | prepare
+	$(call printInfo,Compiling $(@F))
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/compress/%.o: $(SRC_DIR)/compress/%.c $(SRC_DIR)/compress/%.h | prepare
 	$(call printInfo,Compiling $(@F))
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -113,6 +120,10 @@ $(OBJ_DIR)/log/%.o: $(SRC_DIR)/log/%.c $(SRC_DIR)/log/%.h | prepare
 	$(call printInfo,Compiling $(@F))
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)/memory/%.o: $(SRC_DIR)/memory/%.c $(SRC_DIR)/memory/%.h | prepare
+	$(call printInfo,Compiling $(@F))
+	$(CC) $(CFLAGS) -c $< -o $@
+
 $(OBJ_DIR)/net/%.o: $(SRC_DIR)/net/%.c $(SRC_DIR)/net/%.h | prepare
 	$(call printInfo,Compiling $(@F))
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -122,6 +133,10 @@ $(OBJ_DIR)/socket/%.o: $(SRC_DIR)/socket/%.c $(SRC_DIR)/socket/%.h | prepare
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/sysfs/%.o: $(SRC_DIR)/sysfs/%.c $(SRC_DIR)/sysfs/%.h | prepare
+	$(call printInfo,Compiling $(@F))
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/system/%.o: $(SRC_DIR)/system/%.c $(SRC_DIR)/system/%.h | prepare
 	$(call printInfo,Compiling $(@F))
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -146,6 +161,10 @@ $(OBJ_DIR)/adt/%.o: $(SRC_DIR)/adt/%.asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
+$(OBJ_DIR)/compress/%.o: $(SRC_DIR)/compress/%.asm | prepare
+	$(call printInfo,Compiling $(@F))
+	$(ASM) $(ASMFLAGS) $< -o $@
+
 $(OBJ_DIR)/fs/%.o: $(SRC_DIR)/fs/%.asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
@@ -166,6 +185,10 @@ $(OBJ_DIR)/log/%.o: $(SRC_DIR)/log/%.asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
+$(OBJ_DIR)/memory/%.o: $(SRC_DIR)/memory/%.asm | prepare
+	$(call printInfo,Compiling $(@F))
+	$(ASM) $(ASMFLAGS) $< -o $@
+
 $(OBJ_DIR)/net/%.o: $(SRC_DIR)/net/%.asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
@@ -175,6 +198,10 @@ $(OBJ_DIR)/socket/%.o: $(SRC_DIR)/socket/%.asm | prepare
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(OBJ_DIR)/sysfs/%.o: $(SRC_DIR)/sysfs/%.asm | prepare
+	$(call printInfo,Compiling $(@F))
+	$(ASM) $(ASMFLAGS) $< -o $@
+
+$(OBJ_DIR)/system/%.o: $(SRC_DIR)/system/%.asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 

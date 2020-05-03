@@ -118,6 +118,24 @@ bool e2f74138_isAccessible(const char *pathName, int mode) {
 	return access(pathName, mode) == 0;
 }
 
+bool e2f74138_getDescriptorStatus(int fd, FileStatus* fileStatus) {
+	if (fstat(fd, fileStatus) == SYSTEM_ERROR_CODE) {
+		StringBuilder errorMessage;
+		c598a24c_initStringBuilder(&errorMessage);
+
+		c598a24c_append_string(&errorMessage, "Cannot fstat '");
+		c598a24c_append_int(&errorMessage, fd);
+		c598a24c_append_char(&errorMessage, '\'');
+
+		c7c88e52_printLibError(errorMessage.buffer, errno);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
+
+		return false;
+	}
+
+	return true;
+}
+
 void e2f74138_getFileStatus(const char *pathName, FileStatus* fileStatus) {
 	if (stat(pathName, fileStatus) == SYSTEM_ERROR_CODE) {
 		StringBuilder *errorMessage = c598a24c_createStringBuilder();

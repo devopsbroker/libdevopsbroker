@@ -58,6 +58,31 @@ extern  malloc
 extern  free
 extern  abort
 
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~ f668c4bd_alignedAlloc ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f668c4bd_alignedAlloc:function
+f668c4bd_alignedAlloc:
+; Parameters:
+;	rdi : size_t alignment
+;	rsi : size_t size
+; Local Variables:
+
+.prologue:                            ; functions typically have a prologue
+	sub        rsp, 8                 ; align stack frame before calling aligned_alloc()
+
+.aligned_alloc:
+	call       aligned_alloc WRT ..plt
+
+	test       rax, rax               ; if (ptr == NULL)
+	jz         .fatalError
+
+.epilogue:                            ; functions typically have an epilogue
+	add        rsp, 8                 ; re-align stack frame before return
+	ret                               ; pop return address from stack and jump there
+
+.fatalError:
+	call       abort WRT ..plt
+
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f668c4bd_malloc ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	global  f668c4bd_malloc:function

@@ -43,6 +43,18 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f668c4bd_alignedAlloc
+ * Description: Performs an aligned_alloc() operation using the alignment and
+ *              size parameters; size must be a multiple of alignment
+ *
+ * Parameters:
+ *   alignment  The memory alignment which must be a power of 2
+ *   size       The memory size which must be a multiple of alignment
+ * ----------------------------------------------------------------------------
+ */
+void *f668c4bd_alignedAlloc(size_t alignment, size_t size);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f668c4bd_free
  * Description: Performs the free() operation *only* on pointers with space to free
  *

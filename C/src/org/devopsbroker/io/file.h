@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <assert.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -44,8 +45,38 @@
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
-// sys/stat.h
+/*
+ * File Stat Structure                                            // sys/stat.h
+ *   dev_t      st_dev;
+ *     - ID of device containing file
+ *   ino_t      st_ino;
+ *     - inode number
+ *   mode_t     st_mode;
+ *     - file type and mode
+ *   nlink_t    st_nlink;
+ *     - number of hard links
+ *   uid_t      st_uid;
+ *     - user ID of owner
+ *   gid_t      st_gid;
+ *     - group ID of owner
+ *   dev_t      st_rdev;
+ *     - device ID (if special file)
+ *   off_t      st_size;
+ *     - total size in bytes
+ *   blksize_t  st_blksize;
+ *     - block size for filesystem I/O
+ *   blkcnt_t   st_blocks;
+ *     - number of 512B blocks allocated
+ *   struct timespec st_atim;
+ *     - time of last access, nanosecond precision
+ *   struct timespec st_mtim;
+ *     - time of last modification, nanosecond precision
+ *   struct timespec st_ctim;
+ *     - time of last status change, nanosecond precision
+ */
 typedef struct stat FileStatus;
+
+static_assert(sizeof(FileStatus) == 144, "Check your assumptions");
 
 /*
  * File Access Modes
@@ -223,6 +254,19 @@ bool e2f74138_isExecutable(const char *pathName);
  * ----------------------------------------------------------------------------
  */
 bool e2f74138_isAccessible(const char *pathName, int mode);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    e2f74138_getDescriptorStatus
+ * Description: Populates the FileStatus struct with information about the file
+ *              descriptor
+ *
+ * Parameters:
+ *   fd             The file descriptor to retrieve file information for
+ *   fileStatus     The FileStatus struct to populate
+ * Returns:     True if the fstat() operation succeeded, false otherwise
+ * ----------------------------------------------------------------------------
+ */
+bool e2f74138_getDescriptorStatus(int fd, FileStatus* fileStatus);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    e2f74138_getFileStatus
