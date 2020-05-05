@@ -210,47 +210,63 @@ f668c4bd_mallocFlexibleStruct:
 
 	global  f668c4bd_memcopy:function
 f668c4bd_memcopy:
+; Parameters:
+;	rdi : void *source
+;	rsi : void *dest
+;	rdx : size_t numBytes
+; Local Variables:
+;	ecx : variable 0x08 / 0x04
+;	rax : 64-bit data movement buffer
 
 .prologue:                            ; functions typically have a prologue
-	cmp        rdx, 0x08
+	mov        ecx, 0x08              ; set ecx to value 0x08
+
+	cmp        rdx, rcx               ; if (numBytes >= 0x08)
 	jae        .eightBytes
-	cmp        dl, 0x04
+
+	cmp        dl, 0x04               ; if (numBytes >= 0x04)
 	jae        .fourBytes
-	jnz        .bytes
+
+	test       dl, dl                 ; if (numBytes == 0)
 	jz         .epilogue
+
+	jmp        .bytes                 ; if (numBytes > 0x00 && < 0x04)
 
 .eightBytes:
-	mov        rcx, [rdi]
-	mov        [rsi], rcx
+	mov        rax, [rdi]             ; dest[i] = source[i]
+	mov        [rsi], rax
 
-	sub        rdx, 0x08
-	jz         .epilogue
+	add        rdi, rcx               ; source += 0x08
+	add        rsi, rcx               ; dest += 0x08
 
-	add        rdi, 0x08
-	add        rsi, 0x08
+	sub        rdx, rcx               ; numBytes -= 0x08
+	jz         .epilogue              ; if (numBytes == 0)
 
-	cmp        rdx, 0x08
+	cmp        rdx, rcx               ; if (numBytes >= 0x08)
 	jae        .eightBytes
-	cmp        dl, 0x04
+
+	cmp        dl, 0x04               ; if (numBytes < 0x04)
 	jb         .bytes
 
 .fourBytes:
-	mov        ecx, [rdi]
-	mov        [rsi], ecx
+	mov        eax, [rdi]             ; dest[i] = source[i]
+	mov        [rsi], eax
 
-	sub        sil, 0x04
+	mov        cl, 0x04               ; set ecx to value 0x04
+
+	add        rdi, rcx               ; source += 0x04
+	add        rsi, rcx               ; dest += 0x04
+
+	sub        dl, 0x04
 	jz         .epilogue
 
-	add        rdi, 0x04
-	add        rsi, 0x04
-
 .bytes:
-	mov        cl, [rdi]
-	mov        [rsi], cl
+	mov        al, [rdi]              ; dest[i] = source[i]
+	mov        [rsi], al
 
-	inc        rdi
-	inc        rsi
-	dec        cl
+	inc        rdi                    ; source++
+	inc        rsi                    ; dest++
+	dec        dl                     ; numBytes--
 
 	jnz        .bytes
 
