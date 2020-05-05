@@ -129,6 +129,14 @@ void *b196167f_last(ListArray *listArray) {
 	return NULL;
 }
 
+void b196167f_reset(ListArray *listArray) {
+	for (uint32_t i=0; i < listArray->length; i++) {
+		listArray->values[i] = NULL;
+	}
+
+	listArray->length = 0;
+}
+
 void b196167f_sort(ListArray *listArray, int compare(void *a, void *b)) {
 	if (listArray->length > 0) {
 		b33b0483_sortPtrArray(listArray->values, 0, listArray->length-1, compare);

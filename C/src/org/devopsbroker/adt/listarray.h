@@ -205,6 +205,16 @@ void *b196167f_get(ListArray *listArray, uint32_t index);
 void *b196167f_last(ListArray *listArray);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    b196167f_reset
+ * Description: Resets the ListArray to empty
+ *
+ * Parameters:
+ *   listArray  A pointer to the ListArray instance to reset
+ * ----------------------------------------------------------------------------
+ */
+void b196167f_reset(ListArray *listArray);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_sort
  * Description: Sorts the ListArray using the compare() function
  *
