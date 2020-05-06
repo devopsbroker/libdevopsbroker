@@ -108,7 +108,7 @@ void d0059b5b_destroyDirectory(Directory *directory) {
 	for (int i=0; i < directory->subdirList.length; i++) {
 		d0059b5b_destroyDirectory(directory->subdirList.values[i]);
 	}
-	b196167f_cleanUpListArray(&directory->subdirList, f668c4bd_free);
+	b196167f_cleanUpListArray(&directory->subdirList, NULL);
 
 	// Clean up the file list
 	b196167f_cleanUpListArray(&directory->fileList, f668c4bd_free);
@@ -133,7 +133,7 @@ void d0059b5b_cleanUpDirectory(Directory *directory) {
 	for (int i=0; i < directory->subdirList.length; i++) {
 		d0059b5b_destroyDirectory(directory->subdirList.values[i]);
 	}
-	b196167f_cleanUpListArray(&directory->subdirList, f668c4bd_free);
+	b196167f_cleanUpListArray(&directory->subdirList, NULL);
 
 	// Clean up the file list
 	b196167f_cleanUpListArray(&directory->fileList, f668c4bd_free);
