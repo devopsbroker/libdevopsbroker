@@ -108,31 +108,22 @@ void d0059b5b_destroyDirectory(Directory *directory) {
 	for (int i=0; i < directory->subdirList.length; i++) {
 		d0059b5b_destroyDirectory(directory->subdirList.values[i]);
 	}
-	b196167f_cleanUpListArray(&directory->subdirList);
+	b196167f_cleanUpListArray(&directory->subdirList, f668c4bd_free);
 
 	// Clean up the file list
-	for (int i=0; i < directory->fileList.length; i++) {
-		d0059b5b_destroyFile(directory->fileList.values[i]);
-	}
-	b196167f_cleanUpListArray(&directory->fileList);
+	b196167f_cleanUpListArray(&directory->fileList, f668c4bd_free);
 
 	// Free the Directory struct
-	free(directory);
+	f668c4bd_free(directory);
 }
 
 void d0059b5b_destroyDirPath(DirPath *dirPath) {
-	free(dirPath->buffer);
-	free(dirPath);
-}
-
-void d0059b5b_destroyFile(File *file) {
-	// Free the File struct
-	free(file);
+	f668c4bd_free(dirPath->buffer);
+	f668c4bd_free(dirPath);
 }
 
 void d0059b5b_destroyFilePathList(FilePathList *filePathList) {
-	b196167f_destroyAllElements(filePathList);
-	b196167f_destroyListArray(filePathList);
+	b196167f_destroyListArray(filePathList, f668c4bd_free);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,21 +133,18 @@ void d0059b5b_cleanUpDirectory(Directory *directory) {
 	for (int i=0; i < directory->subdirList.length; i++) {
 		d0059b5b_destroyDirectory(directory->subdirList.values[i]);
 	}
-	b196167f_cleanUpListArray(&directory->subdirList);
+	b196167f_cleanUpListArray(&directory->subdirList, f668c4bd_free);
 
 	// Clean up the file list
-	for (int i=0; i < directory->fileList.length; i++) {
-		d0059b5b_destroyFile(directory->fileList.values[i]);
-	}
-	b196167f_cleanUpListArray(&directory->fileList);
+	b196167f_cleanUpListArray(&directory->fileList, f668c4bd_free);
 }
 
 void d0059b5b_cleanUpDirPath(DirPath *dirPath) {
-	free(dirPath->buffer);
+	f668c4bd_free(dirPath->buffer);
 }
 
 void d0059b5b_cleanUpFilePathList(FilePathList *filePathList) {
-	free(filePathList->values);
+	f668c4bd_free(filePathList->values);
 }
 
 void d0059b5b_initDirectory(Directory *directory, char *name) {

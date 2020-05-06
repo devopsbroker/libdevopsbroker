@@ -34,6 +34,7 @@
 
 #include "org/devopsbroker/adt/listarray.h"
 #include "org/devopsbroker/adt/stackarray.h"
+#include "org/devopsbroker/lang/memory.h"
 #include "org/devopsbroker/test/unittest.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
@@ -92,7 +93,7 @@ static void tearDownTesting(ListArray *listArray) {
 	positiveTestInt("  ListArray size = 32\t\t\t\t", 32, listArray->size);
 	positiveTestInt("  ListArray length = 0\t\t\t\t", 0, listArray->length);
 
-	b196167f_cleanUpListArray(listArray);
+	b196167f_cleanUpListArray(listArray, f668c4bd_free);
 
 	printf("\n");
 }

@@ -35,7 +35,7 @@
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
-#define B196167F_DEFAULT_SIZE 8
+#define LISTARRAY_DEFAULT_SIZE  8
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -53,8 +53,8 @@
 ListArray *b196167f_createListArray() {
 	ListArray *listArray = f668c4bd_malloc(sizeof(ListArray));
 
-	listArray->values = f668c4bd_malloc(sizeof(void*) * B196167F_DEFAULT_SIZE);
-	listArray->size = B196167F_DEFAULT_SIZE;
+	listArray->values = f668c4bd_malloc(sizeof(void*) * LISTARRAY_DEFAULT_SIZE);
+	listArray->size = LISTARRAY_DEFAULT_SIZE;
 	listArray->length = 0;
 
 	return listArray;
@@ -70,24 +70,39 @@ ListArray *b196167f_createListArrayWithSize(const uint32_t size) {
 	return listArray;
 }
 
-void b196167f_destroyListArray(ListArray *listArray) {
+void b196167f_destroyListArray(ListArray *listArray, void freeElement(void *ptr)) {
 	if (listArray->values != NULL) {
+		// Free all the elements first, if necessary
+		if (freeElement != NULL) {
+			for (uint32_t i=0; i < listArray->length; i++) {
+				freeElement(listArray->values[i]);
+			}
+		}
+
 		f668c4bd_free(listArray->values);
 	}
+
 	f668c4bd_free(listArray);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void b196167f_cleanUpListArray(ListArray *listArray) {
+void b196167f_cleanUpListArray(ListArray *listArray, void freeElement(void *ptr)) {
 	if (listArray->values != NULL) {
+		// Free all the elements first, if necessary
+		if (freeElement != NULL) {
+			for (uint32_t i=0; i < listArray->length; i++) {
+				freeElement(listArray->values[i]);
+			}
+		}
+
 		f668c4bd_free(listArray->values);
 	}
 }
 
 void b196167f_initListArray(ListArray *listArray) {
-	listArray->values = f668c4bd_malloc(sizeof(void*) * B196167F_DEFAULT_SIZE);
-	listArray->size = B196167F_DEFAULT_SIZE;
+	listArray->values = f668c4bd_malloc(sizeof(void*) * LISTARRAY_DEFAULT_SIZE);
+	listArray->size = LISTARRAY_DEFAULT_SIZE;
 	listArray->length = 0;
 }
 

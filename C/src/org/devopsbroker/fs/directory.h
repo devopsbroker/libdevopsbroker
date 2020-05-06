@@ -133,16 +133,6 @@ void d0059b5b_destroyDirectory(Directory *directory);
 void d0059b5b_destroyDirPath(DirPath *dirPath);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    d0059b5b_destroyFile
- * Description: Frees the memory allocated to the File struct pointer
- *
- * Parameters:
- *   file   A pointer to the File instance to destroy
- * ----------------------------------------------------------------------------
- */
-void d0059b5b_destroyFile(File *file);
-
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    d0059b5b_destroyFilePathList
  * Description: Frees the memory allocated to the FilePathList struct pointer
  *

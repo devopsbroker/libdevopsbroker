@@ -77,19 +77,11 @@ ListArray *b196167f_createListArrayWithSize(const uint32_t size);
  *
  * Parameters:
  *   listArray     A pointer to the ListArray instance to destroy
+ *   freeElement    A function pointer to the method that frees the underlying
+ *                  elemenmt contained within the ListArray instance
  * ----------------------------------------------------------------------------
  */
-void b196167f_destroyListArray(ListArray *listArray);
-
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    b196167f_destroyAllElements
- * Description: Frees memory allocated to all elements contained within the ListArray
- *
- * Parameters:
- *   listArray     A pointer to the ListArray instance
- * ----------------------------------------------------------------------------
- */
-void b196167f_destroyAllElements(ListArray *listArray);
+void b196167f_destroyListArray(ListArray *listArray, void freeElement(void *ptr));
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -99,9 +91,11 @@ void b196167f_destroyAllElements(ListArray *listArray);
  *
  * Parameters:
  *   listArray      A pointer to the ListArray instance to clean up
+ *   freeElement    A function pointer to the method that frees the underlying
+ *                  elemenmt contained within the ListArray instance
  * ----------------------------------------------------------------------------
  */
-void b196167f_cleanUpListArray(ListArray *listArray);
+void b196167f_cleanUpListArray(ListArray *listArray, void freeElement(void *ptr));
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_initListArray

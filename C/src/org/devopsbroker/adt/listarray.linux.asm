@@ -25,7 +25,6 @@
 ;   o void b196167f_add(ListArray *listArray, void *element);
 ;   o void b196167f_addAll(ListArray *listArray, void **elementArray, uint32_t numElements);
 ;   o void b196167f_addFromStack(ListArray *listArray, void *stack, uint32_t numElements);
-;   o void b196167f_destroyAllElements(ListArray *listArray);
 ; -----------------------------------------------------------------------------
 ;
 
@@ -243,47 +242,6 @@ b196167f_addFromStack:
 	jnz        .whileElements
 
 .epilogue:                            ; functions typically have an epilogue
-	ret                               ; pop return address from stack and jump there
-
-; ~~~~~~~~~~~~~~~~~~~~~~~ b196167f_destroyAllElements ~~~~~~~~~~~~~~~~~~~~~~~~
-
-	global  b196167f_destroyAllElements:function
-b196167f_destroyAllElements:
-; Parameters:
-;	rdi : ListArray *listArray
-; Local Variables:
-;	r12  : listArray->values
-;	r13d : listArray->length
-;	r14d : loop counter
-
-.prologue:                            ; functions typically have a prologue
-	push       r12                    ; preserve r12 register
-	push       r13                    ; preserve r13 register
-	push       r14                    ; preserve r14 register
-
-	mov        r12, [rdi]             ; load listArray->values into r12
-	mov        r13d, [rdi+8]          ; load listArray->length into r13d
-	xor        r14, r14               ; set loop counter to zero
-	prefetcht0 [r12]                  ; prefetch listArray->values into the CPU cache
-
-	test       r13d, r13d             ; if (listArray->length == 0)
-	jz         .epilogue
-
-	mov        [rdi+8], r14           ; set listArray->length to zero
-
-.freeData:
-	mov        rdi, [r12 + 8*r14]     ; copy qword from listArray->values address into rdi
-
-	call       free WRT ..plt         ; free(listArray->values[i])
-
-	inc        r14                    ; loopCounter++
-	dec        r13d                   ; listArray->length--
-	jnz        .freeData
-
-.epilogue:
-	pop        r14                    ; restore r14 register
-	pop        r13                    ; restore r13 register
-	pop        r12                    ; restore r12 register
 	ret                               ; pop return address from stack and jump there
 
 ; ═════════════════════════════ Private Routines ═════════════════════════════

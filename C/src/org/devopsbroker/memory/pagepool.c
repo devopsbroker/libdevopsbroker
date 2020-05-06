@@ -53,8 +53,6 @@ static void populatePagePool();
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void f502a409_destroyPagePool(bool debug) {
-	void *slabPtr;
-
 	if (debug) {
 		puts("PagePool Statistics:");
 		printf("\tNumber of Slabs Allocated: %u\n", pagePool.numSlabsAlloc);
@@ -63,15 +61,9 @@ void f502a409_destroyPagePool(bool debug) {
 		printf("\tNumber of Pages Used:      %u\n", pagePool.numPagesUsed);
 	}
 
-	// Free slabs from the slab list
-	for (uint32_t i=0; i < pagePool.slabList.length; i++) {
-		slabPtr = b196167f_get(&pagePool.slabList, i);
-		f668c4bd_free(slabPtr);
-	}
-
 	// Clean up the page stack and slab list
 	f106c0ab_cleanUpStackArray(&pagePool.pageStack);
-	b196167f_cleanUpListArray(&pagePool.slabList);
+	b196167f_cleanUpListArray(&pagePool.slabList, f668c4bd_free);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
