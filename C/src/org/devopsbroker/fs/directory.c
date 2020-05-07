@@ -23,22 +23,28 @@
 
 // ════════════════════════════ Feature Test Macros ═══════════════════════════
 
-#define _DEFAULT_SOURCE
+#define _GNU_SOURCE
 
 // ═════════════════════════════════ Includes ═════════════════════════════════
 
 #include <stdlib.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "directory.h"
 
+#include "../io/file.h"
 #include "../lang/error.h"
 #include "../lang/memory.h"
 #include "../lang/string.h"
+#include "../lang/stringbuilder.h"
 #include "../terminal/ansi.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
-#define DIRPATH_BUFFER 64
+#define DIRPATH_BUFFER_SIZE 64
 #define FILEPATHLIST_SIZE 64
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
@@ -77,7 +83,7 @@ DirPath *d0059b5b_createDirPath(char *path) {
 	DirPath *dirPath = f668c4bd_malloc(sizeof(DirPath));
 
 	dirPath->length = f6215943_getLength(path);
-	dirPath->size = dirPath->length + DIRPATH_BUFFER;
+	dirPath->size = dirPath->length + DIRPATH_BUFFER_SIZE;
 	dirPath->buffer = f668c4bd_mallocArray(sizeof(char), dirPath->size);
 	f6215943_copyToBuffer(path, dirPath->buffer, dirPath->size);
 
@@ -157,7 +163,7 @@ void d0059b5b_initDirectory(Directory *directory, char *name) {
 
 void d0059b5b_initDirPath(DirPath *dirPath, char *path) {
 	dirPath->length = f6215943_getLength(path);
-	dirPath->size = dirPath->length + DIRPATH_BUFFER;
+	dirPath->size = dirPath->length + DIRPATH_BUFFER_SIZE;
 	dirPath->buffer = f668c4bd_mallocArray(sizeof(char), dirPath->size);
 	f6215943_copyToBuffer(path, dirPath->buffer, dirPath->size);
 }
@@ -191,6 +197,59 @@ void d0059b5b_listContents(Directory *directory, DirPath *dirPath, bool isRecurs
 	}
 
 	c598a24c_reduceLength(dirPath, dirPathLen - 1);
+}
+
+bool d0059b5b_makeDirectory(char *pathName, uint32_t mode, bool hasFilename) {
+	FileStatus dirStatus;
+	ListArray subdirList;
+	char *subdir;
+	bool makeDir;
+
+	// 1. Initialize data
+	b196167f_initListArray(&subdirList);
+
+	f6215943_splitWithChar(pathName, '/', &subdirList);
+
+	subdir = pathName;
+	makeDir = false;
+
+	if (subdir[0] == '\0') {
+		subdir[0] = '/';
+		subdirList.length--;
+	}
+
+	// 2. Create subdirectories from the base directory to the leaves
+	for (uint32_t i=1; i <= subdirList.length; i++) {
+		if (i < subdirList.length || !hasFilename) {
+			if (stat(pathName, &dirStatus) == SYSTEM_ERROR_CODE && errno == ENOENT) {
+				if (mkdir(pathName, mode) == SYSTEM_ERROR_CODE) {
+					StringBuilder errorMessage;
+
+					c598a24c_initStringBuilder(&errorMessage);
+
+					c598a24c_append_string(&errorMessage, "Cannot make directory '");
+					c598a24c_append_string(&errorMessage, pathName);
+					c598a24c_append_char(&errorMessage, '\'');
+
+					c7c88e52_printLibError(errorMessage.buffer, errno);
+					c598a24c_cleanUpStringBuilder(&errorMessage);
+				} else {
+					makeDir = true;
+				}
+			}
+		}
+
+		if (i < subdirList.length) {
+			// Advance to the next subdirectory and put back the '/'
+			while ((*subdir) != '\0') {
+				subdir++;
+			}
+
+			(*subdir) = '/';
+		}
+	}
+
+	return makeDir;
 }
 
 void d0059b5b_find(FilePathList *filePathList, DirPath *dirPath, bool isMatch(char *filename)) {

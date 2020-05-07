@@ -38,6 +38,7 @@
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
+#define DIR_DEFAULT_MODE  0750
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -220,6 +221,19 @@ void d0059b5b_initFilePathList(FilePathList *filePathList);
  * ----------------------------------------------------------------------------
  */
 void d0059b5b_listContents(Directory *directory, DirPath *dirPath, bool isRecursive);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    d0059b5b_makeDirectory
+ * Description: Creates the directory from pathName, if not already exists
+ *
+ * Parameters:
+ *   pathName       The directory path name to create
+ *   mode           The file permissions for the new directory
+ *   hasFilename    True if the last element is a filename, false otherwise
+ * Returns:     True if at least one directory was created, false otherwise
+ * ----------------------------------------------------------------------------
+ */
+bool d0059b5b_makeDirectory(char *pathName, uint32_t mode, bool hasFilename);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    d0059b5b_find
