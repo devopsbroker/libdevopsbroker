@@ -31,6 +31,7 @@
 ;   o uint32_t f6215943_hashCode(const char *string);
 ;   o bool f6215943_isEqual(char *foo, char *bar);
 ;   o char *f6215943_search(char *pattern, char *text);
+;   o void f6215943_splitWithChar(char *string, char delimiter, ListArray *substrList);
 ;   o char *f6215943_trim(char *string);
 ;   o char *f6215943_truncate(char *string, uint32_t maxLen);
 ; -----------------------------------------------------------------------------
@@ -59,7 +60,7 @@ section .bss                ; RESX directives
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ External Resources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-extern  b196167f_addAll
+extern  b196167f_addFromStack
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_compare ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -614,82 +615,87 @@ f6215943_splitWithChar:
 ;	r9d : number of matches
 
 .prologue:                            ; functions typically have a prologue
+	push      rbp                     ; save the caller frame pointer on the stack
+	mov       rbp, rsp                ; set current frame pointer to stack pointer
+
+	prefetcht0 [rdi]                  ; prefetch the string into the CPU cache
 	push       rdi                    ; save char *string
 
 	test       rdi, rdi               ; if (string == NULL)
 	jz         .epilogue
-	prefetcht0 [rdi]                  ; prefetch the string into the CPU cache
 
 	test       rsi, rsi               ; if (delimiter == '\0')
 	jz         .epilogue
 
-	xor        r9d, r9d               ; number of matches = 0
+	mov        r9d, 0x01              ; set number of matches = 1
 	mov        cl, 0x08               ; loop counter = 8
 
 	mov        r8, [rdi]              ; load first eight characters of string into r8
 
 .whileString:
 	test       r8b, r8b               ; if (string[i] == '\0')
-	jz         .wasMatchFound
+	jz         .addSubstrings
 
 	cmp        r8b, sil               ; if (string[i] == delimiter)
 	je         .matchFound
 
-	shr        r8, 8
+	shr        r8, 8                  ; buffer++
 	inc        rdi                    ; string++
 	dec        cl                     ; loop counter--
 	jnz        .whileString           ; if (loop counter > 0)
 
-.manageStringBufferA:
+.manageStringBufferWhile:
 	mov        r8, [rdi]              ; load next eight characters of string into r8
 	mov        cl, 0x08               ; loop counter = 8
 	jmp        .whileString
 
 .matchFound:
+	mov        [rdi], byte 0x00       ; string[match] = '\0'
+
+	shr        r8, 8                  ; buffer++
 	inc        rdi                    ; string++
-	inc        r9d                    ; number of matches++
-	push       rdi                    ; save next char *string
-
-	shr        r8, 8
 	dec        cl                     ; loop counter--
-	jnz        .whileString           ; if (loop counter > 0)
+	jnz        .saveNextString        ; if (loop counter > 0)
 
-.manageStringBufferB:
+.manageStringBufferMatch:
 	mov        r8, [rdi]              ; load next eight characters of string into r8
 	mov        cl, 0x08               ; loop counter = 8
+
+.saveNextString:
+	test       r8b, r8b               ; if (string[i] == '\0')
+	jz         .addSubstrings
+
+	push       rdi                    ; save next char *string
+	inc        r9d                    ; number of matches++
 	jmp        .whileString
 
-.wasMatchFound:
-	test       r9d, r9d               ; if (number of matches == 0)
-	jz         .epilogue
-
+.addSubstrings:
 	push       r9                     ; save number of matches
 	mov        rdi, rdx               ; set ListArray *listArray
-	mov        rsi, rsp               ; set void **elementArray
+	lea        rsi, [rbp-8]           ; set void *stack
 	mov        edx, r9d               ; set uint32_t numElements
 
-	test       r9d, 0x01              ; if (number of matches is odd)
-	jnz        .addAlignedElements
+	test       r9d, 0x01              ; if (number of matches is even)
+	jz         .addAlignedElements
 
-	; b196167f_addAll(ListArray *listArray, void **elementArray, uint32_t numElements);
+	; b196167f_addFromStack(ListArray *listArray, void *stack, uint32_t numElements);
 .addUnalignedElements:
 	sub        rsp, 8                 ; align stack frame before calling b196167f_addAll()
-	call       b196167f_addAll
+	call       b196167f_addFromStack
 	add        rsp, 8                 ; unalign stack frame after calling b196167f_addAll()
 
 	pop        r9
-	lea        rsp, [rsp+8+r9*8]      ; unwind char *string values from stack
+	lea        rsp, [rsp+r9*8]        ; unwind char *string values from stack
+	leave                             ; mov rsp, rbp / pop rbp
 	ret                               ; pop return address from stack and jump there
 
 .addAlignedElements:
-	call       b196167f_addAll
-
-	pop        r9
-	lea        rsp, [rsp+8+r9*8]      ; unwind char *string values from stack
-	ret                               ; pop return address from stack and jump there
+	call       b196167f_addFromStack
 
 .epilogue:                            ; functions typically have an epilogue
-	add        rsp, 8                 ; unwind char *string value from stack
+	pop        r9
+	lea        rsp, [rsp+r9*8]        ; unwind char *string values from stack
+	leave                             ; mov rsp, rbp / pop rbp
 	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_trim ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

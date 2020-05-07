@@ -228,18 +228,16 @@ b196167f_addFromStack:
 .addElements:
 	xchg       edx, [rdi+8]           ; swap newLength with listArray->length
 	mov        rdi, [rdi]             ; set up rdi with listArray->values
-	shl        edx, 3                 ; rdi += (listArray->length *= 8)
-	add        rdi, rdx
+	lea        rdi, [rdi+rdx*8]       ; listArray->values += (listArray->length *= 8)
 
 .whileElements:
-	dec        ecx                    ; numElements--
 	mov        rax, [rsi]             ; listArray->values[i] = stack[j]
 	mov        [rdi], rax
-	sub        rsi, SIZEOF_PTR        ; j--
-	add        rdi, SIZEOF_PTR        ; i++
+	lea        rsi, [rsi-8]           ; stack[j--]
+	lea        rdi, [rdi+8]           ; listArray->values[i++]
 
-	test       ecx, ecx               ; if (numElements > 0)
-	jnz        .whileElements
+	dec        ecx                    ; numElements--
+	jnz        .whileElements         ; if (numElements > 0)
 
 .epilogue:                            ; functions typically have an epilogue
 	ret                               ; pop return address from stack and jump there

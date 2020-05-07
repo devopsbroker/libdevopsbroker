@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "org/devopsbroker/adt/listarray.h"
 #include "org/devopsbroker/lang/string.h"
 #include "org/devopsbroker/test/unittest.h"
 
@@ -50,6 +51,7 @@ static void testCopyToBuffer();
 static void testEndsWith();
 static void testGetLength();
 static void testHashCode();
+static void testSplitWithChar();
 
 // ══════════════════════════════════ main() ══════════════════════════════════
 
@@ -59,6 +61,7 @@ int main(int argc, char *argv[]) {
 	testEndsWith();
 	testGetLength();
 	testHashCode();
+	testSplitWithChar();
 
 	// Exit with success
 	exit(EXIT_SUCCESS);
@@ -144,4 +147,23 @@ static void testHashCode() {
 	positiveTestInt("  f6215943_hashCode(\"international\")\t\t\t", 1450727140, f6215943_hashCode("international"));
 
 	printf("\n");
+}
+
+static void testSplitWithChar() {
+	char subdir[30] = "Configurations2/toolpanel/";
+	ListArray subdirList;
+
+	b196167f_initListArray(&subdirList);
+
+	printTestName("testSplitWithChar");
+	puts("  f6215943_splitWithChar(\"Configurations2/toolpanel/\", \'/\', subdirList)...");
+	f6215943_splitWithChar(subdir, '/', &subdirList);
+
+	positiveTestInt("  Number of subdirectories: 2\t\t\t\t", 2, subdirList.length);
+	positiveTestBool("  Subdirectory #1 = Configurations2\t\t\t", true, f6215943_isEqual(subdirList.values[0], "Configurations2"));
+	positiveTestBool("  Subdirectory #2 = toolpanel\t\t\t\t", true, f6215943_isEqual(subdirList.values[1], "toolpanel"));
+
+	printf("\n");
+
+	b196167f_cleanUpListArray(&subdirList, NULL);
 }
