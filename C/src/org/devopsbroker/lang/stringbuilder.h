@@ -136,6 +136,18 @@ void c598a24c_resetStringBuilder(StringBuilder *strBuilder);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    c598a24c_appendBytes
+ * Description: Appends length bytes from bufPtr to the StringBuilder instance
+ *
+ * Parameters:
+ *   strBuilder     The StringBuilder instance
+ *   bufPtr         The buffer to append bytes from
+ *   length         The number of bytes to append
+ * ----------------------------------------------------------------------------
+ */
+void c598a24c_appendBytes(StringBuilder *strBuilder, void *bufPtr, uint32_t length);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    c598a24c_append_char
  * Description: Appends a char to the StringBuilder instance
  *
@@ -263,6 +275,16 @@ void c598a24c_append_string_uint32(StringBuilder *strBuilder, const char *source
  * ----------------------------------------------------------------------------
  */
 char *c598a24c_createString(StringBuilder *strBuilder, char *suffix);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    c598a24c_getLastChar
+ * Description: Returns the last character of the StringBuilder instance
+ *
+ * Parameters:
+ *   strBuilder     A pointer to the StringBuilder instance
+ * ----------------------------------------------------------------------------
+ */
+char c598a24c_getLastChar(StringBuilder *strBuilder);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    c598a24c_reduceLength

@@ -51,20 +51,12 @@
 
 // ═══════════════════════════ Function Declarations ══════════════════════════
 
-/*
- * Static functions in C restrict their scope to the file where they are declared
- */
-static inline char *resizeStringBuilder(StringBuilder* strBuilder) {
-	strBuilder->size <<= 1;
-	strBuilder->buffer = f668c4bd_realloc_void_size_size(strBuilder->buffer, sizeof(char), strBuilder->size);
-
-	return strBuilder->buffer + strBuilder->length;
-}
+static char *resizeStringBuilder(StringBuilder* strBuilder, uint32_t newSize);
 
 static inline void appendNull(StringBuilder* strBuilder, char *target) {
 	// Resize strBuilder->buffer if necessary
 	if (strBuilder->length == strBuilder->size) {
-		target = resizeStringBuilder(strBuilder);
+		target = resizeStringBuilder(strBuilder, strBuilder->size << 1);
 	}
 
 	*target = '\0';
@@ -100,14 +92,14 @@ StringBuilder *c598a24c_createStringBuilder_uint32(const uint32_t bufSize) {
 }
 
 void c598a24c_destroyStringBuilder(StringBuilder *strBuilder) {
-	free(strBuilder->buffer);
-	free(strBuilder);
+	f668c4bd_free(strBuilder->buffer);
+	f668c4bd_free(strBuilder);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void c598a24c_cleanUpStringBuilder(StringBuilder *strBuilder) {
-	free(strBuilder->buffer);
+	f668c4bd_free(strBuilder->buffer);
 }
 
 void c598a24c_initStringBuilder(StringBuilder *strBuilder) {
@@ -131,12 +123,28 @@ void c598a24c_resetStringBuilder(StringBuilder *strBuilder) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+void c598a24c_appendBytes(StringBuilder *strBuilder, void *bufPtr, uint32_t length) {
+	char *target = strBuilder->buffer + strBuilder->length;
+	uint32_t newLength = strBuilder->length + length + 1;
+
+	// Resize strBuilder->buffer if necessary
+	if (newLength >= strBuilder->size) {
+		target = resizeStringBuilder(strBuilder, (newLength + (newLength >> 1)));
+	}
+
+	f668c4bd_memcopy(bufPtr, target, length);
+
+	strBuilder->length += length;
+	target += length;
+	*target = '\0';
+}
+
 void c598a24c_append_char(register StringBuilder *strBuilder, register const char ch) {
 	register char *target = strBuilder->buffer + strBuilder->length;
 
 	// Resize strBuilder->buffer if necessary
 	if ((strBuilder->length + 1) >= strBuilder->size) {
-		target = resizeStringBuilder(strBuilder);
+		target = resizeStringBuilder(strBuilder, strBuilder->size << 1);
 	}
 
 	strBuilder->length++;
@@ -165,7 +173,7 @@ void c598a24c_append_uint(StringBuilder *strBuilder, uint32_t unsignedInt) {
 
 	c598a24c_append_string(strBuilder, unsignedIntStr);
 
-	free(unsignedIntStr);
+	f668c4bd_free(unsignedIntStr);
 }
 
 void c598a24c_append_uint64(register StringBuilder *strBuilder, register const uint64_t unsignedLong) {
@@ -183,7 +191,7 @@ void c598a24c_append_string(StringBuilder *strBuilder, const char *source) {
 	while (ch) {
 		// Resize strBuilder->buffer if necessary
 		if (strBuilder->length == strBuilder->size) {
-			target = resizeStringBuilder(strBuilder);
+			target = resizeStringBuilder(strBuilder, strBuilder->size << 1);
 		}
 
 		strBuilder->length++;
@@ -230,7 +238,7 @@ void c598a24c_append_stringArray(register StringBuilder *strBuilder, register ch
 
 	// Resize strBuilder->buffer if necessary
 	if ((strBuilder->length + 3) >= strBuilder->size) {
-		target = resizeStringBuilder(strBuilder);
+		target = resizeStringBuilder(strBuilder, strBuilder->size << 1);
 	}
 
 	*(target++) = '[';
@@ -244,7 +252,7 @@ void c598a24c_append_stringArray(register StringBuilder *strBuilder, register ch
 		while (ch) {
 			// Resize strBuilder->buffer if necessary
 			if (strBuilder->length == strBuilder->size) {
-				target = resizeStringBuilder(strBuilder);
+				target = resizeStringBuilder(strBuilder, strBuilder->size << 1);
 			}
 
 			strBuilder->length++;
@@ -258,7 +266,7 @@ void c598a24c_append_stringArray(register StringBuilder *strBuilder, register ch
 	while (string != NULL) {
 		// Resize strBuilder->buffer if necessary
 		if (strBuilder->length == strBuilder->size) {
-			target = resizeStringBuilder(strBuilder);
+			target = resizeStringBuilder(strBuilder, strBuilder->size << 1);
 		}
 
 		strBuilder->length++;
@@ -268,7 +276,7 @@ void c598a24c_append_stringArray(register StringBuilder *strBuilder, register ch
 		while (ch) {
 			// Resize strBuilder->buffer if necessary
 			if (strBuilder->length == strBuilder->size) {
-				target = resizeStringBuilder(strBuilder);
+				target = resizeStringBuilder(strBuilder, strBuilder->size << 1);
 			}
 
 			strBuilder->length++;
@@ -288,12 +296,11 @@ void c598a24c_append_stringArray(register StringBuilder *strBuilder, register ch
 void c598a24c_append_string_uint32(register StringBuilder *strBuilder, register const char *source, const uint32_t length) {
 	register char* target = strBuilder->buffer + strBuilder->length;
 	register const char* end = source + length;
+	const uint32_t newLength = strBuilder->length + length + 1;
 
 	// Resize strBuilder->buffer if necessary
-	const uint32_t newLength = strBuilder->length + length;
-	if ((newLength + 1) >= strBuilder->size) {
-		strBuilder->size = (newLength >> 2) * 3;
-		target = resizeStringBuilder(strBuilder);
+	if (newLength >= strBuilder->size) {
+		target = resizeStringBuilder(strBuilder, (newLength + (newLength >> 1)));
 	}
 
 	strBuilder->length += length;
@@ -311,13 +318,15 @@ char *c598a24c_createString(StringBuilder *strBuilder, char *suffix) {
 	if (strBuilder->length > 0) {
 		if (suffix == NULL) {
 			string = f668c4bd_stralloc(strBuilder->length);
-			f6215943_copy(strBuilder->buffer, string);
+			f668c4bd_memcopy(strBuilder->buffer, string, strBuilder->length);
+			string[strBuilder->length] = '\0';
 		} else {
 			uint32_t origLength = strBuilder->length;
 
 			c598a24c_append_string(strBuilder, suffix);
 			string = f668c4bd_stralloc(strBuilder->length);
-			f6215943_copy(strBuilder->buffer, string);
+			f668c4bd_memcopy(strBuilder->buffer, string, strBuilder->length);
+			string[strBuilder->length] = '\0';
 			c598a24c_reduceLength(strBuilder, origLength);
 		}
 	}
@@ -325,9 +334,25 @@ char *c598a24c_createString(StringBuilder *strBuilder, char *suffix) {
 	return string;
 }
 
+char c598a24c_getLastChar(StringBuilder *strBuilder) {
+	if (strBuilder->length > 0) {
+		return strBuilder->buffer[strBuilder->length-1];
+	}
+
+	return '\0';
+}
+
 void c598a24c_reduceLength(StringBuilder *strBuilder, uint32_t newLength) {
 	if (newLength < strBuilder->length) {
 		strBuilder->buffer[newLength] = '\0';
 		strBuilder->length = newLength;
 	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Private Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static char *resizeStringBuilder(StringBuilder* strBuilder, uint32_t newSize) {
+	strBuilder->buffer = f668c4bd_resizeArray(strBuilder->buffer, strBuilder->length, sizeof(char), newSize);
+
+	return strBuilder->buffer + strBuilder->length;
 }
