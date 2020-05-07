@@ -235,8 +235,8 @@ deploy: lib/libdevopsbroker.a
 		sudo mkdir -v --parents /usr/include/$${dirName}; \
 		sudo cp -uv $(headerFile) /usr/include/$${dirName}; \
 	)
-	sudo find /usr/include -type d -exec chmod -c 755 {} \;
-	sudo find /usr/include -type f -exec chmod -c 644 {} \;
+	sudo find /usr/include/org -type d -exec chmod -c 755 {} \;
+	sudo find /usr/include/org -type f -exec chmod -c 644 {} \;
 	$(call printInfo,Deploying libdevopsbroker.a static library)
 	libName=$(subst lib/,,$<);
 	sudo cp -uv $< /usr/lib/
