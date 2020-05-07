@@ -98,6 +98,25 @@ void e2f74138_closeFile(const int fd, const char *pathName) {
 	}
 }
 
+int e2f74138_createFile(char *pathName, int flags, uint32_t mode) {
+	const int fd = open(pathName, flags|O_CREAT|O_WRONLY, mode);
+
+	if (fd == SYSTEM_ERROR_CODE) {
+		StringBuilder errorMessage;
+
+		c598a24c_initStringBuilder(&errorMessage);
+
+		c598a24c_append_string(&errorMessage, "Cannot create file '");
+		c598a24c_append_string(&errorMessage, pathName);
+		c598a24c_append_char(&errorMessage, '\'');
+
+		c7c88e52_printLibError(errorMessage.buffer, errno);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
+	}
+
+	return fd;
+}
+
 bool e2f74138_fileExists(const char *pathName) {
 	return access(pathName, F_OK) == 0;
 }

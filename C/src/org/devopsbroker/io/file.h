@@ -43,6 +43,8 @@
 #define LOGICAL_BLOCK_SIZE 512
 #define PHYSICAL_BLOCK_SIZE 4096
 
+#define FILE_DEFAULT_MODE  0750
+
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
 /*
@@ -198,6 +200,19 @@ int e2f74138_openFile(const char *pathName, const int flags);
  * ----------------------------------------------------------------------------
  */
 void e2f74138_closeFile(const int fd, const char *pathName);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    e2f74138_createFile
+ * Description: Creates the file referenced by the file descriptor
+ *
+ * Parameters:
+ *   pathName   The name of the file to create
+ *   flags      Specifies the file access mode, creation mode, and file status
+ *   mode       The file permissions for the new file
+ * Returns:     A file descriptor to the created file
+ * ----------------------------------------------------------------------------
+ */
+int e2f74138_createFile(char *pathName, int flags, uint32_t mode);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    e2f74138_fileExists
