@@ -64,7 +64,7 @@ export CFLAGS
 .ONESHELL:
 .PHONY: default clean prepare printenv
 
-default: lib/$(LIB_NAME)
+default: $(C_OBJECTS) $(ASM_OBJECTS)
 
 clean:
 	$(call printInfo,Cleaning $(OBJ_DIR) directory)
