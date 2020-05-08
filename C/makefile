@@ -76,6 +76,7 @@ prepare:
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/adt
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/compress
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/fs
+	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/hash
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/info
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/io
 	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/lang
@@ -101,6 +102,10 @@ $(OBJ_DIR)/compress/%.o: $(SRC_DIR)/compress/%.c $(SRC_DIR)/compress/%.h | prepa
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/fs/%.o: $(SRC_DIR)/fs/%.c $(SRC_DIR)/fs/%.h | prepare
+	$(call printInfo,Compiling $(@F))
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/hash/%.o: $(SRC_DIR)/hash/%.c $(SRC_DIR)/fs/%.h | prepare
 	$(call printInfo,Compiling $(@F))
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -166,6 +171,10 @@ $(OBJ_DIR)/compress/%.o: $(SRC_DIR)/compress/%.asm | prepare
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(OBJ_DIR)/fs/%.o: $(SRC_DIR)/fs/%.asm | prepare
+	$(call printInfo,Compiling $(@F))
+	$(ASM) $(ASMFLAGS) $< -o $@
+
+$(OBJ_DIR)/hash/%.o: $(SRC_DIR)/hash/%.asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
