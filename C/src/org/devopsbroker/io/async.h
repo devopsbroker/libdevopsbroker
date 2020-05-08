@@ -187,6 +187,16 @@ typedef struct AIOContext {
 
 static_assert(sizeof(AIOContext) == 64, "Check your assumptions");
 
+typedef struct AIOFile {
+	AIOContext *aioContext;
+	char*       fileName;
+	int64_t     fileSize;
+	int64_t     offset;
+	int         fd;
+} AIOFile;
+
+static_assert(sizeof(AIOFile) == 40, "Check your assumptions");
+
 typedef struct AIOTicket {
 	AIORequest   *requestList[8];
 	AIOEvent      eventList[8];
@@ -273,6 +283,28 @@ int f1207515_cleanUpAIOContext(AIOContext *aioContext);
 int f1207515_initAIOContext(AIOContext *aioContext, uint32_t maxOperations);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1207515_cleanUpAIOFile
+ * Description: Closes the file descriptor within the AIOFile instance
+ *
+ * Parameters:
+ *   aioFile    A pointer to the AIOFile instance to clean up
+ * ----------------------------------------------------------------------------
+ */
+void f1207515_cleanUpAIOFile(AIOFile *aioFile);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1207515_initAIOFile
+ * Description: Initializes an AIOFile struct
+ *
+ * Parameters:
+ *   aioFile        A pointer to the AIOFile instance to initalize
+ *   aioContext     A pointer to the AIOContext instance to initalize
+ *   fileName       The name of the file
+ * ----------------------------------------------------------------------------
+ */
+void f1207515_initAIOFile(AIOFile *aioFile, AIOContext *aioContext, char *fileName);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_cleanUpAIOTicket
  * Description: Frees dynamically allocated memory within the AIOTicket instance
  *
@@ -295,18 +327,33 @@ void f1207515_initAIOTicket(AIOTicket *aioTicket);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1207515_create
+ * Description: Creates the file specified by pathname; file always created
+ *              with O_DIRECT to enable Direct I/O
+ *
+ * Parameters:
+ *   aioFile    The AIOFile instance to reference for the file name
+ *   aMode      Open the file for write-only or read/write access
+ *   flags      Specifies the creation mode and file status
+ *   mode       The file permissions for the new file
+ * Returns:     A file descriptor for the created file, or SYSTEM_ERROR_CODE
+ * ----------------------------------------------------------------------------
+ */
+int f1207515_create(AIOFile *aioFile, FileAccessMode aMode, int flags, uint32_t mode);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_open
  * Description: Opens the file specified by pathname; file always opened with
  *              O_DIRECT to enable Direct I/O
  *
  * Parameters:
- *   pathName   The name of the file to open
+ *   aioFile    The AIOFile instance to reference for the file name
  *   aMode      Open the file for read-only, write-only, or read/write access
  *   flags      Zero or more file creation flags and file status flags
  * Returns:     The file descriptor for the opened file, or SYSTEM_ERROR_CODE
  * ----------------------------------------------------------------------------
  */
-int f1207515_open(char *pathName, FileAccessMode aMode, int flags);
+int f1207515_open(AIOFile *aioFile, FileAccessMode aMode, int flags);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_read
@@ -314,16 +361,14 @@ int f1207515_open(char *pathName, FileAccessMode aMode, int flags);
  *              read operation
  *
  * Parameters:
- *   aioContext     The AIOContext instance to append the AIORequest to
- *   fd             The file descriptor to read from
- *   buf            The data buffer to read into
- *   bufSize        The size of the data buffer
- *   offset         The offset from the start of the file to begin reading from
+ *   aioFile    The AIOFile instance to read from
+ *   buf        The data buffer to read into
+ *   bufSize    The size of the data buffer
  * Returns:     True if the AIO read operation was added successfully to the
  *              AIOContext, false otherwise
  * ----------------------------------------------------------------------------
  */
-bool f1207515_read(AIOContext *aioContext, int fd, void *buf, size_t bufSize, int64_t offset);
+bool f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_write
@@ -331,16 +376,14 @@ bool f1207515_read(AIOContext *aioContext, int fd, void *buf, size_t bufSize, in
  *              write operation
  *
  * Parameters:
- *   aioContext     The AIOContext instance to append the AIORequest to
- *   fd             The file descriptor to write to
- *   buf            The data buffer to write from
- *   count          The number of bytes to write from the buffer
- *   offset         The offset from the start of the file to begin writing to
+ *   aioFile    The AIOFile instance to write to
+ *   buf        The data buffer to write from
+ *   count      The number of bytes to write from the buffer
  * Returns:     True if the AIO write operation was added successfully to the
  *              AIOContext, false otherwise
  * ----------------------------------------------------------------------------
  */
-bool f1207515_write(AIOContext *aioContext, int fd, void *buf, size_t count, int64_t offset);
+bool f1207515_write(AIOFile *aioFile, void *buf, size_t count);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_submit

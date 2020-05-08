@@ -37,6 +37,7 @@
 
 #include "../lang/error.h"
 #include "../lang/integer.h"
+#include "../lang/stringbuilder.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -167,6 +168,18 @@ int f1207515_initAIOContext(AIOContext *aioContext, uint32_t maxOperations) {
 	return 0;
 }
 
+void f1207515_cleanUpAIOFile(AIOFile *aioFile) {
+	// Close the open file descriptor
+	e2f74138_closeFile(aioFile->fd, aioFile->fileName);
+}
+
+void f1207515_initAIOFile(AIOFile *aioFile, AIOContext *aioContext, char *fileName) {
+	f668c4bd_meminit(aioFile, sizeof(AIOFile));
+
+	aioFile->aioContext = aioContext;
+	aioFile->fileName = fileName;
+}
+
 void f1207515_cleanUpAIOTicket(AIOTicket *aioTicket) {
 	// Free all the AIORequest objects
 	for (uint32_t i=0; i < aioTicket->numRequests; i++) {
@@ -180,54 +193,76 @@ void f1207515_initAIOTicket(AIOTicket *aioTicket) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-int f1207515_open(char *pathName, FileAccessMode aMode, int flags) {
-	return open(pathName, aMode | O_DIRECT | flags);
+int f1207515_create(AIOFile *aioFile, FileAccessMode aMode, int flags, uint32_t mode) {
+	if (aMode == FOPEN_READONLY) {
+		StringBuilder errorMessage;
+		c598a24c_initStringBuilder(&errorMessage);
+
+		c598a24c_append_string(&errorMessage, "Cannot create AIO file '");
+		c598a24c_append_string(&errorMessage, aioFile->fileName);
+		c598a24c_append_string(&errorMessage, "': read-only File Access Mode specified");
+
+		c7c88e52_printError_string(errorMessage.buffer);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
+
+		return SYSTEM_ERROR_CODE;
+	}
+
+	aioFile->fd = open(aioFile->fileName, O_DIRECT|O_CREAT|aMode|flags, mode);
+
+	return aioFile->fd;
 }
 
-bool f1207515_read(AIOContext *aioContext, int fd, void *buf, size_t bufSize, int64_t offset) {
+int f1207515_open(AIOFile *aioFile, FileAccessMode aMode, int flags) {
+	aioFile->fd = open(aioFile->fileName, aMode | O_DIRECT | flags);
+
+	return aioFile->fd;
+}
+
+bool f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize) {
 	AIORequest *aioReadRequest;
 
-	if (b8da7268_isFull(aioContext->requestQueue)) {
+	if (b8da7268_isFull(aioFile->aioContext->requestQueue)) {
 		return false;
 	}
 
 	aioReadRequest = f668c4bd_malloc(sizeof(AIORequest));
 	f668c4bd_meminit(aioReadRequest, sizeof(AIORequest));
 
-	aioReadRequest->aio_fildes = fd;
+	aioReadRequest->aio_fildes = aioFile->fd;
 	aioReadRequest->aio_lio_opcode = AIO_READ;
 	aioReadRequest->aio_buf = (uint64_t) buf;
 	aioReadRequest->aio_nbytes = bufSize;
-	aioReadRequest->aio_offset = offset;
+	aioReadRequest->aio_offset = aioFile->offset;
 
 	// Keep track of some metrics
-	aioContext->numRequests++;
-	aioContext->numReadRequests++;
+	aioFile->aioContext->numRequests++;
+	aioFile->aioContext->numReadRequests++;
 
-	return b8da7268_enqueue(aioContext->requestQueue, aioReadRequest);
+	return b8da7268_enqueue(aioFile->aioContext->requestQueue, aioReadRequest);
 }
 
-bool f1207515_write(AIOContext *aioContext, int fd, void *buf, size_t count, int64_t offset) {
+bool f1207515_write(AIOFile *aioFile, void *buf, size_t count) {
 	AIORequest *aioWriteRequest;
 
-	if (b8da7268_isFull(aioContext->requestQueue)) {
+	if (b8da7268_isFull(aioFile->aioContext->requestQueue)) {
 		return false;
 	}
 
 	aioWriteRequest = f668c4bd_malloc(sizeof(AIORequest));
 	f668c4bd_meminit(aioWriteRequest, sizeof(AIORequest));
 
-	aioWriteRequest->aio_fildes = fd;
+	aioWriteRequest->aio_fildes = aioFile->fd;
 	aioWriteRequest->aio_lio_opcode = AIO_WRITE;
 	aioWriteRequest->aio_buf = (uint64_t) buf;
 	aioWriteRequest->aio_nbytes = count;
-	aioWriteRequest->aio_offset = offset;
+	aioWriteRequest->aio_offset = aioFile->offset;
 
 	// Keep track of some metrics
-	aioContext->numRequests++;
-	aioContext->numWriteRequests++;
+	aioFile->aioContext->numRequests++;
+	aioFile->aioContext->numWriteRequests++;
 
-	return b8da7268_enqueue(aioContext->requestQueue, aioWriteRequest);
+	return b8da7268_enqueue(aioFile->aioContext->requestQueue, aioWriteRequest);
 }
 
 bool f1207515_submit(AIOContext *aioContext, AIOTicket *aioTicket) {
