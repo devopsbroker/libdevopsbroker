@@ -98,8 +98,24 @@ void e2f74138_closeFile(const int fd, const char *pathName) {
 	}
 }
 
-int e2f74138_createFile(char *pathName, int flags, uint32_t mode) {
-	const int fd = open(pathName, flags|O_CREAT|O_WRONLY, mode);
+int e2f74138_createFile(char *pathName, FileAccessMode aMode, int flags, uint32_t mode) {
+	int fd;
+
+	if (aMode == FOPEN_READONLY) {
+		StringBuilder errorMessage;
+		c598a24c_initStringBuilder(&errorMessage);
+
+		c598a24c_append_string(&errorMessage, "Cannot create file '");
+		c598a24c_append_string(&errorMessage, pathName);
+		c598a24c_append_string(&errorMessage, "': read-only File Access Mode specified");
+
+		c7c88e52_printError_string(errorMessage.buffer);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
+
+		return SYSTEM_ERROR_CODE;
+	}
+
+	fd = open(pathName, O_CREAT|aMode|flags, mode);
 
 	if (fd == SYSTEM_ERROR_CODE) {
 		StringBuilder errorMessage;
@@ -257,6 +273,24 @@ char *e2f74138_realpath(const char *pathName) {
 	}
 
 	return realPathName;
+}
+
+ssize_t e2f74138_writeFile(int fd, void *buffer, size_t count, char *pathName) {
+	ssize_t numBytes = write(fd, buffer, count);
+
+	if (numBytes == SYSTEM_ERROR_CODE) {
+		StringBuilder errorMessage;
+		c598a24c_initStringBuilder(&errorMessage);
+
+		c598a24c_append_string(&errorMessage, "Cannot write to file '");
+		c598a24c_append_string(&errorMessage, pathName);
+		c598a24c_append_char(&errorMessage, '\'');
+
+		c7c88e52_printLibError(errorMessage.buffer, errno);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
+	}
+
+	return numBytes;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Error Handling Functions ~~~~~~~~~~~~~~~~~~~~~~~~~

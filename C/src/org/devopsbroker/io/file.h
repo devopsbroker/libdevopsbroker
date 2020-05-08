@@ -203,16 +203,17 @@ void e2f74138_closeFile(const int fd, const char *pathName);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    e2f74138_createFile
- * Description: Creates the file referenced by the file descriptor
+ * Description: Creates the file specified by pathname
  *
  * Parameters:
  *   pathName   The name of the file to create
- *   flags      Specifies the file access mode, creation mode, and file status
+ *   aMode      Open the file for write-only or read/write access
+ *   flags      Specifies the creation mode and file status
  *   mode       The file permissions for the new file
- * Returns:     A file descriptor to the created file
+ * Returns:     A file descriptor for the created file, or SYSTEM_ERROR_CODE
  * ----------------------------------------------------------------------------
  */
-int e2f74138_createFile(char *pathName, int flags, uint32_t mode);
+int e2f74138_createFile(char *pathName, FileAccessMode aMode, int flags, uint32_t mode);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    e2f74138_fileExists
@@ -378,6 +379,20 @@ uint64_t e2f74138_read_uint64(const char *pathName);
  * ----------------------------------------------------------------------------
  */
 char *e2f74138_realpath(const char *pathName);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    e2f74138_writeFile
+ * Description: Writes up to count bytes from the file descriptor into the buffer
+ *
+ * Parameters:
+ *   fd             The file descriptor of the file to read
+ *   buffer         The buffer to read into
+ *   count          The maximum number of bytes to read
+ *   pathName       The name of the file to read (used for error handling)
+ * Returns:         The actual number of bytes read
+ * ----------------------------------------------------------------------------
+ */
+ssize_t e2f74138_writeFile(int fd, void *buffer, size_t count, char *pathName);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Error Handling Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
