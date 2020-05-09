@@ -68,6 +68,7 @@ b7e0468d_crc32:
 ;	r11 : lookup table value
 
 .prologue:                            ; functions typically have a prologue
+	prefetcht0 [rel halfByteLUT]      ; prefetch lookup table into the CPU cache
 	prefetcht0 [rdi]                  ; prefetch buffer into the CPU cache
 	mov        eax, edx               ; return value = crc32 parameter
 	not        eax                    ; perform one's complement on crc32 parameter
