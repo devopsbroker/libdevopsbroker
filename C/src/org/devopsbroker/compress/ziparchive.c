@@ -50,6 +50,7 @@
 #include "../lang/memory.h"
 #include "../lang/string.h"
 #include "../memory/pagepool.h"
+#include "../time/time.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -138,7 +139,7 @@ void ce667b0d_unzip(ZipArchive *zipArchive) {
 		// 3. Load the Central Directory
 		centralDir = loadCentralDirectory(zipArchive);
 
-		// printCentralDirectory(centralDir);
+		printCentralDirectory(centralDir);
 
 		// 4. Load up to the first 32KB of the file
 		if (zipArchive->bufferList.fileOffset > 0) {
@@ -330,6 +331,7 @@ static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *cent
 	FileHeader *fileHeader;
 	uint32_t dataLength;
 	AIOFile *inputFile;
+	time_t timestamp;
 	uint32_t crc32;
 	void *bufPtr;
 	int fd;
@@ -428,9 +430,17 @@ static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *cent
 					crc32 = ce97d170_crc32(fileBuffer, fileHeader->uncompressSize);
 
 					if (crc32 == fileHeader->crc32) {
-						// Write out FileBuffer
+						// Create the file
 						fd = e2f74138_createFile(fileHeader->fileName, FOPEN_WRITEONLY, 0, FILE_DEFAULT_MODE);
+
+						// Write out FileBuffer
 						ce97d170_write(fileBuffer, fd, fileHeader->uncompressSize, fileHeader->fileName);
+
+						// Modify the file timestamp
+						timestamp = a66923ff_convertTimeFromDOS(fileHeader->lastModFileDate, fileHeader->lastModFileTime);
+						e2f74138_setTimestamp(fd, fileHeader->fileName, timestamp, timestamp);
+
+						// Close the file descriptor
 						e2f74138_closeFile(fd, fileHeader->fileName);
 					} else {
 
@@ -438,10 +448,15 @@ static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *cent
 
 				} else if (fileHeader->compressMethod == ZIP_METHOD_DEFLATE) {
 					if (fileHeader->uncompressSize == 0) {
-
+						// Create the empty file
 						fd = e2f74138_createFile(fileHeader->fileName, FOPEN_WRITEONLY, 0, FILE_DEFAULT_MODE);
-						e2f74138_closeFile(fd, fileHeader->fileName);
 
+						// Modify the file timestamp
+						timestamp = a66923ff_convertTimeFromDOS(fileHeader->lastModFileDate, fileHeader->lastModFileTime);
+						e2f74138_setTimestamp(fd, fileHeader->fileName, timestamp, timestamp);
+
+						// Close the file descriptor
+						e2f74138_closeFile(fd, fileHeader->fileName);
 					} else {
 						// TODO: Inflate deflated file
 					}

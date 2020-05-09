@@ -27,10 +27,12 @@
 
 // ═════════════════════════════════ Includes ═════════════════════════════════
 
+#include <stdint.h>
 #include <stdbool.h>
 
 #include <assert.h>
 #include <time.h>
+#include <sys/time.h>
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -42,12 +44,13 @@
 
 // Can't remap struct tm to have better variable names because Linux has hidden extensions to the standard
 typedef struct tm Time;   // Broken-down time struct
-/*	int tm_sec;       // Seconds (0-60)
+/*
+	int tm_sec;       // Seconds (0-60)
 	int tm_min;       // Minutes (0-59)
 	int tm_hour;      // Hours (0-23)
 	int tm_mday;      // Day of the month (1-31)
-	int tm_mon;       // Year - 1900
-	int tm_year;      // Month (0-11)
+	int tm_mon;       // Month (0-11)
+	int tm_year;      // Year - 1900
 	int tm_wday;      // Day of the week (0-6, Sunday = 0)
 	int tm_yday;      // Day in the year (0-365, 1 Jan = 0)
 	int tm_isdst;     // Is Daylight Saving Time
@@ -57,6 +60,14 @@ typedef struct tm Time;   // Broken-down time struct
 */
 
 static_assert(sizeof(Time) == 56, "Check your assumptions");
+
+typedef struct timeval TimeValue;
+/*
+	time_t        tv_sec;       // seconds
+	suseconds_t   tv_usec;      // microseconds
+*/
+
+static_assert(sizeof(TimeValue) == 16, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
@@ -78,6 +89,28 @@ static_assert(sizeof(Time) == 56, "Check your assumptions");
 void a66923ff_initTime(Time *time, time_t seconds);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    a66923ff_convertTimeFromDOS
+ * Description: Converts an MS-DOS date and time format into a time_t value
+ *
+ * Parameters:
+ *   dosDate    The date in MS-DOS format
+ *   dosTime	The time in MS-DOS format
+ * Returns:     The time since epoch as a time_t object
+ *
+ * MS-DOS Date Format:
+ *   0-4    Day of the month (1-31)
+ *   5-8    Month (1 = January, 2 = February, and so on)
+ *   9-15   Year offset from 1980 (add 1980 to get actual year)
+ *
+ * MS-DOS Time Format:
+ *   0-4    Seconds divided by 2
+ *   5-10   Minute (0-59)
+ *   11-15  Hour (0-23 on a 24-hour clock)
+ * ----------------------------------------------------------------------------
+ */
+time_t a66923ff_convertTimeFromDOS(uint16_t dosDate, uint16_t dosTime);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    a66923ff_getTime

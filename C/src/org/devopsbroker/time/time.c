@@ -46,6 +46,8 @@
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Initialization Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+
 void a66923ff_initTime(Time *time, time_t seconds) {
 	void *retVal = gmtime_r(&seconds, time);
 
@@ -61,6 +63,28 @@ void a66923ff_initTime(Time *time, time_t seconds) {
 		free(errorMessage.buffer);
 		exit(EXIT_FAILURE);
 	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+time_t a66923ff_convertTimeFromDOS(uint16_t dosDate, uint16_t dosTime) {
+	Time dos;
+
+	f668c4bd_meminit(&dos, sizeof(Time));
+	dos.tm_isdst = -1;
+
+	// 1. First convert the MS-DOS date
+	dos.tm_mday = dosDate & 0x1F;
+	dos.tm_mon = ((dosDate & 0x1E0) >> 5) - 1;
+	dos.tm_year = ((dosDate & 0xFE00) >> 9) + 80;
+
+	// 2. Next convert the MS-DOS time
+	dos.tm_sec = (dosTime & 0x1F) << 1;
+	dos.tm_min = (dosTime & 0x7E0) >> 5;
+	dos.tm_hour = (dosTime & 0xF800) >> 11;
+
+	// 3. Return the time_t
+	return mktime(&dos);
 }
 
 time_t a66923ff_getTime() {

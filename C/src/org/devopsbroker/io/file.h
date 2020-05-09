@@ -35,6 +35,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#include "../time/time.h"
+
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
 #define END_OF_FILE 0
@@ -43,7 +45,7 @@
 #define LOGICAL_BLOCK_SIZE 512
 #define PHYSICAL_BLOCK_SIZE 4096
 
-#define FILE_DEFAULT_MODE  0750
+#define FILE_DEFAULT_MODE  0640
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -363,8 +365,8 @@ uint32_t e2f74138_readUint32Hex(char *pathName);
  * Description: Returns the unsigned long int value in the specified file
  *
  * Parameters:
- *   pathName       The path name of the file
- * Returns:         The unsigned long int value contained within the file
+ *   pathName   The path name of the file
+ * Returns:     The unsigned long int value contained within the file
  * ----------------------------------------------------------------------------
  */
 uint64_t e2f74138_read_uint64(const char *pathName);
@@ -374,11 +376,24 @@ uint64_t e2f74138_read_uint64(const char *pathName);
  * Description: Returns the canonicalized absolute pathname
  *
  * Parameters:
- *   pathName       The path name of the file to evaluate
- * Returns:         The canonicalized absolute pathname
+ *   pathName   The path name of the file to evaluate
+ * Returns:     The canonicalized absolute pathname
  * ----------------------------------------------------------------------------
  */
 char *e2f74138_realpath(const char *pathName);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    e2f74138_setTimestamp
+ * Description: Sets the timestamp on the file referenced by the file descriptor
+ *
+ * Parameters:
+ *   fd         The file descriptor of the file to set the timestamp
+ *   pathName   The name of the file to modify (used for error handling)
+ *   aTime      The last access time of the file
+ *   modTime    The last modification time of the file
+ * ----------------------------------------------------------------------------
+ */
+void e2f74138_setTimestamp(int fd, char *pathName, time_t accessTime, time_t modTime);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    e2f74138_writeFile

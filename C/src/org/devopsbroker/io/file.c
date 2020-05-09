@@ -275,6 +275,30 @@ char *e2f74138_realpath(const char *pathName) {
 	return realPathName;
 }
 
+void e2f74138_setTimestamp(int fd, char *pathName, time_t accessTime, time_t modTime) {
+	TimeValue fileTimeArray[2];
+
+	// 1. Set the last access time
+	fileTimeArray[0].tv_sec = accessTime;
+	fileTimeArray[0].tv_usec = 0;
+
+	// 2. Set the last modification time
+	fileTimeArray[1].tv_sec = modTime;
+	fileTimeArray[1].tv_usec = 0;
+
+	if (futimes (fd, fileTimeArray) == SYSTEM_ERROR_CODE) {
+		StringBuilder errorMessage;
+		c598a24c_initStringBuilder(&errorMessage);
+
+		c598a24c_append_string(&errorMessage, "Cannot modify timestamp of file '");
+		c598a24c_append_string(&errorMessage, pathName);
+		c598a24c_append_char(&errorMessage, '\'');
+
+		c7c88e52_printLibError(errorMessage.buffer, errno);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
+	}
+}
+
 ssize_t e2f74138_writeFile(int fd, void *buffer, size_t count, char *pathName) {
 	ssize_t numBytes = write(fd, buffer, count);
 
