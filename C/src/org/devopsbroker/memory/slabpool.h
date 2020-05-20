@@ -1,5 +1,5 @@
 /*
- * pagepool.h - DevOpsBroker C header file for the org.devopsbroker.memory.PagePool struct
+ * slabpool.h - DevOpsBroker C header file for the org.devopsbroker.memory.SlabPool struct
  *
  * Copyright (C) 2020 Edward Smith <edwardsmith@devopsbroker.org>
  *
@@ -16,40 +16,45 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  * -----------------------------------------------------------------------------
- * Developed on Ubuntu 18.04.4 LTS running kernel.osrelease = 5.3.0-46
+ * Developed on Ubuntu 18.04.4 LTS running kernel.osrelease = 5.3.0-51
  *
- * echo ORG_DEVOPSBROKER_MEMORY_PAGEPOOL | md5sum | cut -c 25-32
+ * echo ORG_DEVOPSBROKER_MEMORY_SLABPOOL | md5sum | cut -c 25-32
  * -----------------------------------------------------------------------------
  */
 
-#ifndef ORG_DEVOPSBROKER_MEMORY_PAGEPOOL_H
-#define ORG_DEVOPSBROKER_MEMORY_PAGEPOOL_H
+#ifndef ORG_DEVOPSBROKER_MEMORY_SLABPOOL_H
+#define ORG_DEVOPSBROKER_MEMORY_SLABPOOL_H
 
 // ═════════════════════════════════ Includes ═════════════════════════════════
 
 #include <stdint.h>
-#include <stdbool.h>
 
 #include <assert.h>
 
-#include "../adt/listarray.h"
 #include "../adt/stackarray.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
+#define SLABPOOL_SLAB_SIZE  32768
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
-typedef struct PagePool {
-	StackArray pageStack;
-	ListArray  slabList;
-	uint32_t   numSlabsAlloc;
-	uint32_t   numPagesAlloc;
-	uint32_t   numPagesFree;
-	uint32_t   numPagesUsed;
-} PagePool;
+typedef struct Slab {
+	void        *buffer;
+	struct Slab *next;
+} Slab;
 
-static_assert(sizeof(PagePool) == 48, "Check your assumptions");
+static_assert(sizeof(Slab) == 16, "Check your assumptions");
+
+typedef struct SlabPool {
+	StackArray slabStack;
+	uint32_t   numSlabsAlloc;
+	uint32_t   numSlabsFree;
+	uint32_t   numSlabsInUse;
+	uint32_t   numSlabsUsed;
+} SlabPool;
+
+static_assert(sizeof(SlabPool) == 32, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
@@ -59,34 +64,34 @@ static_assert(sizeof(PagePool) == 48, "Check your assumptions");
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f502a409_destroyPagePool
- * Description: Frees the memory allocated to the internal PagePool
+ * Function:    b426145b_destroySlabPool
+ * Description: Frees the memory allocated to the internal SlabPool
  *
  * Parameters:
  *   debug      True to print internal statistics, false otherwise
  * ----------------------------------------------------------------------------
  */
-void f502a409_destroyPagePool(bool debug);
+void b426145b_destroySlabPool(bool debug);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f502a409_acquirePage
- * Description: Acquires a 4096-byte memory page from the internal PagePool
+ * Function:    b426145b_acquireSlab
+ * Description: Acquires a 32KB memory slab from the internal SlabPool
  *
- * Returns:     The page if available, NULL otherwise
+ * Returns:     The slab if available, NULL otherwise
  * ----------------------------------------------------------------------------
  */
-void *f502a409_acquirePage();
+Slab *b426145b_acquireSlab();
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f502a409_releasePage
- * Description: Releases a 4096-byte memory page back into the internal PagePool
+ * Function:    b426145b_releaseSlab
+ * Description: Releases a 32KB memory slab back into the internal SlabPool
  *
  * Parameters:
- *   pagePtr    The memory page to return to the PagePool
+ *   slabPtr    The memory slab to return to the SlabPool
  * ----------------------------------------------------------------------------
  */
-void f502a409_releasePage(void *pagePtr);
+void b426145b_releaseSlab(void *slabPtr);
 
-#endif /* ORG_DEVOPSBROKER_MEMORY_PAGEPOOL_H */
+#endif /* ORG_DEVOPSBROKER_MEMORY_SLABPOOL_H */

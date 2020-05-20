@@ -241,7 +241,7 @@ FileBuffer *ce97d170_readFileBuffer(AIOFile *aioFile, uint32_t length) {
 	FileBuffer *fileBuffer;
 	void *bufferPtr;
 
-	if (length > PAGEPOOL_PAGE_SIZE) {
+	if (length > MEMORY_PAGE_SIZE) {
 		StringBuilder errorMessage;
 		c598a24c_initStringBuilder(&errorMessage);
 
@@ -259,7 +259,7 @@ FileBuffer *ce97d170_readFileBuffer(AIOFile *aioFile, uint32_t length) {
 
 	// 1. Read file data
 	bufferPtr = f502a409_acquirePage();
-	f1207515_read(aioFile, bufferPtr, PAGEPOOL_PAGE_SIZE);
+	f1207515_read(aioFile, bufferPtr, MEMORY_PAGE_SIZE);
 
 	// 2. Submit the AIORequests
 	f1207515_submit(aioFile->aioContext, &aioTicket);
@@ -296,8 +296,8 @@ void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, u
 	offset = aioFile->offset;
 	for (uint32_t i=0; i < numBlocks; i++) {
 		bufferPtr = f502a409_acquirePage();
-		f1207515_read(aioFile, bufferPtr, PAGEPOOL_PAGE_SIZE);
-		aioFile->offset += PAGEPOOL_PAGE_SIZE;
+		f1207515_read(aioFile, bufferPtr, MEMORY_PAGE_SIZE);
+		aioFile->offset += MEMORY_PAGE_SIZE;
 	}
 	aioFile->offset = offset;
 

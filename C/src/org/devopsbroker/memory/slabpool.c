@@ -1,5 +1,5 @@
 /*
- * pagepool.c - DevOpsBroker C source file for the org.devopsbroker.memory.PagePool struct
+ * slabpool.c - DevOpsBroker C source file for the org.devopsbroker.memory.SlabPool struct
  *
  * Copyright (C) 2020 Edward Smith <edwardsmith@devopsbroker.org>
  *
@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  * -----------------------------------------------------------------------------
- * Developed on Ubuntu 18.04.4 LTS running kernel.osrelease = 5.3.0-46
+ * Developed on Ubuntu 18.04.4 LTS running kernel.osrelease = 5.3.0-51
  *
  * -----------------------------------------------------------------------------
  */
@@ -28,11 +28,11 @@
 // ═════════════════════════════════ Includes ═════════════════════════════════
 
 #include <stdlib.h>
+#include <stdio.h>
 
-#include "pagepool.h"
+#include "slabpool.h"
 
 #include "../lang/memory.h"
-#include "../memory/slabpool.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -42,77 +42,68 @@
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
-PagePool pagePool = { {NULL, 0, 0}, {NULL, 0, 0}, 0, 0, 0, 0 };
+SlabPool slabPool = { {NULL, 0, 0}, 0, 0, 0, 0 };
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
-static void populatePagePool();
+static void populateSlabPool();
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void f502a409_destroyPagePool(bool debug) {
+void b426145b_destroySlabPool(bool debug) {
 	if (debug) {
-		puts("PagePool Statistics:");
-		printf("\tNumber of Slabs Allocated: %u\n", pagePool.numSlabsAlloc);
-		printf("\tNumber of Pages Allocated: %u\n", pagePool.numPagesAlloc);
-		printf("\tNumber of Pages Free:      %u\n", pagePool.numPagesFree);
-		printf("\tNumber of Pages Used:      %u\n", pagePool.numPagesUsed);
+		puts("SlabPool Statistics:");
+		printf("\tNumber of Slabs Allocated: %u\n", slabPool.numSlabsAlloc);
+		printf("\tNumber of Slabs Free:      %u\n", slabPool.numSlabsFree);
+		printf("\tNumber of Slabs In Use     %u\n", slabPool.numSlabsInUse);
+		printf("\tNumber of Slabs Used:      %u\n", slabPool.numSlabsUsed);
 		printf("\n");
 	}
 
 	// Clean up the page stack and slab list
-	f106c0ab_cleanUpStackArray(&pagePool.pageStack, NULL);
-	b196167f_cleanUpListArray(&pagePool.slabList, b426145b_releaseSlab);
+	f106c0ab_cleanUpStackArray(&slabPool.slabStack, f668c4bd_free);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void *f502a409_acquirePage() {
-	// Initialize the page stack and slab list if no slabs have been allocated yet
-	if (pagePool.numSlabsAlloc == 0) {
-		f106c0ab_initStackArray(&pagePool.pageStack);
-		b196167f_initListArray(&pagePool.slabList);
+Slab *b426145b_acquireSlab() {
+	// Initialize the slab stack if no slabs have been allocated yet
+	if (slabPool.numSlabsAlloc == 0) {
+		f106c0ab_initStackArray(&slabPool.slabStack);
 	}
 
-	// Populate the PagePool with another slab if no pages are free
-	if (pagePool.numPagesFree == 0) {
-		populatePagePool();
+	// Populate the SlabPool with another slab if no pages are free
+	if (slabPool.numSlabsFree == 0) {
+		populateSlabPool();
 	}
 
-	// Keep track of how many pages are free versus used
-	pagePool.numPagesFree--;
-	pagePool.numPagesUsed++;
+	// Keep track of SlabPool statistics
+	slabPool.numSlabsFree--;
+	slabPool.numSlabsInUse++;
+	slabPool.numSlabsUsed++;
 
-	return f106c0ab_pop(&pagePool.pageStack);
+	return f106c0ab_pop(&slabPool.slabStack);
 }
 
-void f502a409_releasePage(void *pagePtr) {
-	// Keep track of how many pages are free versus used
-	pagePool.numPagesFree++;
-	pagePool.numPagesUsed--;
+void b426145b_releaseSlab(void *slabPtr) {
+	// Keep track of SlabPool statistics
+	slabPool.numSlabsFree++;
+	slabPool.numSlabsInUse--;
 
-	f106c0ab_push(&pagePool.pageStack, pagePtr);
+	f106c0ab_push(&slabPool.slabStack, slabPtr);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Private Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static void populatePagePool() {
+static void populateSlabPool() {
 	// Allocate a 32KB slab aligned on 4KB page boundary
-	Slab *slab = b426145b_acquireSlab();
-	void *slabBufferPtr = slab->buffer;
+	Slab *slab = f668c4bd_malloc(sizeof(Slab));
+	slab->buffer = f668c4bd_alignedAlloc(MEMORY_PAGE_SIZE, SLABPOOL_SLAB_SIZE);
 
-	// Add slab to the slab list
-	b196167f_add(&pagePool.slabList, slab);
-	pagePool.numSlabsAlloc++;
-
-	// Add pages to the page stack
-	for (int i=0; i < 8; i++) {
-		f106c0ab_push(&pagePool.pageStack, slabBufferPtr);
-		slabBufferPtr += MEMORY_PAGE_SIZE;
-	}
-
-	pagePool.numPagesAlloc += 8;
-	pagePool.numPagesFree += 8;
+	// Add slab to the slab stack and keep SlabPool statistics
+	f106c0ab_push(&slabPool.slabStack, slab);
+	slabPool.numSlabsAlloc++;
+	slabPool.numSlabsFree++;
 }
