@@ -35,9 +35,7 @@
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
-
 #define F106C0AB_DEFAULT_SIZE 8
-
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -84,8 +82,17 @@ void f106c0ab_destroyStackArray(StackArray *stackArray) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void f106c0ab_cleanUpStackArray(StackArray *stackArray) {
-	f668c4bd_free(stackArray->values);
+void f106c0ab_cleanUpStackArray(StackArray *stackArray, void freeElement(void *ptr)) {
+	if (stackArray->values != NULL) {
+		// Free all the elements first, if necessary
+		if (freeElement != NULL) {
+			while (stackArray->length > 0) {
+				freeElement(stackArray->values[--stackArray->length]);
+			}
+		}
+
+		f668c4bd_free(stackArray->values);
+	}
 }
 
 void f106c0ab_initStackArray(StackArray *stackArray) {

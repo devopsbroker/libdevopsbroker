@@ -90,9 +90,11 @@ void f106c0ab_destroyStackArray(StackArray *stackArray);
  *
  * Parameters:
  *   stackArray     A pointer to the StackArray instance to clean up
+ *   freeElement    A function pointer to the method that frees the underlying
+ *                  elemenmt contained within the StackArray instance
  * ----------------------------------------------------------------------------
  */
-void f106c0ab_cleanUpStackArray(StackArray *stackArray);
+void f106c0ab_cleanUpStackArray(StackArray *stackArray, void freeElement(void *ptr));
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f106c0ab_initStackArray
