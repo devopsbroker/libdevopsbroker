@@ -173,10 +173,9 @@ void f1207515_cleanUpAIOFile(AIOFile *aioFile) {
 	e2f74138_closeFile(aioFile->fd, aioFile->fileName);
 }
 
-void f1207515_initAIOFile(AIOFile *aioFile, AIOContext *aioContext, char *fileName) {
+void f1207515_initAIOFile(AIOFile *aioFile, char *fileName) {
 	f668c4bd_meminit(aioFile, sizeof(AIOFile));
 
-	aioFile->aioContext = aioContext;
 	aioFile->fileName = fileName;
 }
 
@@ -219,11 +218,11 @@ int f1207515_open(AIOFile *aioFile, FileAccessMode aMode, int flags) {
 	return aioFile->fd;
 }
 
-bool f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize) {
+AIORequest *f1207515_read(AIOContext *aioContext, AIOFile *aioFile, void *buf, size_t bufSize) {
 	AIORequest *aioReadRequest;
 
-	if (b8da7268_isFull(aioFile->aioContext->requestQueue)) {
-		return false;
+	if (b8da7268_isFull(aioContext->requestQueue)) {
+		return NULL;
 	}
 
 	aioReadRequest = f668c4bd_malloc(sizeof(AIORequest));
@@ -236,17 +235,20 @@ bool f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize) {
 	aioReadRequest->aio_offset = aioFile->offset;
 
 	// Keep track of some metrics
-	aioFile->aioContext->numRequests++;
-	aioFile->aioContext->numReadRequests++;
+	aioContext->numRequests++;
+	aioContext->numReadRequests++;
 
-	return b8da7268_enqueue(aioFile->aioContext->requestQueue, aioReadRequest);
+	// Queue the request in the AIOContext
+	b8da7268_enqueue(aioContext->requestQueue, aioReadRequest);
+
+	return aioReadRequest;
 }
 
-bool f1207515_write(AIOFile *aioFile, void *buf, size_t count) {
+AIORequest *f1207515_write(AIOContext *aioContext, AIOFile *aioFile, void *buf, size_t count) {
 	AIORequest *aioWriteRequest;
 
-	if (b8da7268_isFull(aioFile->aioContext->requestQueue)) {
-		return false;
+	if (b8da7268_isFull(aioContext->requestQueue)) {
+		return NULL;
 	}
 
 	aioWriteRequest = f668c4bd_malloc(sizeof(AIORequest));
@@ -259,10 +261,13 @@ bool f1207515_write(AIOFile *aioFile, void *buf, size_t count) {
 	aioWriteRequest->aio_offset = aioFile->offset;
 
 	// Keep track of some metrics
-	aioFile->aioContext->numRequests++;
-	aioFile->aioContext->numWriteRequests++;
+	aioContext->numRequests++;
+	aioContext->numWriteRequests++;
 
-	return b8da7268_enqueue(aioFile->aioContext->requestQueue, aioWriteRequest);
+	// Queue the request in the AIOContext
+	b8da7268_enqueue(aioContext->requestQueue, aioWriteRequest);
+
+	return aioWriteRequest;
 }
 
 bool f1207515_submit(AIOContext *aioContext, AIOTicket *aioTicket) {

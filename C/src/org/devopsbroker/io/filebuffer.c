@@ -236,7 +236,7 @@ FileBuffer *ce97d170_getBuffer(FileBufferList *bufferList, uint32_t index) {
 	return NULL;
 }
 
-FileBuffer *ce97d170_readFileBuffer(AIOFile *aioFile, uint32_t length) {
+FileBuffer *ce97d170_readFileBuffer(AIOContext *aioContext, AIOFile *aioFile, uint32_t length) {
 	AIOTicket aioTicket;
 	FileBuffer *fileBuffer;
 	void *bufferPtr;
@@ -259,13 +259,13 @@ FileBuffer *ce97d170_readFileBuffer(AIOFile *aioFile, uint32_t length) {
 
 	// 1. Read file data
 	bufferPtr = f502a409_acquirePage();
-	f1207515_read(aioFile, bufferPtr, MEMORY_PAGE_SIZE);
+	f1207515_read(aioContext, aioFile, bufferPtr, MEMORY_PAGE_SIZE);
 
 	// 2. Submit the AIORequests
-	f1207515_submit(aioFile->aioContext, &aioTicket);
+	f1207515_submit(aioContext, &aioTicket);
 
 	// 3. Retrieve the AIOEvents
-	f1207515_getEvents(aioFile->aioContext, &aioTicket);
+	f1207515_getEvents(aioContext, &aioTicket);
 
 	// 4. Print the ticket
 	// f1207515_printTicket(&aioTicket);
@@ -281,7 +281,7 @@ FileBuffer *ce97d170_readFileBuffer(AIOFile *aioFile, uint32_t length) {
 	return fileBuffer;
 }
 
-void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, uint32_t length) {
+void ce97d170_readFileBufferList(AIOContext *aioContext, AIOFile *aioFile, FileBufferList *bufferList, uint32_t length) {
 	AIOTicket aioTicket;
 	FileBuffer *fileBuffer;
 	uint32_t numBlocks;
@@ -296,17 +296,17 @@ void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, u
 	offset = aioFile->offset;
 	for (uint32_t i=0; i < numBlocks; i++) {
 		bufferPtr = f502a409_acquirePage();
-		f1207515_read(aioFile, bufferPtr, MEMORY_PAGE_SIZE);
+		f1207515_read(aioContext, aioFile, bufferPtr, MEMORY_PAGE_SIZE);
 		aioFile->offset += MEMORY_PAGE_SIZE;
 	}
 	aioFile->offset = offset;
 
-	while (aioFile->aioContext->requestQueue->length > 0) {
+	while (aioContext->requestQueue->length > 0) {
 		// 2. Submit the AIORequests
-		f1207515_submit(aioFile->aioContext, &aioTicket);
+		f1207515_submit(aioContext, &aioTicket);
 
 		// 3. Retrieve the AIOEvents
-		f1207515_getEvents(aioFile->aioContext, &aioTicket);
+		f1207515_getEvents(aioContext, &aioTicket);
 
 		// 4. Print the ticket
 		// f1207515_printTicket(&aioTicket);

@@ -28,6 +28,11 @@
  *    2. Linux AIO currently works best on a filesystem formatted with XFS
  *       The XFS filesystem natively supports multithreading which maximizes
  *       Linux AIO performance
+ *
+ *    3. Unless you are working at a very low-level with respect to writes
+ *       (think a database), Linux AIO write functionality is useless. In
+ *       order for the writes to succeed they *MUST* be in sizes of 512-byte
+ *       increments. Any other size will fail
  * -----------------------------------------------------------------------------
  */
 
@@ -188,14 +193,13 @@ typedef struct AIOContext {
 static_assert(sizeof(AIOContext) == 64, "Check your assumptions");
 
 typedef struct AIOFile {
-	AIOContext *aioContext;
 	char*       fileName;
 	int64_t     fileSize;
 	int64_t     offset;
 	int         fd;
 } AIOFile;
 
-static_assert(sizeof(AIOFile) == 40, "Check your assumptions");
+static_assert(sizeof(AIOFile) == 32, "Check your assumptions");
 
 typedef struct AIOTicket {
 	AIORequest   *requestList[8];
@@ -298,11 +302,10 @@ void f1207515_cleanUpAIOFile(AIOFile *aioFile);
  *
  * Parameters:
  *   aioFile        A pointer to the AIOFile instance to initalize
- *   aioContext     A pointer to the AIOContext instance to initalize
  *   fileName       The name of the file
  * ----------------------------------------------------------------------------
  */
-void f1207515_initAIOFile(AIOFile *aioFile, AIOContext *aioContext, char *fileName);
+void f1207515_initAIOFile(AIOFile *aioFile, char *fileName);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_cleanUpAIOTicket
@@ -361,14 +364,15 @@ int f1207515_open(AIOFile *aioFile, FileAccessMode aMode, int flags);
  *              read operation
  *
  * Parameters:
- *   aioFile    The AIOFile instance to read from
- *   buf        The data buffer to read into
- *   bufSize    The size of the data buffer
- * Returns:     True if the AIO read operation was added successfully to the
- *              AIOContext, false otherwise
+ *   aioContext     The AIOContext instance
+ *   aioFile        The AIOFile instance to read from
+ *   buf            The data buffer to read into
+ *   bufSize        The size of the data buffer
+ * Returns:     The created AIORequest for the read operation, or NULL if
+ *              AIOContext request queue is full
  * ----------------------------------------------------------------------------
  */
-bool f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize);
+AIORequest *f1207515_read(AIOContext *aioContext, AIOFile *aioFile, void *buf, size_t bufSize);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_write
@@ -376,14 +380,15 @@ bool f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize);
  *              write operation
  *
  * Parameters:
- *   aioFile    The AIOFile instance to write to
- *   buf        The data buffer to write from
- *   count      The number of bytes to write from the buffer
- * Returns:     True if the AIO write operation was added successfully to the
- *              AIOContext, false otherwise
+ *   aioContext     The AIOContext instance
+ *   aioFile        The AIOFile instance to write to
+ *   buf            The data buffer to write from
+ *   count          The number of bytes to write from the buffer
+ * Returns:     The created AIORequest for the write operation, or NULL if
+ *              AIOContext request queue is full
  * ----------------------------------------------------------------------------
  */
-bool f1207515_write(AIOFile *aioFile, void *buf, size_t count);
+AIORequest *f1207515_write(AIOContext *aioContext, AIOFile *aioFile, void *buf, size_t count);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_submit

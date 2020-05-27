@@ -212,24 +212,26 @@ FileBuffer *ce97d170_getBuffer(FileBufferList *bufferList, uint32_t index);
  * Description: Returns a FileBuffer instance populated with the requested data
  *
  * Parameters:
- *   aioFile    A pointer to the AIOFile instance
- *   length     The length of data to read
+ *   aioContext     The AIOContext instance
+ *   aioFile        A pointer to the AIOFile instance
+ *   length         The length of data to read
  * Returns:     A FileBuffer instance populated with the requested data
  * ----------------------------------------------------------------------------
  */
-FileBuffer *ce97d170_readFileBuffer(AIOFile *aioFile, uint32_t length);
+FileBuffer *ce97d170_readFileBuffer(AIOContext *aioContext, AIOFile *aioFile, uint32_t length);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    ce97d170_readFileBufferList
  * Description: Loads the requested data into the FileBufferList instance
  *
  * Parameters:
+ *   aioContext     The AIOContext instance
  *   aioFile        A pointer to the AIOFile instance
  *   bufferList     A pointer to the FileBufferList instance to populate
  *   length         The length of data to read
  * ----------------------------------------------------------------------------
  */
-void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, uint32_t length);
+void ce97d170_readFileBufferList(AIOContext *aioContext, AIOFile *aioFile, FileBufferList *bufferList, uint32_t length);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    ce97d170_write
