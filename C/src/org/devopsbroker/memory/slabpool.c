@@ -69,6 +69,8 @@ void b426145b_destroySlabPool(bool debug) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Slab *b426145b_acquireSlab() {
+	Slab *slabPtr;
+
 	// Initialize the slab stack if no slabs have been allocated yet
 	if (slabPool.numSlabsAlloc == 0) {
 		f106c0ab_initStackArray(&slabPool.slabStack);
@@ -84,7 +86,11 @@ Slab *b426145b_acquireSlab() {
 	slabPool.numSlabsInUse++;
 	slabPool.numSlabsUsed++;
 
-	return f106c0ab_pop(&slabPool.slabStack);
+	// Pop the Slab off the stack and return
+	slabPtr = f106c0ab_pop(&slabPool.slabStack);
+	slabPtr->next = NULL;
+
+	return slabPtr;
 }
 
 void b426145b_releaseSlab(void *slabPtr) {

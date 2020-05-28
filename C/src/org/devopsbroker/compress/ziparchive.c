@@ -42,6 +42,7 @@
 #include <stdbool.h>
 
 #include "ziparchive.h"
+#include "inflate.h"
 
 #include "../fs/directory.h"
 #include "../io/file.h"
@@ -63,23 +64,298 @@
 #define ZIP_END_OF_CDR_SIG   0x06054b50
 #define ZIP_END_OF_CDR_SIZE  22
 
+#define ZIP64_END_OF_CDR_SIGNATURE  0x06064b50
+#define ZIP64_END_OF_CDL_SIGNATURE  0x07064b50
+
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
+typedef enum CompressionMethod {
+	ZIP_METHOD_STORED = 0,
+	ZIP_METHOD_IMPLODE = 6,
+	ZIP_METHOD_DEFLATE = 8,
+	ZIP_METHOD_DEFLATE64 = 9
+} CompressionMethod;
+
+/*
+ * Bit 2  Bit 1
+ *   0      0    Normal (-en) compression option was used
+ *   0      1    Maximum (-exx/-ex) compression option was used
+ *   1      0    Fast (-ef) compression option was used
+ *   1      1    Super Fast (-es) compression option was used
+ */
+typedef enum DeflateOption {
+	ZIP_DEFLATE_MASK = 6,
+	ZIP_DEFLATE_NORMAL = 0,
+	ZIP_DEFLATE_MAXIMUM = 2,
+	ZIP_DEFLATE_FAST = 4,
+	ZIP_DEFLATE_SUPERFAST = 6
+} DeflateOption;
+
+/*
+ * Local File Header
+ *   - local file header signature                        4 bytes  (0x04034b50)
+ *   - version needed to extract                          2 bytes
+ *   - general purpose bit flag                           2 bytes
+ *   - compression method                                 2 bytes
+ *   - last mod file time                                 2 bytes
+ *   - last mod file date                                 2 bytes
+ *   - crc-32                                             4 bytes
+ *   - compressed size                                    4 bytes
+ *   - uncompressed size                                  4 bytes
+ *   - file name length                                   2 bytes
+ *   - extra field length                                 2 bytes
+ *
+ *   - file name                                          (variable size)
+ *   - extra field                                        (variable size)
+ */
+typedef struct LocalFileHeader {
+	char       *fileName;
+	char       *extraField;
+	char       *fileData;
+	uint32_t    signature;
+	uint32_t    crc32;
+	uint32_t    compressSize;
+	uint32_t    uncompressSize;
+	uint16_t    needToExtractVersion;
+	uint16_t    bitFlags;
+	uint16_t    compressMethod;
+	uint16_t    lastModFileTime;
+	uint16_t    lastModFileDate;
+	uint16_t    fileNameLen;
+	uint16_t    extraFieldLen;
+} LocalFileHeader __attribute__ ((aligned (16)));
+
+static_assert(sizeof(LocalFileHeader) == 56, "Check your assumptions");
+
+/*
+ * Data Descriptor
+ *   - crc-32                                             4 bytes
+ *   - compressed size                                    4 bytes
+ *   - uncompressed size                                  4 bytes
+ */
+typedef struct DataDescriptor {
+	uint32_t crc32;
+	uint32_t compressSize;
+	uint32_t uncompressSize;
+} DataDescriptor;
+
+static_assert(sizeof(DataDescriptor) == 12, "Check your assumptions");
+
+/*
+ * Zip64 Data Descriptor
+ *   - crc-32                                             4 bytes
+ *   - compressed size                                    8 bytes
+ *   - uncompressed size                                  8 bytes
+ */
+typedef struct Zip64DataDescriptor {
+	uint64_t compressSize;
+	uint64_t uncompressSize;
+	uint32_t crc32;
+} Zip64DataDescriptor;
+
+static_assert(sizeof(Zip64DataDescriptor) == 24, "Check your assumptions");
+
+/*
+ * File Header
+ *   - central file header signature                      4 bytes  (0x02014b50)
+ *   - version made by                                    2 bytes
+ *   - version needed to extract                          2 bytes
+ *   - general purpose bit flag                           2 bytes
+ *   - compression method                                 2 bytes
+ *   - last mod file time                                 2 bytes
+ *   - last mod file date                                 2 bytes
+ *   - crc-32                                             4 bytes
+ *   - compressed size                                    4 bytes
+ *   - uncompressed size                                  4 bytes
+ *   - file name length                                   2 bytes
+ *   - extra field length                                 2 bytes
+ *   - file comment length                                2 bytes
+ *   - disk number start                                  2 bytes
+ *   - internal file attributes                           2 bytes
+ *   - external file attributes                           4 bytes
+ *   - relative offset of local header                    4 bytes
+ *
+ *   - file name                                          (variable size)
+ *   - extra field                                        (variable size)
+ *   - file comment                                       (variable size)
+ */
+typedef struct FileHeader {
+	char*    fileName;
+	char*    extraField;
+	char*    fileComment;
+	uint32_t signature;
+	uint32_t crc32;
+	uint32_t compressSize;
+	uint32_t uncompressSize;
+	uint32_t externalFileAttribs;
+	uint32_t localHeaderOffset;
+	uint16_t madeByVersion;
+	uint16_t needToExtractVersion;
+	uint16_t bitFlags;
+	uint16_t compressMethod;
+	uint16_t lastModFileTime;
+	uint16_t lastModFileDate;
+	uint16_t fileNameLen;
+	uint16_t extraFieldLen;
+	uint16_t fileCommentLen;
+	uint16_t diskNumStart;
+	uint16_t internalFileAttribs;
+} FileHeader __attribute__ ((aligned (16)));
+
+static_assert(sizeof(FileHeader) == 72, "Check your assumptions");
+
+/*
+ * Digital Signature
+ *   - header signature                                   4 bytes  (0x05054b50)
+ *   - size of data                                       2 bytes
+ *   - signature data                                     (variable size)
+ */
+typedef struct DigitalSignature {
+	char*    data;
+	uint32_t signature;
+	uint16_t dataSize;
+} DigitalSignature;
+
+static_assert(sizeof(DigitalSignature) == 16, "Check your assumptions");
+
+/*
+ * Central Directory Structure
+ *   [file header 1]
+ *   .
+ *   .
+ *   .
+ *   [file header n]
+ *   [digital signature]
+ */
+typedef struct CentralDirectory {
+	ListArray        fileHeaderList;
+	DigitalSignature digitalSignature;
+} CentralDirectory;
+
+static_assert(sizeof(CentralDirectory) == 32, "Check your assumptions");
+
+/*
+ * End of Central Directory Record
+ *   - end of central dir signature                       4 bytes  (0x06054b50)
+ *   - number of this disk                                2 bytes
+ *   - number of the disk with the start of the
+ *     central directory                                  2 bytes
+ *   - total number of entries in the central
+ *     directory on this disk                             2 bytes
+ *   - total number of entries in the central
+ *     directory                                          2 bytes
+ *   - size of the central directory                      4 bytes
+ *   - offset of start of central directory
+ *     with respect to the starting disk number           4 bytes
+ *   - .ZIP file comment length                           2 bytes
+ *   - .ZIP file comment                                  (variable size)
+ */
+typedef struct EndOfCDR {
+	char*    comment;
+	uint32_t signature;
+	uint32_t size;
+	uint32_t startOffset;
+	uint16_t diskNum;
+	uint16_t startDiskNum;
+	uint16_t totalEntriesOnDisk;
+	uint16_t totalEntries;
+	uint16_t commentLength;
+} EndOfCDR;
+
+static_assert(sizeof(EndOfCDR) == 32, "Check your assumptions");
+
+/*
+ * Zip64 End of Central Directory Record
+ *   - zip64 end of central dir signature                 4 bytes  (0x06064b50)
+ *   - size of zip64 end of central directory record      8 bytes
+ *   - version made by                                    2 bytes
+ *   - version needed to extract                          2 bytes
+ *   - number of this disk                                4 bytes
+ *   - number of the disk with the start of the
+ *     central directory                                  4 bytes
+ *   - total number of entries in the central
+ *     directory on this disk                             8 bytes
+ *   - total number of entries in the central
+ *     directory                                          8 bytes
+ *   - size of the central directory                      8 bytes
+ *   - offset of start of central directory
+ *     with respect to the starting disk number           8 bytes
+ *   - zip64 extensible data sector                       (variable size)
+ */
+typedef struct Zip64EndOfCDR {
+	uint64_t recordSize;
+	uint64_t totalCentralDirEntriesOnThisDisk;
+	uint64_t totalCentralDirEntries;
+	uint64_t centralDirSize;
+	uint64_t centralDirStartOffset;
+	char*    extensibleData;
+	uint32_t signature;
+	uint32_t diskNum;
+	uint32_t centralDirStartDiskNum;
+	uint16_t madeByVersion;
+	uint16_t needToExtractVersion;
+} Zip64EndOfCDR;
+
+static_assert(sizeof(Zip64EndOfCDR) == 64, "Check your assumptions");
+
+/*
+ * Zip64 End of Central Directory Locator
+ *   - zip64 end of central dir locator signature         4 bytes  (0x07064b50)
+ *   - number of the disk with the start of the zip64
+ *     end of central directory                           4 bytes
+ *   - relative offset of the zip64 end of central
+ *     directory record                                   8 bytes
+ *   - total number of disks                              4 bytes
+ */
+typedef struct Zip64EndOfCDL {
+	uint64_t zip64EndOfCDRStartOffset;
+	uint32_t zip64EndOfCDRStartDiskNum;
+	uint32_t totalNumDisks;
+} Zip64EndOfCDL;
+
+static_assert(sizeof(Zip64EndOfCDL) == 16, "Check your assumptions");
+
+/*
+ * Zip Archive Format
+ *   [local file header 1]
+ *   [file data 1]
+ *   [data descriptor 1]
+ *   .
+ *   .
+ *   .
+ *   [local file header n]
+ *   [file data n]
+ *   [data descriptor n]
+ *   [central directory]
+ *   [zip64 end of central directory record]
+ *   [zip64 end of central directory locator]
+ *   [end of central directory record]
+ */
+typedef struct ZipFormat {
+	ZipArchive      *zipArchive;
+	CentralDirectory centralDirectory;
+	Zip64EndOfCDR    zip64EndOfCDR;
+	Zip64EndOfCDL    zip64EndOfCDL;
+	EndOfCDR         endOfCDR;
+} ZipFormat;
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
-static bool findEndOfCDR(ZipArchive *zipArchive);
-static CentralDirectory *loadCentralDirectory(ZipArchive *zipArchive);
+static bool findEndOfCDR(ZipFormat *zipFormat);
+static void loadCentralDirectory(ZipFormat *zipFormat);
 static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *centralDir);
 
 static void printEndOfCDR(EndOfCDR *endOfCDR);
 static void printCentralDirectory(CentralDirectory *centralDir);
+static void printLocalFileHeader(LocalFileHeader *localFileHeader, FileHeader *fileHeader, uint32_t index);
 
 static FileHeader *ce667b0d_createFileHeader();
+static void ce667b0d_destroyFileHeader(void *fileHeader);
 static LocalFileHeader *ce667b0d_createLocalFileHeader();
+static void ce667b0d_destroyLocalFileHeader(LocalFileHeader *localFileHeader);
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
@@ -103,43 +379,73 @@ void ce667b0d_cleanUpZipArchive(ZipArchive *zipArchive) {
 	// 1. Close the file
 	f1207515_cleanUpAIOFile(&zipArchive->aioFile);
 
-	// 2. Clean up the ListArray declarations
+	// 2. Clean up the FileBufferList struct
 	ce97d170_cleanUpFileBufferList(&zipArchive->bufferList, f502a409_releasePage);
-	b196167f_cleanUpListArray(&zipArchive->centralDirectory.fileHeaderList, f668c4bd_free);
 }
 
 void ce667b0d_initZipArchive(ZipArchive *zipArchive, AIOContext *aioContext, char *fileName) {
 	FileStatus fileStatus;
 
-	// 1. Initialize all of the ZipArchive memory
-	f668c4bd_meminit(zipArchive, sizeof(ZipArchive));
+	// 1. Initialize the FileBufferList struct
 	ce97d170_initFileBufferList(&zipArchive->bufferList);
-	b196167f_initListArray(&zipArchive->centralDirectory.fileHeaderList);
 
 	// 2. Initialize the AIOFile struct
-	f1207515_initAIOFile(&zipArchive->aioFile, aioContext, fileName);
+	f1207515_initAIOFile(&zipArchive->aioFile, fileName);
 
-	// 2. Open the file
+	// 3. Initialize the AIOContext and output directory
+	zipArchive->aioContext = aioContext;
+	zipArchive->outputDir = NULL;
+
+	// 4. Open the file
 	f1207515_open(&zipArchive->aioFile, FOPEN_READONLY, 0);
 
-	// 3. Retrieve the file size
+	// 5. Retrieve the file size
 	e2f74138_getDescriptorStatus(zipArchive->aioFile.fd, &fileStatus);
 	zipArchive->aioFile.fileSize = fileStatus.st_size;
+}
+
+static void cleanUpZipFormat(ZipFormat *zipFormat) {
+	// 1. Clean up the Central Directory FileHeader list
+	b196167f_cleanUpListArray(&zipFormat->centralDirectory.fileHeaderList, ce667b0d_destroyFileHeader);
+
+	// 2. Clean up the Central Directory DigitalSignature data
+	if (zipFormat->centralDirectory.digitalSignature.data != NULL) {
+		f668c4bd_free(zipFormat->centralDirectory.digitalSignature.data);
+	}
+
+	// 3. Clean up the End of Central Directory struct
+	if (zipFormat->endOfCDR.comment != NULL) {
+		f668c4bd_free(zipFormat->endOfCDR.comment);
+	}
+}
+
+static void initZipFormat(ZipFormat *zipFormat, ZipArchive *zipArchive) {
+	// 1. Initialize the ZipFormat memory
+	f668c4bd_meminit(zipFormat, sizeof(ZipFormat));
+
+	// 2. Initialize the Central Directory FileHeader list
+	b196167f_initListArray(&zipFormat->centralDirectory.fileHeaderList);
+
+	// 3. Initialize the ZipArchive struct
+	zipFormat->zipArchive = zipArchive;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void ce667b0d_unzip(ZipArchive *zipArchive) {
-	CentralDirectory *centralDir;
+	ZipFormat zipFormat;
+
+	// 1. Initialize the ZipFormat struct
+	initZipFormat(&zipFormat, zipArchive);
 
 	// 2. Find the End of Central Directory Record
-	if (findEndOfCDR(zipArchive)) {
-		printEndOfCDR(&zipArchive->endOfCDR);
+	if (findEndOfCDR(&zipFormat)) {
+		// printEndOfCDR(&zipFormat.endOfCDR);
 
 		// 3. Load the Central Directory
-		centralDir = loadCentralDirectory(zipArchive);
+		loadCentralDirectory(&zipFormat);
 
-		printCentralDirectory(centralDir);
+		// printCentralDirectory(&zipFormat.centralDirectory);
 
 		// 4. Load up to the first 32KB of the file
 		if (zipArchive->bufferList.fileOffset > 0) {
@@ -155,55 +461,58 @@ void ce667b0d_unzip(ZipArchive *zipArchive) {
 				dataLength = zipArchive->aioFile.fileSize;
 			}
 
-			ce97d170_readFileBufferList(&zipArchive->aioFile, &zipArchive->bufferList, dataLength);
+			ce97d170_readFileBufferList(zipArchive->aioContext, &zipArchive->aioFile, &zipArchive->bufferList, dataLength);
 		}
 
 		// 5. Process the FileHeader list obtained from the Central Directory
-		processFileHeaderList(zipArchive, centralDir);
+		processFileHeaderList(zipArchive, &zipFormat.centralDirectory);
 	}
+
+	// 6. Clean up ZipFormat struct
+	cleanUpZipFormat(&zipFormat);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Private Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static bool findEndOfCDR(ZipArchive *zipArchive) {
+static bool findEndOfCDR(ZipFormat *zipFormat) {
 	FileBuffer *fileBuffer;
 	AIOFile *aioFile;
 	uint32_t length;
 	void *bufPtr;
 
 	// 1. Set the initial offset
-	aioFile = &zipArchive->aioFile;
-	if (aioFile->fileSize > PAGEPOOL_PAGE_SIZE) {
-		aioFile->offset = aioFile->fileSize - PAGEPOOL_PAGE_SIZE;
+	aioFile = &zipFormat->zipArchive->aioFile;
+	if (aioFile->fileSize > MEMORY_PAGE_SIZE) {
+		aioFile->offset = aioFile->fileSize - MEMORY_PAGE_SIZE;
 		aioFile->offset = ((aioFile->offset + 511) >> 9) << 9;
 	}
 
 	length = aioFile->fileSize - aioFile->offset;
 
 	// 2. Read end of Zip archive
-	fileBuffer = ce97d170_readFileBuffer(aioFile, length);
-	ce97d170_addBuffer(&zipArchive->bufferList, fileBuffer);
+	fileBuffer = ce97d170_readFileBuffer(zipFormat->zipArchive->aioContext, aioFile, length);
+	ce97d170_addBuffer(&zipFormat->zipArchive->bufferList, fileBuffer);
 
 	bufPtr = fileBuffer->buffer + fileBuffer->numBytes;
 
 	if (fileBuffer->numBytes > ZIP_END_OF_CDR_SIZE) {
 		for (bufPtr -= ZIP_END_OF_CDR_SIZE; bufPtr >= fileBuffer->buffer; bufPtr--) {
 			if ( (*(uint32_t*)bufPtr) == ZIP_END_OF_CDR_SIG) {
-				zipArchive->endOfCDR.signature = (*(uint32_t*)bufPtr);
+				zipFormat->endOfCDR.signature = (*(uint32_t*)bufPtr);
 				bufPtr += 4;
-				zipArchive->endOfCDR.diskNum = (*(uint16_t*)bufPtr);
+				zipFormat->endOfCDR.diskNum = (*(uint16_t*)bufPtr);
 				bufPtr += 2;
-				zipArchive->endOfCDR.startDiskNum = (*(uint16_t*)bufPtr);
+				zipFormat->endOfCDR.startDiskNum = (*(uint16_t*)bufPtr);
 				bufPtr += 2;
-				zipArchive->endOfCDR.totalEntriesOnDisk = (*(uint16_t*)bufPtr);
+				zipFormat->endOfCDR.totalEntriesOnDisk = (*(uint16_t*)bufPtr);
 				bufPtr += 2;
-				zipArchive->endOfCDR.totalEntries = (*(uint16_t*)bufPtr);
+				zipFormat->endOfCDR.totalEntries = (*(uint16_t*)bufPtr);
 				bufPtr += 2;
-				zipArchive->endOfCDR.size = (*(uint32_t*)bufPtr);
+				zipFormat->endOfCDR.size = (*(uint32_t*)bufPtr);
 				bufPtr += 4;
-				zipArchive->endOfCDR.startOffset = (*(uint32_t*)bufPtr);
+				zipFormat->endOfCDR.startOffset = (*(uint32_t*)bufPtr);
 				bufPtr += 4;
-				zipArchive->endOfCDR.commentLength = (*(uint16_t*)bufPtr);
+				zipFormat->endOfCDR.commentLength = (*(uint16_t*)bufPtr);
 				bufPtr += 2;
 
 				return true;
@@ -214,14 +523,16 @@ static bool findEndOfCDR(ZipArchive *zipArchive) {
 	return false;
 }
 
-static CentralDirectory *loadCentralDirectory(ZipArchive *zipArchive) {
+static void loadCentralDirectory(ZipFormat *zipFormat) {
 	FileBuffer *fileBuffer;
 	FileHeader *fileHeader;
+	ZipArchive *zipArchive;
 	EndOfCDR *endOfCDR;
 	AIOFile *aioFile;
 	void *bufPtr;
 
-	endOfCDR = &zipArchive->endOfCDR;
+	endOfCDR = &zipFormat->endOfCDR;
+	zipArchive = zipFormat->zipArchive;
 	fileBuffer = ce97d170_containsData(&zipArchive->bufferList, endOfCDR->startOffset, endOfCDR->size);
 
 	if (fileBuffer == NULL) {
@@ -236,7 +547,7 @@ static CentralDirectory *loadCentralDirectory(ZipArchive *zipArchive) {
 		dataLength = endOfCDR->startOffset - aioFile->offset + endOfCDR->size;
 
 		// Read the data
-		ce97d170_readFileBufferList(aioFile, &zipArchive->bufferList, dataLength);
+		ce97d170_readFileBufferList(zipArchive->aioContext, aioFile, &zipArchive->bufferList, dataLength);
 		fileBuffer = ce97d170_containsData(&zipArchive->bufferList, endOfCDR->startOffset, dataLength);
 	}
 
@@ -318,17 +629,16 @@ static CentralDirectory *loadCentralDirectory(ZipArchive *zipArchive) {
 				bufPtr += fileHeader->fileCommentLen;
 			}
 
-			b196167f_add(&zipArchive->centralDirectory.fileHeaderList, fileHeader);
+			b196167f_add(&zipFormat->centralDirectory.fileHeaderList, fileHeader);
 		}
 	}
-
-	return &zipArchive->centralDirectory;
 }
 
 static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *centralDir) {
 	LocalFileHeader *localFileHeader;
 	FileBuffer *fileBuffer;
 	FileHeader *fileHeader;
+	Inflate inflateData;
 	uint32_t dataLength;
 	AIOFile *inputFile;
 	time_t timestamp;
@@ -359,7 +669,7 @@ static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *cent
 				dataLength += (fileHeader->localHeaderOffset - inputFile->offset);
 
 				// Read the data
-				ce97d170_readFileBufferList(inputFile, &zipArchive->bufferList, dataLength);
+				ce97d170_readFileBufferList(zipArchive->aioContext, inputFile, &zipArchive->bufferList, dataLength);
 				fileBuffer = ce97d170_containsData(&zipArchive->bufferList, fileHeader->localHeaderOffset, dataLength);
 			}
 
@@ -404,22 +714,7 @@ static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *cent
 					localFileHeader->extraField[localFileHeader->extraFieldLen] = '\0';
 					bufPtr += localFileHeader->extraFieldLen;
 				}
-/*
-				printf("LocalFileHeader #%u:\n", i);
-				printf("\tfilename:             %s [%s]\n", localFileHeader->fileName, f6215943_isEqual(localFileHeader->fileName, fileHeader->fileName) ? "same" : "different");
-				printf("\tsignature:            %#x\n", localFileHeader->signature);
-				printf("\tneedToExtractVersion: %u [%s]\n", localFileHeader->needToExtractVersion, (localFileHeader->needToExtractVersion == fileHeader->needToExtractVersion) ? "same" : "different");
-				printf("\tbitFlags:             %u [%s]\n", localFileHeader->bitFlags, (localFileHeader->bitFlags == fileHeader->bitFlags) ? "same" : "different");
-				printf("\tcompressMethod:       %u [%s]\n", localFileHeader->compressMethod, (localFileHeader->compressMethod == fileHeader->compressMethod) ? "same" : "different");
-				printf("\tlastModFileTime:      %u [%s]\n", localFileHeader->lastModFileTime, (localFileHeader->lastModFileTime == fileHeader->lastModFileTime) ? "same" : "different");
-				printf("\tlastModFileDate:      %u [%s]\n", localFileHeader->lastModFileDate, (localFileHeader->lastModFileDate == fileHeader->lastModFileDate) ? "same" : "different");
-				printf("\tcrc32:                %u [%s]\n", localFileHeader->crc32, (localFileHeader->crc32 == fileHeader->crc32) ? "same" : "different");
-				printf("\tcompressSize:         %u [%s]\n", localFileHeader->compressSize, (localFileHeader->compressSize == fileHeader->compressSize) ? "same" : "different");
-				printf("\tuncompressSize:       %u [%s]\n", localFileHeader->uncompressSize, (localFileHeader->uncompressSize == fileHeader->uncompressSize) ? "same" : "different");
-				printf("\tfileNameLen:          %u [%s]\n", localFileHeader->fileNameLen, (localFileHeader->fileNameLen == fileHeader->fileNameLen) ? "same" : "different");
-				printf("\textraFieldLen:        %u [%s]\n", localFileHeader->extraFieldLen, (localFileHeader->extraFieldLen == fileHeader->extraFieldLen) ? "same" : "different");
-				printf("\n");
-*/
+
 				// Create any subdirectories to the file
 				d0059b5b_makeDirectory(fileHeader->fileName, DIR_DEFAULT_MODE, true);
 
@@ -443,7 +738,7 @@ static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *cent
 						// Close the file descriptor
 						e2f74138_closeFile(fd, fileHeader->fileName);
 					} else {
-
+						// TODO: CRC-32 does not match the one in the archive
 					}
 
 				} else if (fileHeader->compressMethod == ZIP_METHOD_DEFLATE) {
@@ -458,9 +753,37 @@ static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *cent
 						// Close the file descriptor
 						e2f74138_closeFile(fd, fileHeader->fileName);
 					} else {
-						// TODO: Inflate deflated file
+						// printLocalFileHeader(localFileHeader, fileHeader, i);
+						fileBuffer = ce97d170_containsData(&zipArchive->bufferList, fileHeader->localHeaderOffset + dataLength, fileHeader->compressSize);
+
+						d592eb82_initInflate(&inflateData, fileBuffer, fileHeader->compressSize);
+						d592eb82_inflate(&inflateData);
+
+						// Check CRC-32 of the OutputBuffer
+						crc32 = c49f5b0d_crc32(&inflateData.outputBuffer, fileHeader->uncompressSize);
+
+						if (crc32 == fileHeader->crc32) {
+							// Create the file
+							fd = e2f74138_createFile(fileHeader->fileName, FOPEN_WRITEONLY, 0, FILE_DEFAULT_MODE);
+
+							// Write out OutputBuffer
+							c49f5b0d_write(&inflateData.outputBuffer, fd, fileHeader->fileName);
+
+							// Modify the file timestamp
+							timestamp = a66923ff_convertTimeFromDOS(fileHeader->lastModFileDate, fileHeader->lastModFileTime);
+							e2f74138_setTimestamp(fd, fileHeader->fileName, timestamp, timestamp);
+
+							// Close the file descriptor
+							e2f74138_closeFile(fd, fileHeader->fileName);
+						} else {
+							printf("CRC-32 does not match!");
+						}
+
+						d592eb82_cleanUpInflate(&inflateData);
 					}
 				}
+
+				ce667b0d_destroyLocalFileHeader(localFileHeader);
 			}
 		}
 	}
@@ -553,18 +876,67 @@ static void printCentralDirectory(CentralDirectory *centralDir) {
 	}
 }
 
+static void printLocalFileHeader(LocalFileHeader *localFileHeader, FileHeader *fileHeader, uint32_t index) {
+	printf("LocalFileHeader #%u:\n", index);
+	printf("\tfilename:             %s\n", localFileHeader->fileName);
+	printf("\tsignature:            %#x\n", localFileHeader->signature);
+	printf("\tneedToExtractVersion: %u\n", localFileHeader->needToExtractVersion);
+	printf("\tbitFlags:             %u\n", localFileHeader->bitFlags);
+	printf("\tcompressMethod:       %u\n", localFileHeader->compressMethod);
+	printf("\tlastModFileTime:      %u\n", localFileHeader->lastModFileTime);
+	printf("\tlastModFileDate:      %u\n", localFileHeader->lastModFileDate);
+	printf("\tcrc32:                %u\n", fileHeader->crc32);
+	printf("\tcompressSize:         %u\n", fileHeader->compressSize);
+	printf("\tuncompressSize:       %u\n", fileHeader->uncompressSize);
+	printf("\tfileNameLen:          %u\n", localFileHeader->fileNameLen);
+	printf("\textraFieldLen:        %u\n", localFileHeader->extraFieldLen);
+	printf("\n");
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+
 static FileHeader *ce667b0d_createFileHeader() {
-	FileHeader *fileHeader = malloc(sizeof(FileHeader));
+	FileHeader *fileHeader = f668c4bd_malloc(sizeof(FileHeader));
 
 	f668c4bd_meminit(fileHeader, sizeof(FileHeader));
 
 	return fileHeader;
 }
 
+static void ce667b0d_destroyFileHeader(void *fileHeaderPtr) {
+	FileHeader *fileHeader = (FileHeader *)fileHeaderPtr;
+
+	if (fileHeader->fileName != NULL) {
+		f668c4bd_free(fileHeader->fileName);
+	}
+
+	if (fileHeader->extraField != NULL) {
+		f668c4bd_free(fileHeader->extraField);
+	}
+
+	if (fileHeader->fileComment != NULL) {
+		f668c4bd_free(fileHeader->fileComment);
+	}
+
+	f668c4bd_free(fileHeader);
+}
+
 static LocalFileHeader *ce667b0d_createLocalFileHeader() {
-	LocalFileHeader *localFileHeader = malloc(sizeof(LocalFileHeader));
+	LocalFileHeader *localFileHeader = f668c4bd_malloc(sizeof(LocalFileHeader));
 
 	f668c4bd_meminit(localFileHeader, sizeof(LocalFileHeader));
 
 	return localFileHeader;
+}
+
+static void ce667b0d_destroyLocalFileHeader(LocalFileHeader *localFileHeader) {
+	if (localFileHeader->fileName != NULL) {
+		f668c4bd_free(localFileHeader->fileName);
+	}
+
+	if (localFileHeader->extraField != NULL) {
+		f668c4bd_free(localFileHeader->extraField);
+	}
+
+	f668c4bd_free(localFileHeader);
 }

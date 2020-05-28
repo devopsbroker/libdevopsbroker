@@ -1,5 +1,5 @@
 /*
- * ziparchive.h - DevOpsBroker C header file for the org.devopsbroker.compress.zip.ZipArchive struct
+ * inflate.h - DevOpsBroker C header file for the org.devopsbroker.compress.Inflate struct
  *
  * Copyright (C) 2020 Edward Smith <edwardsmith@devopsbroker.org>
  *
@@ -16,45 +16,60 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  * -----------------------------------------------------------------------------
- * Developed on Ubuntu 18.04.4 LTS running kernel.osrelease = 5.3.0-40
+ * Developed on Ubuntu 18.04.4 LTS running kernel.osrelease = 5.3.0-51
  *
- * echo ORG_DEVOPSBROKER_COMPRESS_ZIPARCHIVE | md5sum | cut -c 25-32
+ * echo ORG_DEVOPSBROKER_COMPRESS_INFLATE | md5sum | cut -c 25-32
+ *
+ * A Deflate stream consists of a series of blocks. Each block is preceded by a
+ * 3-bit header:
+ *
+ *  First bit: Last-block-in-stream marker:
+ *      1: This is the last block in the stream
+ *      0: There are more blocks to process after this one
+ *
+ *  Second and third bits: Encoding method used for this block type:
+ *      00: A stored (a.k.a. raw or literal) section, between 0 and 65,535 bytes in length
+ *      01: A static Huffman compressed block, using a pre-agreed Huffman tree defined in the RFC
+ *      10: A compressed block complete with the Huffman table supplied
+ *      11: Reserved—don't use
  * -----------------------------------------------------------------------------
  */
 
-#ifndef ORG_DEVOPSBROKER_COMPRESS_ZIP_ZIPARCHIVE_H
-#define ORG_DEVOPSBROKER_COMPRESS_ZIP_ZIPARCHIVE_H
+#ifndef ORG_DEVOPSBROKER_COMPRESS_INFLATE_H
+#define ORG_DEVOPSBROKER_COMPRESS_INFLATE_H
 
 // ═════════════════════════════════ Includes ═════════════════════════════════
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <assert.h>
 
-#include "../adt/listarray.h"
-#include "../io/async.h"
-#include "../io/filebuffer.h"
+#include "iobuffer.h"
+#include "../memory/slabpool.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
+#define INFLATE_INPUT_LENGTH  8192
+#define INFLATE_OUTPUT_LENGTH  32768
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
-/*
- * Zip Archive
- *    - List of FileBuffer structs
- *    - AIOFile struct for zip archive file
- *    - AIOContext for Linux AIO reads
- *    - Output directory for zip file artifacts
- */
-typedef struct ZipArchive {
-	FileBufferList   bufferList;
-	AIOFile          aioFile;
-	AIOContext      *aioContext;
-	char            *outputDir;
-} ZipArchive;
+typedef enum InflationStatus {
+	INFLATE_SUCCESS,              // Inflation was a success
+	INFLATE_NEED_INPUT,           // Need more input
+	INFLATE_OUTPUT_FULL,          // Output buffer is full
+	INFLATE_INPUT_ERROR           // Input data error
+} InflationStatus;
 
-static_assert(sizeof(ZipArchive) == 80, "Check your assumptions");
+typedef struct Inflate {
+	InputBuffer       inputBuffer;
+	OutputBuffer      outputBuffer;
+	uint32_t          inputBlockStart;
+	InflationStatus   status;
+} Inflate;
+
+static_assert(sizeof(Inflate) == 88, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
@@ -64,58 +79,61 @@ static_assert(sizeof(ZipArchive) == 80, "Check your assumptions");
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    ce667b0d_createZipArchive
- * Description: Creates a ZipArchive struct instance
- *
- * Returns:     A ZipArchive struct instance
- * ----------------------------------------------------------------------------
- */
-ZipArchive *ce667b0d_createZipArchive();
-
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    ce667b0d_destroyZipArchive
- * Description: Frees the memory allocated to the ZipArchive struct pointer
+ * Function:    d592eb82_createInflate
+ * Description: Creates an initialized Inflate struct
  *
  * Parameters:
- *   zipArchive	A pointer to the ZipArchive instance to destroy
+ *   fileBuffer     The FileBuffer instance
+ *   compressSize   The compressed size of the input file
+ * Returns:         An initialized Inflate struct
  * ----------------------------------------------------------------------------
  */
-void ce667b0d_destroyZipArchive(ZipArchive *zipArchive);
+Inflate *d592eb82_createInflate(FileBuffer *fileBuffer, uint32_t compressSize);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    d592eb82_destroyInflate
+ * Description: Frees the memory allocated to the Inflate struct pointer
+ *
+ * Parameters:
+ *   inflate    A pointer to the Inflate instance to destroy
+ * ----------------------------------------------------------------------------
+ */
+void d592eb82_destroyInflate(Inflate *inflate);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    ce667b0d_cleanUpZipArchive
- * Description: Frees dynamically allocated memory within the ZipArchive instance
+ * Function:    d592eb82_cleanUpInflate
+ * Description: Frees dynamically allocated memory within the Inflate instance
  *
  * Parameters:
- *   zipArchive	A pointer to the ZipArchive instance to clean up
+ *   inflate    A pointer to the Inflate instance to clean up
  * ----------------------------------------------------------------------------
  */
-void ce667b0d_cleanUpZipArchive(ZipArchive *zipArchive);
+void d592eb82_cleanUpInflate(Inflate *inflate);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    ce667b0d_initZipArchive
- * Description: Initializes an existing ZipArchive struct
+ * Function:    d592eb82_initInflate
+ * Description: Initializes an Inflate struct
  *
  * Parameters:
- *   zipArchive     A pointer to the ZipArchive instance to initalize
- *   aioContext     The AIOContext to use for Zip file access
- *   fileName       The name of the Zip archive file
+ *   inflate        A pointer to the Inflate instance to initalize
+ *   fileBuffer     The FileBuffer instance
+ *   compressSize   The compressed size of the input file
  * ----------------------------------------------------------------------------
  */
-void ce667b0d_initZipArchive(ZipArchive *zipArchive, AIOContext *aioContext, char *fileName);
+void d592eb82_initInflate(Inflate *inflate, FileBuffer *fileBuffer, uint32_t compressSize);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    ce667b0d_unzip
- * Description: Extract files from a Zip archive into the current directory
+ * Function:    d592eb82_inflate
+ * Description: Inflates a previously DEFLATE bitstream
  *
  * Parameters:
- *   zipArchive     The ZipArchive instance to unzip
+ *   inflate	A pointer to the Inflate instance
  * ----------------------------------------------------------------------------
  */
-void ce667b0d_unzip(ZipArchive *zipArchive);
+bool d592eb82_inflate(Inflate *inflate);
 
-#endif /* ORG_DEVOPSBROKER_COMPRESS_ZIP_ZIPARCHIVE_H */
+#endif /* ORG_DEVOPSBROKER_COMPRESS_INFLATE_H */
