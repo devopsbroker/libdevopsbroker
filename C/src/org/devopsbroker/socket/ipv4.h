@@ -34,8 +34,9 @@
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
-#define TCP_OVERHEAD 40
-#define UDP_OVERHEAD 28
+#define TCP_HEADER_SIZE   20
+#define UDP_HEADER_SIZE   8
+#define IPV4_HEADER_SIZE  20
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 

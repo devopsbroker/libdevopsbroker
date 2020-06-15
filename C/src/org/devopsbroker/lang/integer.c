@@ -149,6 +149,18 @@ uint32_t f45efac2_parseHex_uint32(register const char *source) {
 	return value;
 }
 
+int f45efac2_range(int value, int low, int high) {
+	if (value < low) {
+		return low;
+	}
+
+	if (value > high) {
+		return high;
+	}
+
+	return value;
+}
+
 char *f45efac2_toString_int32(register int32_t value) {
 	// Return the int32_t minimum value string
 	if (value == INT32_MIN) {

@@ -125,6 +125,19 @@ uint32_t f45efac2_parseHex_uint32(const char *source);
 int f45efac2_parseInt(const char *source, int *value);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f45efac2_range
+ * Description: Ensures the integer value is within the specified range
+ *
+ * Parameters:
+ *   value      The integer value
+ *   low        The low end of the range
+ *   high       The high end of the range
+ * Returns:     An integer value within the specified range
+ * ----------------------------------------------------------------------------
+ */
+int f45efac2_range(int value, int low, int high);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f45efac2_toString_int32
  * Description: Converts a signed integer to a string
  *
