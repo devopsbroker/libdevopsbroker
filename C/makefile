@@ -62,35 +62,36 @@ export CFLAGS
 ################################### Targets ###################################
 
 .ONESHELL:
+.SILENT:
 .PHONY: default clean prepare printenv
 
 default: $(C_OBJECTS) $(ASM_OBJECTS)
 
 clean:
 	$(call printInfo,Cleaning $(OBJ_DIR) directory)
-	/bin/rm -rfv $(OBJ_DIR)
+	/usr/bin/rm -rfv $(OBJ_DIR)
 	$(call printInfo,Cleaning $(LIB_DIR))
-	/bin/rm -fv lib/$(LIB_NAME)
+	/usr/bin/rm -fv lib/$(LIB_NAME)
 
 prepare:
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/adt
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/compress
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/fs
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/hash
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/info
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/io
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/lang
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/log
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/memory
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/net
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/socket
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/sysfs
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/system
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/terminal
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/test
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/text
-	/bin/mkdir --parents --mode=750 $(OBJ_DIR)/time
-	/bin/mkdir --parents --mode=750 $(LIB_DIR)
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/adt
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/compress
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/fs
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/hash
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/info
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/io
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/lang
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/log
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/memory
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/net
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/socket
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/sysfs
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/system
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/terminal
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/test
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/text
+	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/time
+	/usr/bin/mkdir --parents --mode=750 $(LIB_DIR)
 
 # Obtain object files for the C utilities
 $(OBJ_DIR)/adt/%.o: $(SRC_DIR)/adt/%.c $(SRC_DIR)/adt/%.h | prepare
@@ -232,7 +233,7 @@ $(OBJ_DIR)/time/%.o: $(SRC_DIR)/time/%.asm | prepare
 
 lib/libdevopsbroker.a: $(C_OBJECTS) $(ASM_OBJECTS)
 	$(call printInfo,Building libdevopsbroker.a static library)
-	/bin/rm -f lib/libdevopsbroker.a
+	/usr/bin/rm -f lib/libdevopsbroker.a
 	/usr/bin/ar cr lib/libdevopsbroker.a $(C_OBJECTS) $(ASM_OBJECTS)
 	/usr/bin/ranlib lib/libdevopsbroker.a
 
@@ -241,15 +242,15 @@ deploy: lib/libdevopsbroker.a
 	$(foreach headerFile, \
 		$(wildcard $(SRC_DIR)/**/*.h), \
 		dirName=$(subst src/,,$(dir $(headerFile))); \
-		sudo mkdir -v --parents /usr/include/$${dirName}; \
-		sudo cp -uv $(headerFile) /usr/include/$${dirName}; \
+		/usr/bin/sudo /usr/bin/mkdir -v --parents /usr/include/$${dirName}; \
+		/usr/bin/sudo /usr/bin/cp -uv $(headerFile) /usr/include/$${dirName}; \
 	)
-	sudo find /usr/include/org -type d -exec chmod -c 755 {} \;
-	sudo find /usr/include/org -type f -exec chmod -c 644 {} \;
+	/usr/bin/sudo /usr/bin/find /usr/include/org -type d -exec /usr/bin/chmod -c 755 {} \;
+	/usr/bin/sudo /usr/bin/find /usr/include/org -type f -exec /usr/bin/chmod -c 644 {} \;
 	$(call printInfo,Deploying libdevopsbroker.a static library)
 	libName=$(subst lib/,,$<);
-	sudo cp -uv $< /usr/lib/
-	sudo chmod -c 644 /usr/lib/$${libName}
+	/usr/bin/sudo /usr/bin/cp -uv $< /usr/lib/
+	/usr/bin/sudo /usr/bin/chmod -c 644 /usr/lib/$${libName}
 
 printenv:
 	echo "  MAKEFILE_LIST: $(MAKEFILE_LIST)"
