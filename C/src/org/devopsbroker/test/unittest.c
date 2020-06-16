@@ -29,9 +29,9 @@
 
 #include <stdio.h>
 
-#include <org/devopsbroker/terminal/ansi.h>
-
 #include "unittest.h"
+
+#include "../terminal/ansi.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
