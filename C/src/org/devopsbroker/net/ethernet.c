@@ -95,8 +95,7 @@ void d3843373_getEthernetStatus(Ethernet *ethernet, EthernetRequest *request, IP
 		c598a24c_append_char(&errorMessage, '\'');
 
 		c7c88e52_printLibError(errorMessage.buffer, errno);
-		free(errorMessage.buffer);
-		exit(EXIT_FAILURE);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
 	}
 
 	ethernet->speed = ethtool_cmd_speed(&ethernet->status);
