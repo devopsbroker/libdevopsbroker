@@ -176,10 +176,8 @@ void f1518caf_md5Rounds(uint32_t *state, uint32_t numRounds) {
 }
 
 void f1518caf_md5WithSalt(uint32_t *state, uint8_t *salt, uint32_t saltLen, void *buffer, uint32_t length) {
-	uint8_t message[64];
-	uint64_t msgLength;
-	uint32_t i;
 
+	// Exit if salt length is greater than 64
 	if (saltLen > 64) {
 		StringBuilder errorMessage;
 
@@ -192,61 +190,11 @@ void f1518caf_md5WithSalt(uint32_t *state, uint8_t *salt, uint32_t saltLen, void
 		exit(EXIT_FAILURE);
 	}
 
-	// Save original message length for later
-	i = saltLen + length;
-	msgLength = i;
+	// 1. Compute the MD5 digest of the salt value
+	f1518caf_md5(state, salt, saltLen);
 
-	if (msgLength > 64) {
-		uint32_t bufferLen;
-
-		bufferLen = 64 - saltLen;
-
-		f668c4bd_memcopy(salt, message, saltLen);
-		f668c4bd_memcopy(buffer, message + saltLen, bufferLen);
-		f1518caf_md5Transform(state, message);
-
-		buffer = (((uint8_t*)buffer) + bufferLen);
-		length -= bufferLen;
-		f1518caf_md5(state, buffer, length);
-
-	} else {
-
-
-		if (msgLength < 56) {
-			f668c4bd_memcopy(salt, message, saltLen);
-			f668c4bd_memcopy(buffer, message + saltLen, length);
-			message[i++] = ONE_BIT_VALUE;
-			f668c4bd_meminit(message + i, 64 - i);
-
-			((uint64_t*) message)[7] = msgLength;
-
-			f1518caf_md5Transform(state, message);
-
-		} else if (length < 64) {
-			f668c4bd_memcopy(salt, message, saltLen);
-			f668c4bd_memcopy(buffer, message + saltLen, length);
-			message[i++] = ONE_BIT_VALUE;
-
-			for (; i < 64; i++) {
-				message[i] = 0;
-			}
-
-			f1518caf_md5Transform(state, message);
-
-			f668c4bd_meminit(message, 56);
-			((uint64_t*) message)[7] = msgLength;
-			f1518caf_md5Transform(state, message);
-		} else {
-			f668c4bd_memcopy(salt, message, saltLen);
-			f668c4bd_memcopy(buffer, message + saltLen, length);
-			f1518caf_md5Transform(state, message);
-
-			f668c4bd_meminit(message, 56);
-			message[0] = ONE_BIT_VALUE;
-			((uint64_t*) message)[7] = msgLength;
-			f1518caf_md5Transform(state, message);
-		}
-	}
+	// 2. Then compute the MD5 digest of the buffer
+	f1518caf_md5(state, buffer, length);
 }
 
 void f1518caf_printMD5(uint32_t *digest) {
