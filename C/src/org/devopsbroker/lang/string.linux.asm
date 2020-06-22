@@ -767,29 +767,6 @@ f6215943_trim:
 	mov        rax, rdi               ; return current position of rdi
 	ret                               ; pop return address from stack and jump there
 
-; ═════════════════════════════ Private Routines ═════════════════════════════
-
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ getNextCharacter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-getNextCharacter:
-; Parameters:
-;	rdi : char *ipAddress
-;	rsi : 64-bit char buffer
-;	dx  : dl = bufSize, dh = 8
-
-	shr        rsi, 8                 ; shift to the next character
-	dec        dl                     ; bufSize--
-	inc        rdi                    ; string++
-
-	test       dl, dl                 ; if (bufSize == 0)
-	jnz        .epilogue
-
-	mov        rsi, [rdi]             ; load next eight characters into rsi
-	mov        dl, dh                 ; bufSize = 8
-
-.epilogue:
-	jmp        r10                    ; jump to the return address
-
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_truncate ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	global  f6215943_truncate:function
@@ -834,3 +811,26 @@ f6215943_truncate:
 
 .epilogue:
 	ret                               ; pop return address from stack and jump there
+
+; ═════════════════════════════ Private Routines ═════════════════════════════
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ getNextCharacter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+getNextCharacter:
+; Parameters:
+;	rdi : char *ipAddress
+;	rsi : 64-bit char buffer
+;	dx  : dl = bufSize, dh = 8
+
+	shr        rsi, 8                 ; shift to the next character
+	dec        dl                     ; bufSize--
+	inc        rdi                    ; string++
+
+	test       dl, dl                 ; if (bufSize == 0)
+	jnz        .epilogue
+
+	mov        rsi, [rdi]             ; load next eight characters into rsi
+	mov        dl, dh                 ; bufSize = 8
+
+.epilogue:
+	jmp        r10                    ; jump to the return address

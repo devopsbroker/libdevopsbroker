@@ -20,7 +20,7 @@
 ; Developed on Ubuntu 18.04.4 LTS running kernel.osrelease = 5.3.0-46
 ;
 ; This file implements the following x86-64 assembly language functions for the
-; org.devopsbroker.lang.string.h header file:
+; org.devopsbroker.hash.crc32.h header file:
 ;
 ;   o void b7e0468d_crc32(void *buffer, uint32_t length);
 ; -----------------------------------------------------------------------------
