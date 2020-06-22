@@ -156,6 +156,23 @@ void f1518caf_md5(uint32_t *state, void *buffer, uint32_t length) {
 	}
 }
 
+void f1518caf_md5Rounds(uint32_t *state, uint32_t numRounds) {
+	uint8_t message[64] = {
+		0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	};
+
+	((uint64_t*) message)[7] = 16UL;
+
+	while (numRounds > 0) {
+		f668c4bd_memcopy(state, message, 16);
+		f1518caf_md5Transform(state, message);
+		numRounds--;
+	}
+}
+
 void f1518caf_printMD5(uint32_t *digest) {
 	for (uint32_t i=0; i < 16; i++) {
 		printf ("%02x", ((uint8_t*)digest)[i]);

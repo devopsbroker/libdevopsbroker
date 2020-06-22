@@ -77,6 +77,18 @@ void f1518caf_initMD5State(uint32_t *state);
 void f1518caf_md5(uint32_t *state, void *buffer, uint32_t length);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1518caf_md5Rounds
+ * Description: Takes an existing MD5 digest state and applies and additional
+ *              numRounds transformations to it
+ *
+ * Parameters:
+ *   state      A pointer to the MD5 state array
+ *   numRounds  The number of transformation rounds to apply to the MD5 state
+ * ----------------------------------------------------------------------------
+ */
+void f1518caf_md5Rounds(uint32_t *state, uint32_t numRounds);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1518caf_printMD5
  * Description: Prints the MD5 hash digest as per the RFC 1321 spec
  *
