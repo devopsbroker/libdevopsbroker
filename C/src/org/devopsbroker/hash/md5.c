@@ -45,7 +45,9 @@
 
 #include "md5.h"
 
+#include "../lang/error.h"
 #include "../lang/memory.h"
+#include "../lang/stringbuilder.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -170,6 +172,80 @@ void f1518caf_md5Rounds(uint32_t *state, uint32_t numRounds) {
 		f668c4bd_memcopy(state, message, 16);
 		f1518caf_md5Transform(state, message);
 		numRounds--;
+	}
+}
+
+void f1518caf_md5WithSalt(uint32_t *state, uint8_t *salt, uint32_t saltLen, void *buffer, uint32_t length) {
+	uint8_t message[64];
+	uint64_t msgLength;
+	uint32_t i;
+
+	if (saltLen > 64) {
+		StringBuilder errorMessage;
+
+		c598a24c_initStringBuilder(&errorMessage);
+		c598a24c_append_string(&errorMessage, "Invalid salt length: ");
+		c598a24c_append_uint(&errorMessage, saltLen);
+
+		c7c88e52_printError_string(errorMessage.buffer);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
+		exit(EXIT_FAILURE);
+	}
+
+	// Save original message length for later
+	i = saltLen + length;
+	msgLength = i;
+
+	if (msgLength > 64) {
+		uint32_t bufferLen;
+
+		bufferLen = 64 - saltLen;
+
+		f668c4bd_memcopy(salt, message, saltLen);
+		f668c4bd_memcopy(buffer, message + saltLen, bufferLen);
+		f1518caf_md5Transform(state, message);
+
+		buffer = (((uint8_t*)buffer) + bufferLen);
+		length -= bufferLen;
+		f1518caf_md5(state, buffer, length);
+
+	} else {
+
+
+		if (msgLength < 56) {
+			f668c4bd_memcopy(salt, message, saltLen);
+			f668c4bd_memcopy(buffer, message + saltLen, length);
+			message[i++] = ONE_BIT_VALUE;
+			f668c4bd_meminit(message + i, 64 - i);
+
+			((uint64_t*) message)[7] = msgLength;
+
+			f1518caf_md5Transform(state, message);
+
+		} else if (length < 64) {
+			f668c4bd_memcopy(salt, message, saltLen);
+			f668c4bd_memcopy(buffer, message + saltLen, length);
+			message[i++] = ONE_BIT_VALUE;
+
+			for (; i < 64; i++) {
+				message[i] = 0;
+			}
+
+			f1518caf_md5Transform(state, message);
+
+			f668c4bd_meminit(message, 56);
+			((uint64_t*) message)[7] = msgLength;
+			f1518caf_md5Transform(state, message);
+		} else {
+			f668c4bd_memcopy(salt, message, saltLen);
+			f668c4bd_memcopy(buffer, message + saltLen, length);
+			f1518caf_md5Transform(state, message);
+
+			f668c4bd_meminit(message, 56);
+			message[0] = ONE_BIT_VALUE;
+			((uint64_t*) message)[7] = msgLength;
+			f1518caf_md5Transform(state, message);
+		}
 	}
 }
 

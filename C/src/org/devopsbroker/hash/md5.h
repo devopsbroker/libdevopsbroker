@@ -70,6 +70,7 @@ void f1518caf_initMD5State(uint32_t *state);
  * Description: Calculates the MD5 of the input data for length bytes
  *
  * Parameters:
+ *   state      A pointer to the MD5 state array
  *   buffer     A pointer to the data buffer to calculate the MD5
  *   length     The length of the buffer to calculate
  * ----------------------------------------------------------------------------
@@ -87,6 +88,21 @@ void f1518caf_md5(uint32_t *state, void *buffer, uint32_t length);
  * ----------------------------------------------------------------------------
  */
 void f1518caf_md5Rounds(uint32_t *state, uint32_t numRounds);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1518caf_md5WithSalt
+ * Description: Applies a variable length salt (up to 64 bytes) to the buffer
+ *              before calculating the MD5 digest
+ *
+ * Parameters:
+ *   state      A pointer to the MD5 state array
+ *   salt       A byte array of salt values (up to 64 bytes)
+ *   saltLen    The length of the salt byte array
+ *   buffer     A pointer to the data buffer to calculate the MD5
+ *   length     The length of the buffer to calculate
+ * ----------------------------------------------------------------------------
+ */
+void f1518caf_md5WithSalt(uint32_t *state, uint8_t *salt, uint32_t saltLen, void *buffer, uint32_t length);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1518caf_printMD5
