@@ -52,6 +52,11 @@ C_OBJECTS := $(subst src/,obj/,$(C_SOURCES:.c=.o))
 ASM_SOURCES := $(shell /usr/bin/find $(SRC_DIR) -type f -name "*.asm")
 ASM_OBJECTS := $(subst src/,obj/,$(ASM_SOURCES:.asm=.o))
 
+EXEC_CHMOD := $(shell which chmod)
+EXEC_CP :=  $(shell which cp)
+EXEC_MKDIR := $(shell which mkdir)
+EXEC_RM := $(shell which rm)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Exports ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 export ASM
@@ -69,29 +74,29 @@ default: $(C_OBJECTS) $(ASM_OBJECTS)
 
 clean:
 	$(call printInfo,Cleaning $(OBJ_DIR) directory)
-	/usr/bin/rm -rfv $(OBJ_DIR)
+	$(EXEC_RM) -rfv $(OBJ_DIR)
 	$(call printInfo,Cleaning $(LIB_DIR))
-	/usr/bin/rm -fv lib/$(LIB_NAME)
+	$(EXEC_RM) -fv lib/$(LIB_NAME)
 
 prepare:
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/adt
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/compress
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/fs
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/hash
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/info
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/io
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/lang
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/log
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/memory
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/net
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/socket
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/sysfs
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/system
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/terminal
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/test
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/text
-	/usr/bin/mkdir --parents --mode=750 $(OBJ_DIR)/time
-	/usr/bin/mkdir --parents --mode=750 $(LIB_DIR)
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/adt
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/compress
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/fs
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/hash
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/info
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/io
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/lang
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/log
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/memory
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/net
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/socket
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/sysfs
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/system
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/terminal
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/test
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/text
+	$(EXEC_MKDIR) --parents --mode=750 $(OBJ_DIR)/time
+	$(EXEC_MKDIR) --parents --mode=750 $(LIB_DIR)
 
 # Obtain object files for the C utilities
 $(OBJ_DIR)/adt/%.o: $(SRC_DIR)/adt/%.c $(SRC_DIR)/adt/%.h | prepare
@@ -106,7 +111,7 @@ $(OBJ_DIR)/fs/%.o: $(SRC_DIR)/fs/%.c $(SRC_DIR)/fs/%.h | prepare
 	$(call printInfo,Compiling $(@F))
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/hash/%.o: $(SRC_DIR)/hash/%.c $(SRC_DIR)/fs/%.h | prepare
+$(OBJ_DIR)/hash/%.o: $(SRC_DIR)/hash/%.c $(SRC_DIR)/hash/%.h | prepare
 	$(call printInfo,Compiling $(@F))
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -233,7 +238,7 @@ $(OBJ_DIR)/time/%.o: $(SRC_DIR)/time/%.asm | prepare
 
 lib/libdevopsbroker.a: $(C_OBJECTS) $(ASM_OBJECTS)
 	$(call printInfo,Building libdevopsbroker.a static library)
-	/usr/bin/rm -f lib/libdevopsbroker.a
+	$(EXEC_RM) -f lib/libdevopsbroker.a
 	/usr/bin/ar cr lib/libdevopsbroker.a $(C_OBJECTS) $(ASM_OBJECTS)
 	/usr/bin/ranlib lib/libdevopsbroker.a
 
@@ -242,15 +247,15 @@ deploy: lib/libdevopsbroker.a
 	$(foreach headerFile, \
 		$(wildcard $(SRC_DIR)/**/*.h), \
 		dirName=$(subst src/,,$(dir $(headerFile))); \
-		/usr/bin/sudo /usr/bin/mkdir -v --parents /usr/include/$${dirName}; \
-		/usr/bin/sudo /usr/bin/cp -uv $(headerFile) /usr/include/$${dirName}; \
+		/usr/bin/sudo $(EXEC_MKDIR) -v --parents /usr/include/$${dirName}; \
+		/usr/bin/sudo $(EXEC_CP) -uv $(headerFile) /usr/include/$${dirName}; \
 	)
-	/usr/bin/sudo /usr/bin/find /usr/include/org -type d -exec /usr/bin/chmod -c 755 {} \;
-	/usr/bin/sudo /usr/bin/find /usr/include/org -type f -exec /usr/bin/chmod -c 644 {} \;
+	/usr/bin/sudo /usr/bin/find /usr/include/org -type d -exec $(EXEC_CHMOD) -c 755 {} \;
+	/usr/bin/sudo /usr/bin/find /usr/include/org -type f -exec $(EXEC_CHMOD) -c 644 {} \;
 	$(call printInfo,Deploying libdevopsbroker.a static library)
 	libName=$(subst lib/,,$<);
-	/usr/bin/sudo /usr/bin/cp -uv $< /usr/lib/
-	/usr/bin/sudo /usr/bin/chmod -c 644 /usr/lib/$${libName}
+	/usr/bin/sudo $(EXEC_CP) -uv $< /usr/lib/
+	/usr/bin/sudo $(EXEC_CHMOD) -c 644 /usr/lib/$${libName}
 
 printenv:
 	echo "  MAKEFILE_LIST: $(MAKEFILE_LIST)"
