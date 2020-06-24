@@ -31,6 +31,8 @@
 
 #include <assert.h>
 
+#include "../lang/stringbuilder.h"
+
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
 
@@ -43,6 +45,18 @@
 // ═══════════════════════════ Function Declarations ══════════════════════════
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1518caf_appendMD5
+ * Description: Appends the MD5 digest in hexadecimal format to the
+ *              StringBuilder instance
+ *
+ * Parameters:
+ *   builder    The StringBuilder instance
+ *   state      A pointer to the MD5 state array
+ * ----------------------------------------------------------------------------
+ */
+void f1518caf_appendMD5(StringBuilder *builder, uint32_t *state);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1518caf_getHexString

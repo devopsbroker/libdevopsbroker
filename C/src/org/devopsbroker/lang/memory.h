@@ -183,6 +183,20 @@ void *f668c4bd_realloc_void_size_size(void *ptr, const size_t typeSize, const si
 void *f668c4bd_resizeArray(void *arrayPtr, uint32_t arrayLen, size_t typeSize, size_t numBlocks);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f668c4bd_resizeStrArray
+ * Description: Allocates a new block of memory for a string, copies over the
+ *              original string, and frees the original block of memory
+ *
+ * Parameters:
+ *   strPtr     The pointer to the string array to resize
+ *   strLen     The length of the string to resize
+ *   newSize    The new string size to allocate
+ * Returns:     A pointer to the new resized string
+ * ----------------------------------------------------------------------------
+ */
+void *f668c4bd_resizeStrArray(void *strPtr, uint32_t strLen, size_t newSize);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f668c4bd_stralloc
  * Description: Performs an 8-byte aligned malloc() operation for strings
  *

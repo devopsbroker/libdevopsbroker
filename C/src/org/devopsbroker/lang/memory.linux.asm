@@ -29,6 +29,7 @@
 ;   o void f668c4bd_meminit(void *ptr, size_t size);
 ;   o void *f668c4bd_realloc(void *ptr, size_t origSize, size_t newSize);
 ;   o void *f668c4bd_resizeArray(void *arrayPtr, uint32_t arrayLen, size_t typeSize, size_t numBlocks);
+;   o void *f668c4bd_resizeStrArray(void *strPtr, uint32_t strLen, size_t newSize);
 ;   o void *f668c4bd_stralloc(size_t size);
 ; -----------------------------------------------------------------------------
 ;
@@ -488,6 +489,74 @@ f668c4bd_resizeArray:
 	pop        r14                    ; restore r14 register
 	pop        r13                    ; restore r13 register
 	pop        r12                    ; restore r12 register
+	ret                               ; pop return address from stack and jump there
+
+.fatalError:
+	call       abort WRT ..plt
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~ f668c4bd_resizeStrArray ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f668c4bd_resizeStrArray:function
+f668c4bd_resizeStrArray:
+; Parameters:
+;	rdi : void *strPtr
+;	    : alignment parameter for aligned_alloc
+;	esi : uint32_t strLen
+;	    : size parameter for aligned_alloc
+;	rdx : size_t newSize
+; Local Variables:
+;	r12 : local register void *strPtr
+;	r13 : local register uint32_t strLen
+
+.prologue:                            ; functions typically have a prologue
+	push       r12                    ; put r12 register onto the stack
+	push       r13                    ; put r13 register onto the stack
+	sub        rsp, 8                 ; align stack frame before calling functions
+
+	test       rdi, rdi               ; if (strPtr == NULL)
+	jz         .epilogue
+
+	test       esi, esi               ; if (strLen == 0)
+	jz         .epilogue
+
+	test       rdx, rdx               ; if (numBlocks == 0)
+	jz         .epilogue
+
+	mov        r12, rdi               ; r12 = void *strPtr
+	mov        r13d, esi              ; r13d = uint32_t strLen
+
+.calcAllocSize:                       ; size must be a multiple of 16-byte alignment
+	shr        rsi, 4                 ; size = ((size / 16) + 1) * 16
+	inc        rsi
+	shl        rsi, 4
+
+	; void *aligned_alloc(size_t alignment, size_t size);
+.aligned_alloc:
+	mov        edi, 0x10              ; alignment = 16
+	mov        rsi, rdx               ; size = 16-byte aligned size
+	call       aligned_alloc WRT ..plt
+
+	test       rax, rax               ; if (ptr == NULL)
+	je         .fatalError
+
+	; void f668c4bd_memcopy(void *source, void *dest, size_t numBytes);
+.memcopyString:
+	mov        rdi, r12               ; source = void *strPtr
+	mov        rsi, rax               ; dest = aligned_alloc() reference
+	mov        edx, r13d              ; numBytes = uint32_t strLen
+	mov        r13, rax               ; save aligned_alloc() reference into r13
+	call       f668c4bd_memcopy
+
+	; void free(void *ptr);
+.freeOriginalArray:
+	mov        rdi, r12               ; ptr = void *strPtr
+	call       free WRT ..plt
+
+.epilogue:                            ; functions typically have an epilogue
+	mov        rax, r13               ; return new aligned_alloc() value
+	add        rsp, 8                 ; re-align stack frame before return
+	pop        r13                    ; restore r13 register from the stack
+	pop        r12                    ; restore r12 register from the stack
 	ret                               ; pop return address from stack and jump there
 
 .fatalError:

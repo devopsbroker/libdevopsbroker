@@ -22,6 +22,7 @@
 ; This file implements the following x86-64 assembly language functions for the
 ; org.devopsbroker.hash.md5.h header file:
 ;
+;   o void f1518caf_appendMD5(StringBuilder *builder, uint32_t *state);
 ;   o char *f1518caf_getHexString(uint32_t *state);
 ;   o void f1518caf_md5Transform(uint32_t *state, void *block);
 ; -----------------------------------------------------------------------------
@@ -65,15 +66,74 @@ X:          dd 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,\
 
 section .bss                ; RESX directives
 
-buffer:     resb 64         ; reserve 64 bytes
-
 ; ══════════════════════════════ Assembly Code ═══════════════════════════════
 
 section .text               ; TEXT section
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ External Resources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+extern  f668c4bd_resizeStrArray
 extern  f668c4bd_stralloc
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f1518caf_appendMD5 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  f1518caf_appendMD5:function
+f1518caf_appendMD5:
+; Parameters:
+;	rdi : StringBuilder *builder
+;	rsi : uint32_t *state
+; Local Variables:
+;	rdi : char *target
+;	edx : length
+;	ecx : size
+
+.prologue:                            ; functions typically have a prologue
+	mov        edx, [rdi + 8]         ; edx = builder->length
+	mov        ecx, [rdi + 12]        ; ecx = builder->size
+	mov        r8d, edx               ; save original length for resize operation
+
+.isLengthGTSize:
+	add        edx, 0x20              ; length += 32
+	cmp        edx, ecx               ; if (length < size)
+	jb         .populateStringBuilder
+
+	; void *f668c4bd_resizeStrArray(void *strPtr, uint32_t strLen, size_t newSize);
+.resizeStringBuilder:
+	push       rdi                    ; put rdi onto the stack
+	push       rsi                    ; put rsi onto the stack
+	push       rdx                    ; put rdx onto the stack
+
+	add        ecx, r8d               ; newSize = (newLength + (newLength >> 1))
+	shr        r8d, 1
+	add        ecx, r8d
+	mov        [rdi + 12], ecx        ; builder->size = newSize
+
+	mov        rdi, [rdi]             ; strPtr = builder->buffer
+	mov        esi, r8d               ; strLen = builder->length
+	call       f668c4bd_resizeStrArray
+
+	pop        rdx                    ; retrieve rdx from the stack
+	pop        rsi                    ; retrieve rsi from the stack
+	pop        rdi                    ; retrieve rdi from the stack
+
+	mov        [rdi], rax             ; builder->buffer = new array address
+
+.populateStringBuilder:
+	xchg       edx, [rdi + 8]         ; newLength <=> old length
+	mov        rdi, [rdi]             ; target = builder->buffer + builder->length
+	lea        rdi, [rdi + rdx]
+
+	mov        rdx, [rsi]
+	mov        r8w, ZERO
+	mov        r9w, UPPER_W
+	xor        ecx, ecx
+	xor        r10d, r10d
+
+	call       convertToHexadecimal
+
+.epilogue:                            ; functions typically have an epilogue
+	mov        [rdi], byte 0x00       ; null-terminate builder->buffer
+	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~ f1518caf_getHexString ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -86,53 +146,23 @@ f1518caf_getHexString:
 	push       rdi                    ; put rdi onto the stack
 
 	; void *f668c4bd_stralloc(size_t size);
-.allocateMD5String:
+.allocateString:
 	mov        rdi, MD5_HASH_LENGTH
 	call       f668c4bd_stralloc
 	mov        rdi, rax
 	pop        rsi                    ; retrieve rdi from the stack and place in rsi
 
+.populateString:
 	mov        rdx, [rsi]
 	mov        r8w, ZERO
 	mov        r9w, UPPER_W
 	xor        ecx, ecx
 	xor        r10d, r10d
 
-.convertToHexadecimal:
-	movzx      r11d, dl               ; baseChar = (value <= 9) ? ZERO : UPPER_W
-	and        r11b, 0xF0
-	shr        r11b, 4
-	cmp        r11b, 0x09
-	cmovbe     cx, r8w
-	cmova      cx, r9w
-
-	lea        r11d, [r11d + ecx]     ; char = baseChar + value
-	mov        [rdi], r11b
-	inc        rdi                    ; md5String++
-
-	movzx      r11d, dl               ; baseChar = (value <= 9) ? ZERO : UPPER_W
-	and        r11b, 0x0F
-	cmp        r11b, 0x09
-	cmovbe     cx, r8w
-	cmova      cx, r9w
-
-	lea        r11d, [r11d + ecx]     ; char = baseChar + value
-	mov        [rdi], r11b
-	inc        rdi                    ; md5String++
-
-	shr        rdx, 8                 ; move one full byte over
-	inc        r10b                   ; loop counter++
-
-	test       r10b, 0x07             ; if (loop counter % 8 != 0)
-	jnz        .convertToHexadecimal
-
-	cmp        r10b, 0x10             ; if (loop counter == 16)
-	je         .epilogue
-
-	mov        rdx, [rsi + r10]
-	jmp        .convertToHexadecimal
+	call       convertToHexadecimal
 
 .epilogue:                            ; functions typically have an epilogue
+	mov        [rdi], byte 0x00       ; null-terminate string
 	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~ f1518caf_md5Transform ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -374,6 +404,45 @@ f1518caf_md5Transform:
 	ret                               ; pop return address from stack and jump there
 
 ; ═════════════════════════════ Private Routines ═════════════════════════════
+
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~ convertToHexadecimal ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+convertToHexadecimal:
+	movzx      r11d, dl               ; baseChar = (value <= 9) ? ZERO : UPPER_W
+	and        r11b, 0xF0
+	shr        r11b, 4
+	cmp        r11b, 0x09
+	cmovbe     cx, r8w
+	cmova      cx, r9w
+
+	lea        r11d, [r11d + ecx]     ; char = baseChar + value
+	mov        [rdi], r11b
+	inc        rdi                    ; md5String++
+
+	movzx      r11d, dl               ; baseChar = (value <= 9) ? ZERO : UPPER_W
+	and        r11b, 0x0F
+	cmp        r11b, 0x09
+	cmovbe     cx, r8w
+	cmova      cx, r9w
+
+	lea        r11d, [r11d + ecx]     ; char = baseChar + value
+	mov        [rdi], r11b
+	inc        rdi                    ; md5String++
+
+	shr        rdx, 8                 ; move one full byte over
+	inc        r10b                   ; loop counter++
+
+	test       r10b, 0x07             ; if (loop counter % 8 != 0)
+	jnz        convertToHexadecimal
+
+	cmp        r10b, 0x10             ; if (loop counter == 16)
+	je         .epilogue
+
+	mov        rdx, [rsi + r10]
+	jmp        convertToHexadecimal
+
+.epilogue:                            ; functions typically have an epilogue
+	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ffTransform ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
