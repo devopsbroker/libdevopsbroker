@@ -302,26 +302,21 @@ bool f1207515_submit(AIOContext *aioContext, AIOTicket *aioTicket) {
 
 bool f1207515_getEvents(AIOContext *aioContext, AIOTicket *aioTicket) {
 	AIORequest *aioRequest;
-	uint32_t numEvents = 0;
 	long retValue;
 
-	while (numEvents < aioTicket->numRequests) {
-		retValue = syscall(__NR_io_getevents, aioTicket->id, 1,
-			aioTicket->numRequests - numEvents, aioTicket->eventList,
+	retValue = syscall(__NR_io_getevents, aioTicket->id, aioTicket->numRequests,
+			aioTicket->numRequests, aioTicket->eventList,
 			&aioContext->timeout);
 
-		if (retValue < 0) {
-			errno = -retValue;
-			return false;
-		}
-
-		numEvents += retValue;
+	if (retValue < 0) {
+		errno = -retValue;
+		return false;
 	}
 
 	// Keep track of some metrics
-	aioTicket->numEvents = numEvents;
+	aioTicket->numEvents += retValue;
 
-	for (uint32_t i=0; i < numEvents; i++) {
+	for (uint32_t i=0; i < retValue; i++) {
 		aioRequest = (AIORequest*) aioTicket->eventList[i].obj;
 
 		if (aioRequest->aio_lio_opcode == AIO_READ) {
