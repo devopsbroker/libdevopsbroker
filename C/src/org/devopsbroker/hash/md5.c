@@ -175,6 +175,68 @@ void f1518caf_md5Rounds(uint32_t *state, uint32_t numRounds) {
 	}
 }
 
+void f1518caf_md5Stream(uint32_t *state, void *buffer, uint32_t length) {
+
+	// Exit if buffer length is not a multiple of 64
+	if ((length & 0x3F) != 0) {
+		StringBuilder errorMessage;
+
+		c598a24c_initStringBuilder(&errorMessage);
+		c598a24c_append_string(&errorMessage, "f1518caf_md5Stream(): Invalid buffer length of ");
+		c598a24c_append_uint(&errorMessage, length);
+
+		c7c88e52_printError_string(errorMessage.buffer);
+		c598a24c_cleanUpStringBuilder(&errorMessage);
+		exit(EXIT_FAILURE);
+	}
+
+	// Calculate the MD5 based upon the stream of bytes
+	do {
+		f1518caf_md5Transform(state, buffer);
+		length -= 64;
+	} while (length > 0);
+}
+
+void f1518caf_md5StreamEnd(uint32_t *state, void *buffer, uint32_t length, size_t origLen) {
+	uint8_t message[64];
+
+	while (length > 64) {
+		f1518caf_md5Transform(state, buffer);
+		length -= 64;
+	}
+
+	if (length < 56) {
+		f668c4bd_memcopy(buffer, message, length);
+		message[length++] = ONE_BIT_VALUE;
+		f668c4bd_meminit(message + length, 64 - length);
+
+		((uint64_t*) message)[7] = origLen;
+
+		f1518caf_md5Transform(state, message);
+
+	} else if (length < 64) {
+		f668c4bd_memcopy(buffer, message, length);
+		message[length++] = ONE_BIT_VALUE;
+
+		for (; length < 64; length++) {
+			message[length] = 0;
+		}
+
+		f1518caf_md5Transform(state, message);
+
+		f668c4bd_meminit(message, 56);
+		((uint64_t*) message)[7] = origLen;
+		f1518caf_md5Transform(state, message);
+	} else {
+		f1518caf_md5Transform(state, buffer);
+
+		f668c4bd_meminit(message, 56);
+		message[0] = ONE_BIT_VALUE;
+		((uint64_t*) message)[7] = origLen;
+		f1518caf_md5Transform(state, message);
+	}
+}
+
 void f1518caf_md5WithSalt(uint32_t *state, uint8_t *salt, uint32_t saltLen, void *buffer, uint32_t length) {
 
 	// Exit if salt length is greater than 64
@@ -182,7 +244,7 @@ void f1518caf_md5WithSalt(uint32_t *state, uint8_t *salt, uint32_t saltLen, void
 		StringBuilder errorMessage;
 
 		c598a24c_initStringBuilder(&errorMessage);
-		c598a24c_append_string(&errorMessage, "Invalid salt length: ");
+		c598a24c_append_string(&errorMessage, "f1518caf_md5WithSalt(): Invalid salt length of ");
 		c598a24c_append_uint(&errorMessage, saltLen);
 
 		c7c88e52_printError_string(errorMessage.buffer);

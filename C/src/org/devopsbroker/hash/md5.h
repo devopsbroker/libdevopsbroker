@@ -104,6 +104,35 @@ void f1518caf_md5(uint32_t *state, void *buffer, uint32_t length);
 void f1518caf_md5Rounds(uint32_t *state, uint32_t numRounds);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1518caf_md5Stream
+ * Description: Partially calculates the MD5 of the input data as part of a
+ *              larger stream of bytes. The buffer length must be a multiple
+ *              of 64 bytes.
+ *
+ * Parameters:
+ *   state      A pointer to the MD5 state array
+ *   buffer     A pointer to the data buffer to calculate the MD5
+ *   length     The length of the buffer to calculate (must be a multiple of 64)
+ * ----------------------------------------------------------------------------
+ */
+void f1518caf_md5Stream(uint32_t *state, void *buffer, uint32_t length);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1518caf_md5StreamEnd
+ * Description: Partially calculates the MD5 of the input data as part of a
+ *              larger stream of bytes. The buffer length must be a multiple
+ *              of 64 bytes.
+ *
+ * Parameters:
+ *   state      A pointer to the MD5 state array
+ *   buffer     A pointer to the data buffer to calculate the MD5
+ *   length     The length of the buffer to calculate
+ *   origLen    The original length of the stream
+ * ----------------------------------------------------------------------------
+ */
+void f1518caf_md5StreamEnd(uint32_t *state, void *buffer, uint32_t length, size_t origLen);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1518caf_md5WithSalt
  * Description: Applies a variable length salt (up to 64 bytes) to the buffer
  *              before calculating the MD5 digest
