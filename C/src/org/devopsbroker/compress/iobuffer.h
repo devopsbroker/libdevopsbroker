@@ -52,11 +52,11 @@ typedef struct InputBuffer {
 static_assert(sizeof(InputBuffer) == 48, "Check your assumptions");
 
 typedef struct OutputBuffer {
-	Slab    *slab;
-	uint8_t *currentBuf;
-	uint8_t *previousBuf;
-	uint32_t length;
-	uint32_t size;
+	uint8_t             *buffer;
+	struct OutputBuffer *prev;
+	struct OutputBuffer *next;
+	uint32_t             length;
+	uint32_t             size;
 } OutputBuffer;
 
 static_assert(sizeof(OutputBuffer) == 32, "Check your assumptions");

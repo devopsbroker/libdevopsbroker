@@ -39,13 +39,6 @@
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
-typedef struct Slab {
-	void        *buffer;
-	struct Slab *next;
-} Slab;
-
-static_assert(sizeof(Slab) == 16, "Check your assumptions");
-
 typedef struct SlabPool {
 	StackArray slabStack;
 	uint32_t   numSlabsAlloc;
@@ -82,7 +75,7 @@ void b426145b_destroySlabPool(bool debug);
  * Returns:     The slab if available, NULL otherwise
  * ----------------------------------------------------------------------------
  */
-Slab *b426145b_acquireSlab();
+void *b426145b_acquireSlab();
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b426145b_releaseSlab

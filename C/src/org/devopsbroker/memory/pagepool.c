@@ -100,11 +100,10 @@ void f502a409_releasePage(void *pagePtr) {
 
 static void populatePagePool() {
 	// Allocate a 32KB slab aligned on 4KB page boundary
-	Slab *slab = b426145b_acquireSlab();
-	void *slabBufferPtr = slab->buffer;
+	void *slabBufferPtr = b426145b_acquireSlab();
 
 	// Add slab to the slab list
-	b196167f_add(&pagePool.slabList, slab);
+	b196167f_add(&pagePool.slabList, slabBufferPtr);
 	pagePool.numSlabsAlloc++;
 
 	// Add pages to the page stack

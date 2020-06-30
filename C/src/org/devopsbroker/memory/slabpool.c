@@ -68,8 +68,8 @@ void b426145b_destroySlabPool(bool debug) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Slab *b426145b_acquireSlab() {
-	Slab *slabPtr;
+void *b426145b_acquireSlab() {
+	void *slabPtr;
 
 	// Initialize the slab stack if no slabs have been allocated yet
 	if (slabPool.numSlabsAlloc == 0) {
@@ -88,7 +88,6 @@ Slab *b426145b_acquireSlab() {
 
 	// Pop the Slab off the stack and return
 	slabPtr = f106c0ab_pop(&slabPool.slabStack);
-	slabPtr->next = NULL;
 
 	return slabPtr;
 }
@@ -105,8 +104,7 @@ void b426145b_releaseSlab(void *slabPtr) {
 
 static void populateSlabPool() {
 	// Allocate a 32KB slab aligned on 4KB page boundary
-	Slab *slab = f668c4bd_malloc(sizeof(Slab));
-	slab->buffer = f668c4bd_alignedAlloc(MEMORY_PAGE_SIZE, SLABPOOL_SLAB_SIZE);
+	void *slab = f668c4bd_alignedAlloc(MEMORY_PAGE_SIZE, SLABPOOL_SLAB_SIZE);
 
 	// Add slab to the slab stack and keep SlabPool statistics
 	f106c0ab_push(&slabPool.slabStack, slab);

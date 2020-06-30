@@ -80,9 +80,9 @@ void c49f5b0d_destroyInputBuffer(InputBuffer *inputBuffer) {
 OutputBuffer *c49f5b0d_createOutputBuffer() {
 	OutputBuffer *outputBuffer = f668c4bd_malloc(sizeof(OutputBuffer));
 
-	outputBuffer->slab = b426145b_acquireSlab();
-	outputBuffer->currentBuf = outputBuffer->slab->buffer;
-	outputBuffer->previousBuf = NULL;
+	outputBuffer->buffer = b426145b_acquireSlab();
+	outputBuffer->prev = NULL;
+	outputBuffer->next = NULL;
 	outputBuffer->length = 0;
 	outputBuffer->size = 0;
 
@@ -90,7 +90,14 @@ OutputBuffer *c49f5b0d_createOutputBuffer() {
 }
 
 void c49f5b0d_destroyOutputBuffer(OutputBuffer *outputBuffer) {
-	f668c4bd_free(outputBuffer);
+	OutputBuffer *nextOutputBuffer;
+
+	do {
+		nextOutputBuffer = outputBuffer->next;
+		b426145b_releaseSlab(outputBuffer->buffer);
+		f668c4bd_free(outputBuffer);
+		outputBuffer = nextOutputBuffer;
+	} while (outputBuffer != NULL);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,21 +112,19 @@ void c49f5b0d_initInputBuffer(InputBuffer *inputBuffer, FileBuffer *fileBuffer, 
 }
 
 void c49f5b0d_cleanUpOutputBuffer(OutputBuffer *outputBuffer) {
-	Slab *slabPtr, *nextSlabPtr;
+	OutputBuffer *nextOutputBuffer;
 
-	slabPtr = outputBuffer->slab;
-
-	while (slabPtr != NULL) {
-		nextSlabPtr = outputBuffer->slab->next;
-		b426145b_releaseSlab(slabPtr);
-		slabPtr = nextSlabPtr;
-	}
+	do {
+		nextOutputBuffer = outputBuffer->next;
+		b426145b_releaseSlab(outputBuffer->buffer);
+		outputBuffer = nextOutputBuffer;
+	} while (outputBuffer != NULL);
 }
 
 void c49f5b0d_initOutputBuffer(OutputBuffer *outputBuffer) {
-	outputBuffer->slab = b426145b_acquireSlab();
-	outputBuffer->currentBuf = outputBuffer->slab->buffer;
-	outputBuffer->previousBuf = NULL;
+	outputBuffer->buffer = b426145b_acquireSlab();
+	outputBuffer->prev = NULL;
+	outputBuffer->next = NULL;
 	outputBuffer->length = 0;
 	outputBuffer->size = 0;
 }
@@ -127,19 +132,16 @@ void c49f5b0d_initOutputBuffer(OutputBuffer *outputBuffer) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 uint32_t c49f5b0d_crc32(OutputBuffer *outputBuffer, uint32_t length) {
-	Slab *slabPtr;
 	uint32_t bufferLength;
 	uint32_t crc32 = 0;
 
-	slabPtr = outputBuffer->slab;
-
-	while (length > 0 && slabPtr != NULL) {
+	while (length > 0 && outputBuffer != NULL) {
 		bufferLength = (SLABPOOL_SLAB_SIZE > length) ? length : SLABPOOL_SLAB_SIZE;
 
-		crc32 = b7e0468d_crc32(slabPtr->buffer, bufferLength, crc32);
+		crc32 = b7e0468d_crc32(outputBuffer->buffer, bufferLength, crc32);
 
 		length -= bufferLength;
-		slabPtr = slabPtr->next;
+		outputBuffer = outputBuffer->next;
 	}
 
 	return crc32;
@@ -293,5 +295,5 @@ bool c49f5b0d_useNumBits(InputBuffer *inputBuffer, uint32_t numBits) {
 
 void c49f5b0d_write(OutputBuffer *outputBuffer, int fd, char *pathName) {
 	// Write out OutputBuffer
-	e2f74138_writeFile(fd, outputBuffer->currentBuf, outputBuffer->length, pathName);
+	e2f74138_writeFile(fd, outputBuffer->buffer, outputBuffer->length, pathName);
 }
