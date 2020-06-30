@@ -124,6 +124,7 @@ void f1518caf_md5(uint32_t *state, void *buffer, uint32_t length) {
 	while (length > 64) {
 		f1518caf_md5Transform(state, buffer);
 		length -= 64;
+		buffer += 64;
 	}
 
 	if (length < 56) {
@@ -194,6 +195,7 @@ void f1518caf_md5Stream(uint32_t *state, void *buffer, uint32_t length) {
 	do {
 		f1518caf_md5Transform(state, buffer);
 		length -= 64;
+		buffer += 64;
 	} while (length > 0);
 }
 
@@ -203,6 +205,7 @@ void f1518caf_md5StreamEnd(uint32_t *state, void *buffer, uint32_t length, size_
 	while (length > 64) {
 		f1518caf_md5Transform(state, buffer);
 		length -= 64;
+		buffer += 64;
 	}
 
 	if (length < 56) {
