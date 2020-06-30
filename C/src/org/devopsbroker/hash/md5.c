@@ -127,36 +127,44 @@ void f1518caf_md5(uint32_t *state, void *buffer, uint32_t length) {
 		buffer += 64;
 	}
 
-	if (length < 56) {
-		f668c4bd_memcopy(buffer, message, length);
-		message[length++] = ONE_BIT_VALUE;
-		f668c4bd_meminit(message + length, 64 - length);
+	if (length > 0) {
+		if (length < 56) {
+			f668c4bd_memcopy(buffer, message, length);
+			message[length++] = ONE_BIT_VALUE;
+			f668c4bd_meminit(message + length, 64 - length);
 
-		((uint64_t*) message)[7] = msgLength;
+			((uint64_t*) message)[7] = msgLength;
 
-		f1518caf_md5Transform(state, message);
+			f1518caf_md5Transform(state, message);
 
-	} else if (length < 64) {
-		f668c4bd_memcopy(buffer, message, length);
-		message[length++] = ONE_BIT_VALUE;
+		} else if (length < 64) {
+			f668c4bd_memcopy(buffer, message, length);
+			message[length++] = ONE_BIT_VALUE;
 
-		for (; length < 64; length++) {
-			message[length] = 0;
+			for (; length < 64; length++) {
+				message[length] = 0;
+			}
+
+			f1518caf_md5Transform(state, message);
+
+			f668c4bd_meminit(message, 56);
+			((uint64_t*) message)[7] = msgLength;
+			f1518caf_md5Transform(state, message);
+		} else {
+			f1518caf_md5Transform(state, buffer);
+
+			f668c4bd_meminit(message, 56);
+			message[0] = ONE_BIT_VALUE;
+			((uint64_t*) message)[7] = msgLength;
+			f1518caf_md5Transform(state, message);
 		}
-
-		f1518caf_md5Transform(state, message);
-
-		f668c4bd_meminit(message, 56);
-		((uint64_t*) message)[7] = msgLength;
-		f1518caf_md5Transform(state, message);
 	} else {
-		f1518caf_md5Transform(state, buffer);
-
 		f668c4bd_meminit(message, 56);
 		message[0] = ONE_BIT_VALUE;
 		((uint64_t*) message)[7] = msgLength;
 		f1518caf_md5Transform(state, message);
 	}
+
 }
 
 void f1518caf_md5Rounds(uint32_t *state, uint32_t numRounds) {
@@ -208,31 +216,38 @@ void f1518caf_md5StreamEnd(uint32_t *state, void *buffer, uint32_t length, size_
 		buffer += 64;
 	}
 
-	if (length < 56) {
-		f668c4bd_memcopy(buffer, message, length);
-		message[length++] = ONE_BIT_VALUE;
-		f668c4bd_meminit(message + length, 64 - length);
+	if (length > 0) {
+		if (length < 56) {
+			f668c4bd_memcopy(buffer, message, length);
+			message[length++] = ONE_BIT_VALUE;
+			f668c4bd_meminit(message + length, 64 - length);
 
-		((uint64_t*) message)[7] = origLen;
+			((uint64_t*) message)[7] = origLen;
 
-		f1518caf_md5Transform(state, message);
+			f1518caf_md5Transform(state, message);
 
-	} else if (length < 64) {
-		f668c4bd_memcopy(buffer, message, length);
-		message[length++] = ONE_BIT_VALUE;
+		} else if (length < 64) {
+			f668c4bd_memcopy(buffer, message, length);
+			message[length++] = ONE_BIT_VALUE;
 
-		for (; length < 64; length++) {
-			message[length] = 0;
+			for (; length < 64; length++) {
+				message[length] = 0;
+			}
+
+			f1518caf_md5Transform(state, message);
+
+			f668c4bd_meminit(message, 56);
+			((uint64_t*) message)[7] = origLen;
+			f1518caf_md5Transform(state, message);
+		} else {
+			f1518caf_md5Transform(state, buffer);
+
+			f668c4bd_meminit(message, 56);
+			message[0] = ONE_BIT_VALUE;
+			((uint64_t*) message)[7] = origLen;
+			f1518caf_md5Transform(state, message);
 		}
-
-		f1518caf_md5Transform(state, message);
-
-		f668c4bd_meminit(message, 56);
-		((uint64_t*) message)[7] = origLen;
-		f1518caf_md5Transform(state, message);
 	} else {
-		f1518caf_md5Transform(state, buffer);
-
 		f668c4bd_meminit(message, 56);
 		message[0] = ONE_BIT_VALUE;
 		((uint64_t*) message)[7] = origLen;
