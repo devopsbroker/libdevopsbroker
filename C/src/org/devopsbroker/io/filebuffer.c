@@ -33,9 +33,11 @@
 
 #include "../hash/crc32.h"
 #include "../lang/error.h"
+#include "../lang/integer.h"
 #include "../lang/memory.h"
 #include "../lang/stringbuilder.h"
 #include "../memory/pagepool.h"
+#include "../memory/slabpool.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -46,25 +48,59 @@
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
+FileBufferPool fileBufferPool = { {NULL, 0, 0}, {NULL, 0, 0}, 0, 0, 0, 0, 0, 0 };
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
 
 // ═════════════════════════ Function Implementations ═════════════════════════
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Acquire/Release Functions ~~~~~~~~~~~~~~~~~~~~~~~~
 
-FileBuffer *ce97d170_createFileBuffer(void *buffer) {
-	FileBuffer *fileBuffer = f668c4bd_malloc(sizeof(FileBuffer));
+FileBuffer *f502a409_acquireFileBuffer(void *internalBuf) {
+	FileBuffer *fileBuffer;
 
+	// Lazy-initialize FileBufferPool
+	if (fileBufferPool.structStack.values == NULL) {
+		f106c0ab_initStackArray(&fileBufferPool.structStack);
+		f106c0ab_initStackArray(&fileBufferPool.pageStack);
+	}
+
+	// Acquire new FileBuffer from the page
+	if (fileBufferPool.structStack.length == 0) {
+		void *page;
+
+		if (fileBufferPool.numPageBytesFree < sizeof(FileBuffer)) {
+			page = f502a409_acquirePage();
+
+			f106c0ab_push(&fileBufferPool.pageStack, page);
+
+			fileBufferPool.numPageBytesFree = MEMORY_PAGE_SIZE;
+			fileBufferPool.numPageBytesUsed = 0;
+		}
+
+		page = f106c0ab_peek(&fileBufferPool.pageStack);
+		page += fileBufferPool.numPageBytesUsed;
+		fileBuffer = (FileBuffer*) page;
+
+		f668c4bd_meminit(fileBuffer, sizeof(FileBuffer));
+		fileBuffer->buffer = internalBuf;
+
+		fileBufferPool.numPageBytesUsed += sizeof(FileBuffer);
+		fileBufferPool.numPageBytesFree -= sizeof(FileBuffer);
+
+		return fileBuffer;
+	}
+
+	fileBuffer = f106c0ab_pop(&fileBufferPool.structStack);
 	f668c4bd_meminit(fileBuffer, sizeof(FileBuffer));
-	fileBuffer->buffer = buffer;
+	fileBuffer->buffer = internalBuf;
 
 	return fileBuffer;
 }
 
-void ce97d170_destroyFileBuffer(FileBuffer *fileBuffer) {
-	f668c4bd_free(fileBuffer);
+void f502a409_releaseFileBuffer(FileBuffer *fileBuffer) {
+	f106c0ab_push(&fileBufferPool.structStack, fileBuffer);
 }
 
 FileBufferList *ce97d170_createFileBufferList() {
@@ -114,13 +150,13 @@ void ce97d170_cleanUpFileBufferList(FileBufferList *bufferList, void freeBuffer(
 	if (freeBuffer == NULL) {
 		for (uint32_t i=0; i < bufferList->length; i++) {
 			fileBuffer = bufferList->values[i];
-			f668c4bd_free(fileBuffer);
+			f502a409_releaseFileBuffer(fileBuffer);
 		}
 	} else {
 		for (uint32_t i=0; i < bufferList->length; i++) {
 			fileBuffer = bufferList->values[i];
 			freeBuffer(fileBuffer->buffer);
-			f668c4bd_free(fileBuffer);
+			f502a409_releaseFileBuffer(fileBuffer);
 		}
 	}
 
@@ -142,13 +178,13 @@ void ce97d170_resetFileBufferList(FileBufferList *bufferList, void freeBuffer(vo
 	if (freeBuffer == NULL) {
 		for (uint32_t i=0; i < bufferList->length; i++) {
 			fileBuffer = bufferList->values[i];
-			f668c4bd_free(fileBuffer);
+			f502a409_releaseFileBuffer(fileBuffer);
 		}
 	} else {
 		for (uint32_t i=0; i < bufferList->length; i++) {
 			fileBuffer = bufferList->values[i];
 			freeBuffer(fileBuffer->buffer);
-			f668c4bd_free(fileBuffer);
+			f502a409_releaseFileBuffer(fileBuffer);
 		}
 	}
 
@@ -236,10 +272,12 @@ FileBuffer *ce97d170_getBuffer(FileBufferList *bufferList, uint32_t index) {
 	return NULL;
 }
 
-FileBuffer *ce97d170_readFileBuffer(AIOContext *aioContext, AIOFile *aioFile, uint32_t length) {
-	AIOTicket aioTicket;
+FileBuffer *ce97d170_readFileBuffer(AIOFile *aioFile, uint64_t length) {
 	FileBuffer *fileBuffer;
+	AIOTicket *aioTicket;
 	void *bufferPtr;
+
+	aioTicket = &aioFile->aioTicket;
 
 	if (length > MEMORY_PAGE_SIZE) {
 		StringBuilder errorMessage;
@@ -255,76 +293,93 @@ FileBuffer *ce97d170_readFileBuffer(AIOContext *aioContext, AIOFile *aioFile, ui
 		return NULL;
 	}
 
-	f1207515_initAIOTicket(&aioTicket);
-
-	// 1. Read file data
+	// 1. Create FileBuffer
 	bufferPtr = f502a409_acquirePage();
-	f1207515_read(aioContext, aioFile, bufferPtr, MEMORY_PAGE_SIZE);
-
-	// 2. Submit the AIORequests
-	f1207515_submit(aioContext, &aioTicket);
-
-	// 3. Retrieve the AIOEvents
-	f1207515_getEvents(aioContext, &aioTicket);
-
-	// 4. Print the ticket
-	// f1207515_printTicket(&aioTicket);
-
-	// 5. Create FileBuffer object from the AIORequest
-	fileBuffer = ce97d170_createFileBuffer(bufferPtr);
-	fileBuffer->numBytes = (int64_t) aioTicket.eventList[0].res;
+	fileBuffer = f502a409_acquireFileBuffer(bufferPtr);
 	fileBuffer->fileOffset = aioFile->offset;
 
-	// 6. Clean up the AIOTicket
-	f1207515_cleanUpAIOTicket(&aioTicket);
+	// 2. Initialize AIOTicket
+	f1207515_initAIOTicket(aioTicket);
+
+	// 3. Read file data
+	f1207515_read(aioFile, bufferPtr, MEMORY_PAGE_SIZE);
+
+	// 4. Submit the AIORequests
+	f1207515_submit(aioFile);
+
+	// 5. Retrieve the AIOEvents
+	f1207515_getEvents(aioFile);
+
+	// 6. Print the ticket
+	// f1207515_printTicket(&aioTicket);
+
+	// 7. Retrieve number of bytes read
+	fileBuffer->numBytes = (int64_t) aioTicket->eventList[0].res;
+
+	// 8. Clean up the AIOTicket
+	f1207515_cleanUpAIOTicket(aioTicket);
 
 	return fileBuffer;
 }
 
-void ce97d170_readFileBufferList(AIOContext *aioContext, AIOFile *aioFile, FileBufferList *bufferList, uint32_t length) {
-	AIOTicket aioTicket;
+void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, int64_t length) {
 	FileBuffer *fileBuffer;
+	AIOTicket *aioTicket;
 	uint32_t numBlocks;
+	int32_t numEvents;
 	void *bufferPtr;
-	int64_t offset;
 
-	f1207515_initAIOTicket(&aioTicket);
+	aioTicket = &aioFile->aioTicket;
 
-	numBlocks = (length + 4095) >> 12;
-
-	// 1. Read file data
-	offset = aioFile->offset;
-	for (uint32_t i=0; i < numBlocks; i++) {
-		bufferPtr = f502a409_acquirePage();
-		f1207515_read(aioContext, aioFile, bufferPtr, MEMORY_PAGE_SIZE);
-		aioFile->offset += MEMORY_PAGE_SIZE;
+	// Reset the FileBufferList if contains data
+	if (bufferList->length > 0) {
+		ce97d170_resetFileBufferList(bufferList, f502a409_releasePage);
 	}
-	aioFile->offset = offset;
 
-	while (aioContext->requestQueue->length > 0) {
-		// 2. Submit the AIORequests
-		f1207515_submit(aioContext, &aioTicket);
+	if (aioTicket->numEvents < aioTicket->numRequests) {
+		// Get the remaining events from the submitted requests
+		numEvents = f1207515_getEvents(aioFile);
 
-		// 3. Retrieve the AIOEvents
-		f1207515_getEvents(aioContext, &aioTicket);
+	} else {
+		// Create and submit new AIORequests
+		f1207515_initAIOTicket(aioTicket);
 
-		// 4. Print the ticket
-		// f1207515_printTicket(&aioTicket);
+		// Calculate the number of blocks to read
+		length = f45efac2_min_uint32(length, ASYNC_AIOTICKET_MAXSIZE);
+		numBlocks = (length + 4095) >> 12;
 
-		// 5. Create FileBuffer objects from the AIORequests
-		for (uint32_t i=0; i < aioTicket.numEvents; i++) {
-			bufferPtr = (void*) aioTicket.requestList[i]->aio_buf;
-
-			fileBuffer = ce97d170_createFileBuffer(bufferPtr);
-			fileBuffer->numBytes = (int64_t) aioTicket.eventList[i].res;
-			fileBuffer->fileOffset = (int64_t) aioTicket.requestList[i]->aio_offset;
-
-			ce97d170_addBuffer(bufferList, fileBuffer);
+		// Read file data
+		for (uint32_t i=0; i < numBlocks; i++) {
+			bufferPtr = f502a409_acquirePage();
+			f1207515_read(aioFile, bufferPtr, MEMORY_PAGE_SIZE);
 		}
+
+		// Submit the AIORequests
+		f1207515_submit(aioFile);
+
+		// Retrieve the AIOEvents
+		numEvents = f1207515_getEvents(aioFile);
 	}
 
-	// 6. Clean up the AIOTicket
-	f1207515_cleanUpAIOTicket(&aioTicket);
+	// Print the ticket
+//	f1207515_printTicket(aioTicket);
+
+	// Create FileBuffer objects from the AIORequests
+	for (int32_t i=0; i < numEvents; i++) {
+		AIORequest *aioRequest;
+
+		aioRequest = (AIORequest*)aioTicket->eventList[i].obj;
+		bufferPtr = (void*) aioRequest->aio_buf;
+
+		fileBuffer = f502a409_acquireFileBuffer(bufferPtr);
+		fileBuffer->numBytes = (int64_t) aioTicket->eventList[i].res;
+		fileBuffer->fileOffset = (int64_t) aioRequest->aio_offset;
+
+		ce97d170_addBuffer(bufferList, fileBuffer);
+	}
+
+	// Clean up the AIOTicket
+	f1207515_cleanUpAIOTicket(aioTicket);
 }
 
 void ce97d170_write(FileBuffer *fileBuffer, int fd, uint32_t length, char *pathName) {

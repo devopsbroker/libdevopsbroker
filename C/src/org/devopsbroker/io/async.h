@@ -54,9 +54,7 @@
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
-#define ASYNC_MAX_REQUEST_QUEUE_CAPACITY  2048
 #define ASYNC_AIOTICKET_MAXSIZE  32768
-#define ASYNC_TIMEOUT_NSEC  6000000
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -192,26 +190,27 @@ typedef struct AIOContext {
 
 static_assert(sizeof(AIOContext) == 64, "Check your assumptions");
 
+typedef struct AIOTicket {
+	AIORequest *requestList[8];
+	AIOEvent    eventList[8];
+	uint32_t    numRequests;
+	uint32_t    numEvents;
+	int64_t     numBytesRead;
+	int64_t     numBytesWrite;
+} AIOTicket;
+
+static_assert(sizeof(AIOTicket) == 344, "Check your assumptions");
+
 typedef struct AIOFile {
+	AIOTicket   aioTicket;
+	AIOContext *aioContext;
 	char*       fileName;
 	int64_t     fileSize;
 	int64_t     offset;
 	int         fd;
 } AIOFile;
 
-static_assert(sizeof(AIOFile) == 32, "Check your assumptions");
-
-typedef struct AIOTicket {
-	AIORequest   *requestList[8];
-	AIOEvent      eventList[8];
-	aio_context_t id;
-	uint32_t      numRequests;
-	uint32_t      numEvents;
-	int64_t       numBytesRead;
-	int64_t       numBytesWrite;
-} AIOTicket;
-
-static_assert(sizeof(AIOTicket) == 352, "Check your assumptions");
+static_assert(sizeof(AIOFile) == 384, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
@@ -241,25 +240,6 @@ AIOContext *f1207515_createAIOContext(uint32_t maxOperations);
  * ----------------------------------------------------------------------------
  */
 int f1207515_destroyAIOContext(AIOContext *aioContext);
-
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f1207515_createAIOTicket
- * Description: Creates an AIOTicket struct instance
- *
- * Returns:     An AIOTicket struct instance
- * ----------------------------------------------------------------------------
- */
-AIOTicket *f1207515_createAIOTicket();
-
-/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f1207515_destroyAIOTicket
- * Description: Frees the memory allocated to the AIOTicket struct pointer
- *
- * Parameters:
- *   aioTicket  A pointer to the AIOTicket instance to destroy
- * ----------------------------------------------------------------------------
- */
-void f1207515_destroyAIOTicket(AIOTicket *aioTicket);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -301,15 +281,16 @@ void f1207515_cleanUpAIOFile(AIOFile *aioFile);
  * Description: Initializes an AIOFile struct
  *
  * Parameters:
+ *   aioContext     A pointer to the AIOContext instance
  *   aioFile        A pointer to the AIOFile instance to initalize
  *   fileName       The name of the file
  * ----------------------------------------------------------------------------
  */
-void f1207515_initAIOFile(AIOFile *aioFile, char *fileName);
+void f1207515_initAIOFile(AIOContext *aioContext, AIOFile *aioFile, char *fileName);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_cleanUpAIOTicket
- * Description: Frees dynamically allocated memory within the AIOTicket instance
+ * Description: Cleans up an AIOTicket struct
  *
  * Parameters:
  *   aioTicket  A pointer to the AIOTicket instance to clean up
@@ -322,7 +303,7 @@ void f1207515_cleanUpAIOTicket(AIOTicket *aioTicket);
  * Description: Initializes an AIOTicket struct
  *
  * Parameters:
- *   aioTicket      A pointer to the AIOTicket instance to initalize
+ *   aioTicket  A pointer to the AIOTicket instance to initalize
  * ----------------------------------------------------------------------------
  */
 void f1207515_initAIOTicket(AIOTicket *aioTicket);
@@ -364,15 +345,14 @@ int f1207515_open(AIOFile *aioFile, FileAccessMode aMode, int flags);
  *              read operation
  *
  * Parameters:
- *   aioContext     The AIOContext instance
- *   aioFile        The AIOFile instance to read from
- *   buf            The data buffer to read into
- *   bufSize        The size of the data buffer
+ *   aioFile    The AIOFile instance to read from
+ *   buf        The data buffer to read into
+ *   bufSize    The size of the data buffer
  * Returns:     The created AIORequest for the read operation, or NULL if
  *              AIOContext request queue is full
  * ----------------------------------------------------------------------------
  */
-AIORequest *f1207515_read(AIOContext *aioContext, AIOFile *aioFile, void *buf, size_t bufSize);
+AIORequest *f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_write
@@ -380,39 +360,36 @@ AIORequest *f1207515_read(AIOContext *aioContext, AIOFile *aioFile, void *buf, s
  *              write operation
  *
  * Parameters:
- *   aioContext     The AIOContext instance
- *   aioFile        The AIOFile instance to write to
- *   buf            The data buffer to write from
- *   count          The number of bytes to write from the buffer
+ *   aioFile    The AIOFile instance to write to
+ *   buf        The data buffer to write from
+ *   count      The number of bytes to write from the buffer
  * Returns:     The created AIORequest for the write operation, or NULL if
  *              AIOContext request queue is full
  * ----------------------------------------------------------------------------
  */
-AIORequest *f1207515_write(AIOContext *aioContext, AIOFile *aioFile, void *buf, size_t count);
+AIORequest *f1207515_write(AIOFile *aioFile, void *buf, size_t count);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_submit
  * Description: Submits all queued AIORequest blocks for processing
  *
  * Parameters:
- *   aioContext     The AIOContext instance to submit for processing
- *   aioTicket      The AIOTicket to populate with the submitted AIORequests
+ *   aioFile    The AIOFile instance to submit I/O operations for
  * Returns:     True if the AIO submit operation succeeded, false otherwise
  * ----------------------------------------------------------------------------
  */
-bool f1207515_submit(AIOContext *aioContext, AIOTicket *aioTicket);
+bool f1207515_submit(AIOFile *aioFile);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_getEvents
  * Description: Read asynchronous I/O events from the Linux completion queue
  *
  * Parameters:
- *   aioContext     The AIOContext instance
- *   aioTicket      The AIOTicket instance to retrieve events for
- * Returns:     True if the AIO getEvents operation succeeded, false otherwise
+ *   aioFile    The AIOFile instance to retrieve events for
+ * Returns:     The number of received events
  * ----------------------------------------------------------------------------
  */
-bool f1207515_getEvents(AIOContext *aioContext, AIOTicket *aioTicket);
+int32_t f1207515_getEvents(AIOFile *aioFile);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    f1207515_printContext

@@ -32,7 +32,9 @@
 
 #include <assert.h>
 
-#include "../io/async.h"
+#include "async.h"
+
+#include "../adt/stackarray.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -51,7 +53,7 @@ static_assert(sizeof(FileBuffer) == 32, "Check your assumptions");
 
 typedef struct FileBufferList {
 	FileBuffer **values;
-	uint64_t     numBytes;
+	int64_t      numBytes;
 	int64_t      fileOffset;
 	uint32_t     length;
 	uint32_t     size;
@@ -59,33 +61,46 @@ typedef struct FileBufferList {
 
 static_assert(sizeof(FileBufferList) == 32, "Check your assumptions");
 
+typedef struct FileBufferPool {
+	StackArray structStack;
+	StackArray pageStack;
+	uint32_t   numPagesAlloc;
+	uint32_t   numPageBytesUsed;
+	uint32_t   numPageBytesFree;
+	uint32_t   numFileBufferAlloc;
+	uint32_t   numFileBufferFree;
+	uint32_t   numFileBufferUsed;
+} FileBufferPool;
+
+static_assert(sizeof(FileBufferPool) == 56, "Check your assumptions");
+
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
 
 // ═══════════════════════════ Function Declarations ══════════════════════════
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Acquire/Release Functions ~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    ce97d170_createFileBuffer
- * Description: Creates a FileBuffer struct instance
+ * Function:    f502a409_acquireFileBuffer
+ * Description: Acquires a FileBuffer instance from the internal FileBufferPool
  *
  * Parameters:
- *   buffer     A pointer to the underlying buffer for the file
- * Returns:     A FileBuffer struct instance
+ *   internalBuf    The internal buffer to use within the FileBuffer
+ * Returns:     The FileBuffer instance if available, NULL otherwise
  * ----------------------------------------------------------------------------
  */
-FileBuffer *ce97d170_createFileBuffer(void *buffer);
+FileBuffer *f502a409_acquireFileBuffer(void *internalBuf);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    ce97d170_destroyFileBuffer
- * Description: Frees the memory allocated to the FileBuffer struct pointer
+ * Function:    f502a409_releaseFileBuffer
+ * Description: Releases a FileBuffer instance back into the internal FileBufferPool
  *
  * Parameters:
- *   fileBuffer    A pointer to the FileBuffer instance to destroy
+ *   fileBuffer     The FileBuffer instance to return to the FileBufferPool
  * ----------------------------------------------------------------------------
  */
-void ce97d170_destroyFileBuffer(FileBuffer *fileBuffer);
+void f502a409_releaseFileBuffer(FileBuffer *fileBuffer);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    ce97d170_createFileBufferList
@@ -212,26 +227,24 @@ FileBuffer *ce97d170_getBuffer(FileBufferList *bufferList, uint32_t index);
  * Description: Returns a FileBuffer instance populated with the requested data
  *
  * Parameters:
- *   aioContext     The AIOContext instance
- *   aioFile        A pointer to the AIOFile instance
- *   length         The length of data to read
+ *   aioFile    A pointer to the AIOFile instance to read from
+ *   length     The length of data to read
  * Returns:     A FileBuffer instance populated with the requested data
  * ----------------------------------------------------------------------------
  */
-FileBuffer *ce97d170_readFileBuffer(AIOContext *aioContext, AIOFile *aioFile, uint32_t length);
+FileBuffer *ce97d170_readFileBuffer(AIOFile *aioFile, uint64_t length);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    ce97d170_readFileBufferList
  * Description: Loads the requested data into the FileBufferList instance
  *
  * Parameters:
- *   aioContext     The AIOContext instance
  *   aioFile        A pointer to the AIOFile instance
  *   bufferList     A pointer to the FileBufferList instance to populate
  *   length         The length of data to read
  * ----------------------------------------------------------------------------
  */
-void ce97d170_readFileBufferList(AIOContext *aioContext, AIOFile *aioFile, FileBufferList *bufferList, uint32_t length);
+void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, int64_t length);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    ce97d170_write

@@ -35,12 +35,15 @@
 
 #include "async.h"
 
+#include "../io/file.h"
 #include "../lang/error.h"
 #include "../lang/integer.h"
 #include "../lang/stringbuilder.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
+#define ASYNC_MAX_REQUEST_QUEUE_CAPACITY  2048
+#define ASYNC_TIMEOUT_NSEC  6000000
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -103,24 +106,6 @@ int f1207515_destroyAIOContext(AIOContext *aioContext) {
 	return 0;
 }
 
-AIOTicket *f1207515_createAIOTicket() {
-	AIOTicket *aioTicket;
-
-	aioTicket = f668c4bd_malloc(sizeof(AIOTicket));
-	f668c4bd_meminit(aioTicket, sizeof(AIOTicket));
-
-	return aioTicket;
-}
-
-void f1207515_destroyAIOTicket(AIOTicket *aioTicket) {
-	// Free all the AIORequest objects
-	for (uint32_t i=0; i < aioTicket->numRequests; i++) {
-		f668c4bd_free(aioTicket->requestList[i]);
-	}
-
-	f668c4bd_free(aioTicket);
-}
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 int f1207515_cleanUpAIOContext(AIOContext *aioContext) {
@@ -173,21 +158,26 @@ void f1207515_cleanUpAIOFile(AIOFile *aioFile) {
 	e2f74138_closeFile(aioFile->fd, aioFile->fileName);
 }
 
-void f1207515_initAIOFile(AIOFile *aioFile, char *fileName) {
+void f1207515_initAIOFile(AIOContext *aioContext, AIOFile *aioFile, char *fileName) {
+	// Initialize the AIOFile
 	f668c4bd_meminit(aioFile, sizeof(AIOFile));
 
+	// Set the AIOContext and fileName
+	aioFile->aioContext = aioContext;
 	aioFile->fileName = fileName;
 }
 
 void f1207515_cleanUpAIOTicket(AIOTicket *aioTicket) {
-	// Free all the AIORequest objects
-	for (uint32_t i=0; i < aioTicket->numRequests; i++) {
-		f668c4bd_free(aioTicket->requestList[i]);
+	if (aioTicket->numEvents == aioTicket->numRequests) {
+		for (uint32_t i=0; i < aioTicket->numRequests; i++) {
+			f668c4bd_free(aioTicket->requestList[i]);
+		}
 	}
 }
 
 void f1207515_initAIOTicket(AIOTicket *aioTicket) {
-	f668c4bd_meminit(aioTicket, sizeof(AIOTicket));
+	aioTicket->numRequests = 0;
+	aioTicket->numEvents = 0;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -213,13 +203,21 @@ int f1207515_create(AIOFile *aioFile, FileAccessMode aMode, int flags, uint32_t 
 }
 
 int f1207515_open(AIOFile *aioFile, FileAccessMode aMode, int flags) {
+	FileStatus fileStatus;
+
 	aioFile->fd = open(aioFile->fileName, aMode | O_DIRECT | flags);
+	e2f74138_getDescriptorStatus(aioFile->fd, &fileStatus);
+	aioFile->fileSize = fileStatus.st_size;
+	aioFile->offset = 0;
 
 	return aioFile->fd;
 }
 
-AIORequest *f1207515_read(AIOContext *aioContext, AIOFile *aioFile, void *buf, size_t bufSize) {
+AIORequest *f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize) {
 	AIORequest *aioReadRequest;
+	AIOContext *aioContext;
+
+	aioContext = aioFile->aioContext;
 
 	if (b8da7268_isFull(aioContext->requestQueue)) {
 		return NULL;
@@ -233,6 +231,7 @@ AIORequest *f1207515_read(AIOContext *aioContext, AIOFile *aioFile, void *buf, s
 	aioReadRequest->aio_buf = (uint64_t) buf;
 	aioReadRequest->aio_nbytes = bufSize;
 	aioReadRequest->aio_offset = aioFile->offset;
+	aioFile->offset += bufSize;
 
 	// Keep track of some metrics
 	aioContext->numRequests++;
@@ -244,8 +243,11 @@ AIORequest *f1207515_read(AIOContext *aioContext, AIOFile *aioFile, void *buf, s
 	return aioReadRequest;
 }
 
-AIORequest *f1207515_write(AIOContext *aioContext, AIOFile *aioFile, void *buf, size_t count) {
+AIORequest *f1207515_write(AIOFile *aioFile, void *buf, size_t count) {
 	AIORequest *aioWriteRequest;
+	AIOContext *aioContext;
+
+	aioContext = aioFile->aioContext;
 
 	if (b8da7268_isFull(aioContext->requestQueue)) {
 		return NULL;
@@ -259,6 +261,7 @@ AIORequest *f1207515_write(AIOContext *aioContext, AIOFile *aioFile, void *buf, 
 	aioWriteRequest->aio_buf = (uint64_t) buf;
 	aioWriteRequest->aio_nbytes = count;
 	aioWriteRequest->aio_offset = aioFile->offset;
+	aioFile->offset += count;
 
 	// Keep track of some metrics
 	aioContext->numRequests++;
@@ -270,10 +273,15 @@ AIORequest *f1207515_write(AIOContext *aioContext, AIOFile *aioFile, void *buf, 
 	return aioWriteRequest;
 }
 
-bool f1207515_submit(AIOContext *aioContext, AIOTicket *aioTicket) {
+bool f1207515_submit(AIOFile *aioFile) {
 	AIORequest *aioRequest;
+	AIOContext *aioContext;
+	AIOTicket *aioTicket;
 	int numRequests = 0;
 	long retValue;
+
+	aioContext = aioFile->aioContext;
+	aioTicket = &aioFile->aioTicket;
 
 	// Nothing to submit if the request queue is empty
 	if (b8da7268_isEmpty(aioContext->requestQueue)) {
@@ -287,7 +295,6 @@ bool f1207515_submit(AIOContext *aioContext, AIOTicket *aioTicket) {
 		numRequests++;
 	}
 
-	aioTicket->id = aioContext->id;
 	aioTicket->numRequests = numRequests;
 
 	retValue = syscall(__NR_io_submit, aioContext->id, numRequests, aioTicket->requestList);
@@ -300,17 +307,21 @@ bool f1207515_submit(AIOContext *aioContext, AIOTicket *aioTicket) {
 	return true;
 }
 
-bool f1207515_getEvents(AIOContext *aioContext, AIOTicket *aioTicket) {
+int32_t f1207515_getEvents(AIOFile *aioFile) {
 	AIORequest *aioRequest;
+	AIOContext *aioContext;
+	AIOTicket *aioTicket;
 	long retValue;
 
-	retValue = syscall(__NR_io_getevents, aioTicket->id, aioTicket->numRequests,
-			aioTicket->numRequests, aioTicket->eventList,
-			&aioContext->timeout);
+	aioContext = aioFile->aioContext;
+	aioTicket = &aioFile->aioTicket;
+
+	retValue = syscall(__NR_io_getevents, aioContext->id, 1, aioTicket->numRequests,
+		    aioTicket->eventList, &aioContext->timeout);
 
 	if (retValue < 0) {
 		errno = -retValue;
-		return false;
+		return SYSTEM_ERROR_CODE;
 	}
 
 	// Keep track of some metrics
@@ -328,7 +339,7 @@ bool f1207515_getEvents(AIOContext *aioContext, AIOTicket *aioTicket) {
 		}
 	}
 
-	return true;
+	return retValue;
 }
 
 void f1207515_printContext(AIOContext *aioContext) {
