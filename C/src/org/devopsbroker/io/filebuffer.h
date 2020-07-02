@@ -61,16 +61,6 @@ typedef struct FileBufferList {
 
 static_assert(sizeof(FileBufferList) == 32, "Check your assumptions");
 
-typedef struct FileBufferPool {
-	StackArray structStack;
-	uint32_t   numFileBufferAlloc;
-	uint32_t   numFileBufferFree;
-	uint32_t   numFileBufferInUse;
-	uint32_t   numFileBufferUsed;
-} FileBufferPool;
-
-static_assert(sizeof(FileBufferPool) == 32, "Check your assumptions");
-
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
 
@@ -79,7 +69,7 @@ static_assert(sizeof(FileBufferPool) == 32, "Check your assumptions");
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Acquire/Release Functions ~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f502a409_acquireFileBuffer
+ * Function:    ce97d170_acquireFileBuffer
  * Description: Acquires a FileBuffer instance from the internal FileBufferPool
  *
  * Parameters:
@@ -87,17 +77,19 @@ static_assert(sizeof(FileBufferPool) == 32, "Check your assumptions");
  * Returns:     The FileBuffer instance if available, NULL otherwise
  * ----------------------------------------------------------------------------
  */
-FileBuffer *f502a409_acquireFileBuffer(void *internalBuf);
+FileBuffer *ce97d170_acquireFileBuffer(void *internalBuf);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
- * Function:    f502a409_releaseFileBuffer
+ * Function:    ce97d170_releaseFileBuffer
  * Description: Releases a FileBuffer instance back into the internal FileBufferPool
  *
  * Parameters:
  *   fileBuffer     The FileBuffer instance to return to the FileBufferPool
  * ----------------------------------------------------------------------------
  */
-void f502a409_releaseFileBuffer(FileBuffer *fileBuffer);
+void ce97d170_releaseFileBuffer(FileBuffer *fileBuffer);
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    ce97d170_createFileBufferList

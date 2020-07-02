@@ -46,6 +46,15 @@
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
+typedef struct FileBufferPool {
+	StackArray structStack;
+	uint32_t   numFileBufferAlloc;
+	uint32_t   numFileBufferFree;
+	uint32_t   numFileBufferInUse;
+	uint32_t   numFileBufferUsed;
+} FileBufferPool;
+
+static_assert(sizeof(FileBufferPool) == 32, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
@@ -58,7 +67,7 @@ FileBufferPool fileBufferPool = { {NULL, 0, 0}, 0, 0, 0, 0 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Acquire/Release Functions ~~~~~~~~~~~~~~~~~~~~~~~~
 
-FileBuffer *f502a409_acquireFileBuffer(void *internalBuf) {
+FileBuffer *ce97d170_acquireFileBuffer(void *internalBuf) {
 	FileBuffer *fileBuffer;
 
 	// Lazy-initialize FileBufferPool
@@ -89,13 +98,15 @@ FileBuffer *f502a409_acquireFileBuffer(void *internalBuf) {
 	return fileBuffer;
 }
 
-void f502a409_releaseFileBuffer(FileBuffer *fileBuffer) {
+void ce97d170_releaseFileBuffer(FileBuffer *fileBuffer) {
 	f106c0ab_push(&fileBufferPool.structStack, fileBuffer);
 
 	// Keep track of metrics
 	fileBufferPool.numFileBufferInUse--;
 	fileBufferPool.numFileBufferFree++;
 }
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FileBufferList *ce97d170_createFileBufferList() {
 	FileBufferList *bufferList = f668c4bd_malloc(sizeof(FileBufferList));
@@ -144,13 +155,13 @@ void ce97d170_cleanUpFileBufferList(FileBufferList *bufferList, void freeBuffer(
 	if (freeBuffer == NULL) {
 		for (uint32_t i=0; i < bufferList->length; i++) {
 			fileBuffer = bufferList->values[i];
-			f502a409_releaseFileBuffer(fileBuffer);
+			ce97d170_releaseFileBuffer(fileBuffer);
 		}
 	} else {
 		for (uint32_t i=0; i < bufferList->length; i++) {
 			fileBuffer = bufferList->values[i];
 			freeBuffer(fileBuffer->buffer);
-			f502a409_releaseFileBuffer(fileBuffer);
+			ce97d170_releaseFileBuffer(fileBuffer);
 		}
 	}
 
@@ -172,13 +183,13 @@ void ce97d170_resetFileBufferList(FileBufferList *bufferList, void freeBuffer(vo
 	if (freeBuffer == NULL) {
 		for (uint32_t i=0; i < bufferList->length; i++) {
 			fileBuffer = bufferList->values[i];
-			f502a409_releaseFileBuffer(fileBuffer);
+			ce97d170_releaseFileBuffer(fileBuffer);
 		}
 	} else {
 		for (uint32_t i=0; i < bufferList->length; i++) {
 			fileBuffer = bufferList->values[i];
 			freeBuffer(fileBuffer->buffer);
-			f502a409_releaseFileBuffer(fileBuffer);
+			ce97d170_releaseFileBuffer(fileBuffer);
 		}
 	}
 
@@ -289,7 +300,7 @@ FileBuffer *ce97d170_readFileBuffer(AIOFile *aioFile, uint64_t length) {
 
 	// 1. Create FileBuffer
 	bufferPtr = f502a409_acquirePage();
-	fileBuffer = f502a409_acquireFileBuffer(bufferPtr);
+	fileBuffer = ce97d170_acquireFileBuffer(bufferPtr);
 	fileBuffer->fileOffset = aioFile->offset;
 
 	// 2. Initialize AIOTicket
@@ -365,7 +376,7 @@ void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, i
 		aioRequest = (AIORequest*)aioTicket->eventList[i].obj;
 		bufferPtr = (void*) aioRequest->aio_buf;
 
-		fileBuffer = f502a409_acquireFileBuffer(bufferPtr);
+		fileBuffer = ce97d170_acquireFileBuffer(bufferPtr);
 		fileBuffer->numBytes = (int64_t) aioTicket->eventList[i].res;
 		fileBuffer->fileOffset = (int64_t) aioRequest->aio_offset;
 
