@@ -506,7 +506,7 @@ static bool processLiteralBackrefBlock(Inflate *inflate, HuffmanDecoder *litlenD
 	int litlen, distSymbol;
 	uint16_t extraBits;
 
-	outputBuf = (uint8_t *) inflate->outputBuffer.currentBuf;
+	outputBuf = (uint8_t *) inflate->outputBuffer.buffer;
 
 	while (true) {
 		// Read a litlen symbol
@@ -616,7 +616,7 @@ static void output_backref64(OutputBuffer *outputBuffer, size_t dist, size_t len
 	}
 
 //	length >>= 3;
-	outputBuf = (uint8_t *)outputBuffer->currentBuf + outputBuffer->length;
+	outputBuf = (uint8_t *)outputBuffer->buffer + outputBuffer->length;
 	backref = outputBuf - dist;
 	f668c4bd_memcopy(backref, outputBuf, length);
 /*
@@ -636,7 +636,7 @@ static void lz77_output_backref(OutputBuffer *outputBuffer, size_t dist, size_t 
 	uint8_t *outputBuf;
 	uint8_t *backref;
 
-	outputBuf = (uint8_t *)outputBuffer->currentBuf + outputBuffer->length;
+	outputBuf = (uint8_t *)outputBuffer->buffer + outputBuffer->length;
 	backref = outputBuf - dist;
 
 	for (uint32_t i=0; i < length; i++) {
