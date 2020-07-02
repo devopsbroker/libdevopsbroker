@@ -42,14 +42,13 @@
 
 typedef struct PagePool {
 	StackArray pageStack;
-	ListArray  slabList;
-	uint32_t   numSlabsAlloc;
 	uint32_t   numPagesAlloc;
 	uint32_t   numPagesFree;
+	uint32_t   numPagesInUse;
 	uint32_t   numPagesUsed;
 } PagePool;
 
-static_assert(sizeof(PagePool) == 48, "Check your assumptions");
+static_assert(sizeof(PagePool) == 32, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
