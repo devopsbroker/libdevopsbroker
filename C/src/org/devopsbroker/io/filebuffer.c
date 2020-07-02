@@ -36,6 +36,7 @@
 #include "../lang/integer.h"
 #include "../lang/memory.h"
 #include "../lang/stringbuilder.h"
+#include "../memory/memorypool.h"
 #include "../memory/pagepool.h"
 #include "../memory/slabpool.h"
 
@@ -48,7 +49,7 @@
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
-FileBufferPool fileBufferPool = { {NULL, 0, 0}, {NULL, 0, 0}, 0, 0, 0, 0, 0, 0 };
+FileBufferPool fileBufferPool = { {NULL, 0, 0}, 0, 0, 0, 0 };
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
@@ -63,44 +64,37 @@ FileBuffer *f502a409_acquireFileBuffer(void *internalBuf) {
 	// Lazy-initialize FileBufferPool
 	if (fileBufferPool.structStack.values == NULL) {
 		f106c0ab_initStackArray(&fileBufferPool.structStack);
-		f106c0ab_initStackArray(&fileBufferPool.pageStack);
 	}
 
-	// Acquire new FileBuffer from the page
 	if (fileBufferPool.structStack.length == 0) {
-		void *page;
-
-		if (fileBufferPool.numPageBytesFree < sizeof(FileBuffer)) {
-			page = f502a409_acquirePage();
-
-			f106c0ab_push(&fileBufferPool.pageStack, page);
-
-			fileBufferPool.numPageBytesFree = MEMORY_PAGE_SIZE;
-			fileBufferPool.numPageBytesUsed = 0;
-		}
-
-		page = f106c0ab_peek(&fileBufferPool.pageStack);
-		page += fileBufferPool.numPageBytesUsed;
-		fileBuffer = (FileBuffer*) page;
-
-		f668c4bd_meminit(fileBuffer, sizeof(FileBuffer));
-		fileBuffer->buffer = internalBuf;
-
-		fileBufferPool.numPageBytesUsed += sizeof(FileBuffer);
-		fileBufferPool.numPageBytesFree -= sizeof(FileBuffer);
-
-		return fileBuffer;
+		// Acquire new FileBuffer from the memory pool
+		fileBuffer = f502a409_acquireMemory(sizeof(FileBuffer));
+		fileBufferPool.numFileBufferAlloc++;
+	} else {
+		fileBuffer = f106c0ab_pop(&fileBufferPool.structStack);
+		fileBufferPool.numFileBufferFree--;
 	}
 
-	fileBuffer = f106c0ab_pop(&fileBufferPool.structStack);
-	f668c4bd_meminit(fileBuffer, sizeof(FileBuffer));
+	// Initialize FileBuffer attributes
 	fileBuffer->buffer = internalBuf;
+	fileBuffer->next = NULL;
+	fileBuffer->fileOffset = 0;
+	fileBuffer->dataOffset = 0;
+	fileBuffer->numBytes = 0;
+
+	// Keep track of metrics
+	fileBufferPool.numFileBufferInUse++;
+	fileBufferPool.numFileBufferUsed++;
 
 	return fileBuffer;
 }
 
 void f502a409_releaseFileBuffer(FileBuffer *fileBuffer) {
 	f106c0ab_push(&fileBufferPool.structStack, fileBuffer);
+
+	// Keep track of metrics
+	fileBufferPool.numFileBufferInUse--;
+	fileBufferPool.numFileBufferFree++;
 }
 
 FileBufferList *ce97d170_createFileBufferList() {

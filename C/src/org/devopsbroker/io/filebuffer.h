@@ -63,16 +63,13 @@ static_assert(sizeof(FileBufferList) == 32, "Check your assumptions");
 
 typedef struct FileBufferPool {
 	StackArray structStack;
-	StackArray pageStack;
-	uint32_t   numPagesAlloc;
-	uint32_t   numPageBytesUsed;
-	uint32_t   numPageBytesFree;
 	uint32_t   numFileBufferAlloc;
 	uint32_t   numFileBufferFree;
+	uint32_t   numFileBufferInUse;
 	uint32_t   numFileBufferUsed;
 } FileBufferPool;
 
-static_assert(sizeof(FileBufferPool) == 56, "Check your assumptions");
+static_assert(sizeof(FileBufferPool) == 32, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
