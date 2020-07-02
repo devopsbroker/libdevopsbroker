@@ -35,10 +35,12 @@
 
 #include "async.h"
 
+#include "../adt/stackarray.h"
 #include "../io/file.h"
 #include "../lang/error.h"
 #include "../lang/integer.h"
 #include "../lang/stringbuilder.h"
+#include "../memory/memorypool.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -47,14 +49,58 @@
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
+typedef struct AIORequestPool {
+	StackArray structStack;
+	uint32_t   numAIORequestAlloc;
+	uint32_t   numAIORequestFree;
+	uint32_t   numAIORequestInUse;
+	uint32_t   numAIORequestUsed;
+} AIORequestPool;
+
+static_assert(sizeof(AIORequestPool) == 32, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
+AIORequestPool aioRequestPool = { {NULL, 0, 0}, 0, 0, 0, 0 };
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
 
 // ═════════════════════════ Function Implementations ═════════════════════════
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Acquire/Release Functions ~~~~~~~~~~~~~~~~~~~~~~~~
+
+AIORequest *f1207515_acquireAIORequest() {
+	AIORequest *aioRequest;
+
+	// Lazy-initialize FileBufferPool
+	if (aioRequestPool.structStack.values == NULL) {
+		f106c0ab_initStackArray(&aioRequestPool.structStack);
+	}
+
+	if (aioRequestPool.structStack.length == 0) {
+		// Acquire new FileBuffer from the memory pool
+		aioRequest = f502a409_acquireMemory(sizeof(AIORequest));
+		aioRequestPool.numAIORequestAlloc++;
+	} else {
+		aioRequest = f106c0ab_pop(&aioRequestPool.structStack);
+		aioRequestPool.numAIORequestFree--;
+	}
+
+	// Keep track of metrics
+	aioRequestPool.numAIORequestInUse++;
+	aioRequestPool.numAIORequestUsed++;
+
+	return aioRequest;
+}
+
+void f1207515_releaseAIORequest(AIORequest *aioRequest) {
+	f106c0ab_push(&aioRequestPool.structStack, aioRequest);
+
+	// Keep track of metrics
+	aioRequestPool.numAIORequestInUse--;
+	aioRequestPool.numAIORequestFree++;
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -170,7 +216,7 @@ void f1207515_initAIOFile(AIOContext *aioContext, AIOFile *aioFile, char *fileNa
 void f1207515_cleanUpAIOTicket(AIOTicket *aioTicket) {
 	if (aioTicket->numEvents == aioTicket->numRequests) {
 		for (uint32_t i=0; i < aioTicket->numRequests; i++) {
-			f668c4bd_free(aioTicket->requestList[i]);
+			f1207515_releaseAIORequest(aioTicket->requestList[i]);
 		}
 	}
 }
@@ -223,14 +269,17 @@ AIORequest *f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize) {
 		return NULL;
 	}
 
-	aioReadRequest = f668c4bd_malloc(sizeof(AIORequest));
-	f668c4bd_meminit(aioReadRequest, sizeof(AIORequest));
+	aioReadRequest = f1207515_acquireAIORequest();
 
+	aioReadRequest->aio_data = 0;
 	aioReadRequest->aio_fildes = aioFile->fd;
 	aioReadRequest->aio_lio_opcode = AIO_READ;
+	aioReadRequest->aio_reqprio = 0;
 	aioReadRequest->aio_buf = (uint64_t) buf;
 	aioReadRequest->aio_nbytes = bufSize;
 	aioReadRequest->aio_offset = aioFile->offset;
+	aioReadRequest->aio_flags = 0;
+	aioReadRequest->aio_resfd = 0;
 	aioFile->offset += bufSize;
 
 	// Keep track of some metrics
@@ -253,14 +302,17 @@ AIORequest *f1207515_write(AIOFile *aioFile, void *buf, size_t count) {
 		return NULL;
 	}
 
-	aioWriteRequest = f668c4bd_malloc(sizeof(AIORequest));
-	f668c4bd_meminit(aioWriteRequest, sizeof(AIORequest));
+	aioWriteRequest = f1207515_acquireAIORequest();
 
+	aioWriteRequest->aio_data = 0;
 	aioWriteRequest->aio_fildes = aioFile->fd;
 	aioWriteRequest->aio_lio_opcode = AIO_WRITE;
+	aioWriteRequest->aio_reqprio = 0;
 	aioWriteRequest->aio_buf = (uint64_t) buf;
 	aioWriteRequest->aio_nbytes = count;
 	aioWriteRequest->aio_offset = aioFile->offset;
+	aioWriteRequest->aio_flags = 0;
+	aioWriteRequest->aio_resfd = 0;
 	aioFile->offset += count;
 
 	// Keep track of some metrics

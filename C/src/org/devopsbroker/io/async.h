@@ -217,6 +217,27 @@ static_assert(sizeof(AIOFile) == 384, "Check your assumptions");
 
 // ═══════════════════════════ Function Declarations ══════════════════════════
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Acquire/Release Functions ~~~~~~~~~~~~~~~~~~~~~~~~
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1207515_acquireAIORequest
+ * Description: Acquires a AIORequest instance from the internal AIORequestPool
+ *
+ * Returns:     The AIORequest instance if available, NULL otherwise
+ * ----------------------------------------------------------------------------
+ */
+AIORequest *f1207515_acquireAIORequest();
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    f1207515_releaseAIORequest
+ * Description: Releases a AIORequest instance back into the internal AIORequestPool
+ *
+ * Parameters:
+ *   aioRequest     The AIORequest instance to return to the AIORequestPool
+ * ----------------------------------------------------------------------------
+ */
+void f1207515_releaseAIORequest(AIORequest *aioRequest);
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
