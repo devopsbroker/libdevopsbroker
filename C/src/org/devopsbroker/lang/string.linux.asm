@@ -205,7 +205,7 @@ f6215943_copyToBuffer:
 ;	rsi : char *buffer
 ;	rdx : uint32_t numBytes
 ; Local Variables:
-;	al  : source byte buffer
+;	ecx : rep counter index variable
 
 .prologue:                            ; functions typically have a prologue
 	prefetcht0 [rdi]                  ; prefetch source into the CPU cache
@@ -220,22 +220,15 @@ f6215943_copyToBuffer:
 	jz         .epilogue
 
 .copyToBuffer:
-	dec        edx                    ; if (--numBytes == 0)
-	jz         .terminateBuffer
+	cld                               ; Clear direction flag to increment rsi and rdi
+	xchg       rdi, rsi               ; Exchange rdi and rsi for rep movsb
+	mov        ecx, edx               ; Put numBytes into ecx for rep movsb
 
-	mov        al, [rdi]              ; copy byte from source address into al
-	inc        rdi                    ; source++
-	mov        [rsi], al              ; copy al into buffer address
-	inc        rsi                    ; buffer++
+	rep movsb                         ; Copy data from [rsi] to [rdi]
 
-	test       al, al                 ; if (source character != '\0')
-	jnz        .copyToBuffer
+	mov        [rdi], byte 0x00       ; terminate char *buffer
 
 .epilogue:
-	ret                               ; pop return address from stack and jump there
-
-.terminateBuffer:
-	mov        [rsi], byte 0x00       ; terminate char *buffer
 	ret                               ; pop return address from stack and jump there
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ f6215943_endsWith ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
