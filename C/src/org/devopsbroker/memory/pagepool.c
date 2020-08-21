@@ -42,7 +42,7 @@
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
-PagePool pagePool = { {NULL, 0, 0}, 0, 0, 0, 0 };
+PagePool pagePool = { {NULL, 0, 0}, {NULL, 0, 0}, 0, 0, 0, 0 };
 
 // ════════════════════════════ Function Prototypes ═══════════════════════════
 
@@ -64,6 +64,9 @@ void f502a409_destroyPagePool(bool debug) {
 
 	// Clean up the page stack
 	f106c0ab_cleanUpStackArray(&pagePool.pageStack, NULL);
+
+	// Clean up the slab list
+	b196167f_cleanUpListArray(&pagePool.slabList, b426145b_releaseSlab);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,6 +75,7 @@ void *f502a409_acquirePage() {
 	// Initialize the page stack and slab list if no slabs have been allocated yet
 	if (pagePool.pageStack.values == NULL) {
 		f106c0ab_initStackArray(&pagePool.pageStack);
+		b196167f_initListArray(&pagePool.slabList);
 	}
 
 	// Populate the PagePool with another slab if no pages are free
@@ -100,6 +104,8 @@ void f502a409_releasePage(void *pagePtr) {
 static void populatePagePool() {
 	// Allocate a 32KB slab aligned on 4KB page boundary
 	void *slabBufferPtr = b426145b_acquireSlab();
+
+	b196167f_add(&pagePool.slabList, slabBufferPtr);
 
 	// Add pages to the page stack
 	for (int i=0; i < 8; i++) {
