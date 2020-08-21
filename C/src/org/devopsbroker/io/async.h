@@ -208,6 +208,7 @@ typedef struct AIOFile {
 	int64_t     fileSize;
 	int64_t     offset;
 	int         fd;
+	uint32_t    numRequestsRemaining;
 } AIOFile;
 
 static_assert(sizeof(AIOFile) == 384, "Check your assumptions");

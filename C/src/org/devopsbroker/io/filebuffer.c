@@ -341,7 +341,7 @@ void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, i
 		ce97d170_resetFileBufferList(bufferList, f502a409_releasePage);
 	}
 
-	if (aioTicket->numEvents < aioTicket->numRequests) {
+	if (aioFile->numRequestsRemaining > 0) {
 		// Get the remaining events from the submitted requests
 		numEvents = f1207515_getEvents(aioFile);
 
@@ -360,6 +360,7 @@ void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, i
 		}
 
 		// Submit the AIORequests
+		aioFile->numRequestsRemaining = numBlocks;
 		f1207515_submit(aioFile);
 
 		// Retrieve the AIOEvents
@@ -367,6 +368,7 @@ void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, i
 	}
 
 	// Print the ticket
+	aioFile->numRequestsRemaining -= numEvents;
 //	f1207515_printTicket(aioTicket);
 
 	// Create FileBuffer objects from the AIORequests
