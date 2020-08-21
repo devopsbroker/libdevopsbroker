@@ -23,7 +23,7 @@
 
 // ════════════════════════════ Feature Test Macros ═══════════════════════════
 
-#define _DEFAULT_SOURCE
+#define _GNU_SOURCE
 
 // ═════════════════════════════════ Includes ═════════════════════════════════
 
@@ -78,7 +78,7 @@ void b45c9f7e_destroyLogLine(LogLine *logLine) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Init/Clean Up Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void b45c9f7e_initLogLine(LogLine *logLine, String *line) {
+void b45c9f7e_initLogLine(LogLine *logLine, Line *line) {
 	char *position = line->value;
 
 	// in

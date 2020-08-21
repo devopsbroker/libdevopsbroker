@@ -237,6 +237,70 @@ c196bc72_getLine:
 	xor        rax, rax               ; set return value to NULL
 	ret                               ; pop return address from stack and jump there
 
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ c196bc72_getLine ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	global  c196bc72_getLineFromFileBuffer:function
+c196bc72_getLineFromFileBuffer:
+; Parameters:
+;	rdi : Line *line
+;	rsi : FileBuffer *fileBuffer
+; Local Variables:
+;	rsi : fileBuffer->buffer
+;   rax : 64-bit character buffer
+;	edx : fileBuffer->dataOffset / line length counter
+;	ecx : buffer length counter
+;	r8b : 64-bit buffer counter
+;	r10 : starting fileBuffer->buffer address
+
+.prologue:                            ; functions typically have a prologue
+	mov        edx, [rsi + 24]        ; load fileBuffer->dataOffset into edx
+	mov        ecx, [rsi + 28]        ; load fileBuffer->numBytes into ecx
+	sub        ecx, edx               ; numBytes = fileBuffer->numBytes - fileBuffer->dataOffset
+
+	mov        rsi, [rsi]             ; load fileBuffer->buffer into rsi
+	lea        rsi, [rsi + rdx]       ; set rsi to fileBuffer->buffer + fileBuffer->dataOffset
+	mov        r10, rsi               ; set r10 to beginning fileBuffer->buffer address
+
+	mov        r8b, 0x08              ; bufferCounter = 8
+	xor        edx, edx               ; lineLength = 0
+
+	mov        rax, [rsi]             ; load first eight bytes into rax
+
+.findNewline:
+	test       al, al                 ; if (ch == '\0')
+	jz         .returnNull
+
+	cmp        al, NEWLINE            ; if (ch == '\n')
+	je         .foundNewline
+
+	inc        rsi                    ; fileBuffer->buffer++
+	inc        edx                    ; lineLength++
+
+	dec        ecx                    ; numBytes--
+	jz         .returnNull
+
+.getNextCharacter:
+	shr        rax, 8                 ; shift rax to the next character in the buffer
+	dec        r8b                    ; bufferCounter--
+	jnz        .findNewline
+
+	mov        rax, [rsi]             ; load next eight bytes into rax
+	mov        r8b, 0x08              ; bufferCounter = 8
+	jmp        .findNewline
+
+.foundNewline:
+	mov        [rsi], byte 0x00       ; null-terminate found line
+	mov        [rdi], r10             ; line->value = starting fileBuffer->buffer pointer
+	mov        [rdi + 8], edx         ; line->length = lineLength
+
+.epilogue:                            ; functions typically have an epilogue
+	mov        rax, rdi               ; return Line *line reference
+	ret                               ; pop return address from stack and jump there
+
+.returnNull:
+	xor        rax, rax               ; set return value to NULL
+	ret                               ; pop return address from stack and jump there
+
 ; ~~~~~~~~~~~~~~~~~~~~~~~~ c196bc72_populateLineBuffer ~~~~~~~~~~~~~~~~~~~~~~~~
 
 	global  c196bc72_populateLineBuffer:function

@@ -31,7 +31,7 @@
 
 #include <assert.h>
 
-#include "../lang/string.h"
+#include "../text/linebuffer.h"
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
@@ -90,7 +90,7 @@ void b45c9f7e_destroyLogLine(LogLine *logLine);
  *   line       A pointer reference to the line data
  * ----------------------------------------------------------------------------
  */
-void b45c9f7e_initLogLine(LogLine *logLine, String *line);
+void b45c9f7e_initLogLine(LogLine *logLine, Line *line);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

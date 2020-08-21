@@ -33,6 +33,7 @@
 #include <assert.h>
 
 #include "../io/file.h"
+#include "../io/filebuffer.h"
 #include "../lang/memory.h"
 #include "../lang/string.h"
 #include "../lang/stringbuilder.h"
@@ -42,6 +43,13 @@
 #define C196BC72_BUFFER_SIZE 4072                          // PAGESIZE - 24
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
+
+typedef struct Line {
+	char    *value;
+	uint32_t length;
+} Line;
+
+static_assert(sizeof(Line) == 16, "Check your assumptions");
 
 typedef struct LineBuffer {
 	char buffer[C196BC72_BUFFER_SIZE];
@@ -106,6 +114,22 @@ void c196bc72_initLineBuffer(LineBuffer *lineBuffer);
  * ----------------------------------------------------------------------------
  */
 String *c196bc72_getLine(LineBuffer *lineBuffer);
+
+/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ * Function:    c196bc72_getLineFromFileBuffer
+ * Description: Returns a Line* to the next line in the FileBuffer
+ *
+ * Parameters:
+ *   line           A pointer to the Line instance to populate
+ *   fileBuffer     A pointer to the FileBuffer instance
+ * Returns:         A Line* pointer to the next line, or NULL if no line found
+ *
+ * NOTE: This method will bomb out with a SIGSEGV Segmentation Fault if the
+ *       char* buffer refers to data that resides within the read-only Data
+ *       Segment area of your program.
+ * ----------------------------------------------------------------------------
+ */
+Line *c196bc72_getLineFromFileBuffer(Line *line, FileBuffer *fileBuffer);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    c196bc72_populateLineBuffer
