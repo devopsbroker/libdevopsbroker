@@ -65,7 +65,11 @@ typedef struct MemoryDevice {
 	float minVoltage;
 } MemoryDevice;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(MemoryDevice) == 128, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(MemoryDevice) == 96, "Check your assumptions");
+#endif
 
 typedef struct MemoryArray {
 	StringBuilder *dmidecodeData;
@@ -82,7 +86,11 @@ typedef struct MemoryArray {
 	MemoryDevice memoryDeviceList[];
 } MemoryArray;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(MemoryArray) == 64, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(MemoryArray) == 56, "Check your assumptions");
+#endif
 
 // ═══════════════════════════ Function Declarations ══════════════════════════
 

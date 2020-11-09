@@ -59,7 +59,11 @@ typedef struct tm Time;   // Broken-down time struct
 	char *tm_zone;    // Timezone abbreviation
 */
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(Time) == 56, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(Time) == 44, "Check your assumptions");
+#endif
 
 typedef struct timeval TimeValue;
 /*
@@ -67,7 +71,11 @@ typedef struct timeval TimeValue;
 	suseconds_t   tv_usec;      // microseconds
 */
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(TimeValue) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(TimeValue) == 8, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

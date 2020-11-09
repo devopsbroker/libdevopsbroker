@@ -53,7 +53,11 @@ typedef struct sysinfo SystemInfo;
 	char _f[20-2*sizeof(long)-sizeof(int)];
 */
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(SystemInfo) == 112, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(SystemInfo) == 64, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

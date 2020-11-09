@@ -48,7 +48,11 @@ typedef struct String {
 	uint32_t size;
 } String;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(String) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(String) == 12, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

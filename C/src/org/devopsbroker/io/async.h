@@ -174,7 +174,11 @@ static_assert(sizeof(AIOEvent) == 32, "Check your assumptions");
  */
 typedef struct timespec WaitTime;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(WaitTime) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(WaitTime) == 8, "Check your assumptions");
+#endif
 
 typedef struct AIOContext {
 	aio_context_t id;
@@ -188,7 +192,11 @@ typedef struct AIOContext {
 	uint32_t      numWriteRequests;
 } AIOContext;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(AIOContext) == 64, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(AIOContext) == 48, "Check your assumptions");
+#endif
 
 typedef struct AIOTicket {
 	AIORequest *requestList[8];
@@ -199,7 +207,11 @@ typedef struct AIOTicket {
 	int64_t     numBytesWrite;
 } AIOTicket;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(AIOTicket) == 344, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(AIOTicket) == 312, "Check your assumptions");
+#endif
 
 typedef struct AIOFile {
 	AIOTicket   aioTicket;
@@ -211,7 +223,11 @@ typedef struct AIOFile {
 	uint32_t    numRequestsRemaining;
 } AIOFile;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(AIOFile) == 384, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(AIOFile) == 344, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

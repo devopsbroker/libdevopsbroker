@@ -80,7 +80,11 @@
  */
 typedef struct stat FileStatus;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(FileStatus) == 144, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(FileStatus) == 88, "Check your assumptions");
+#endif
 
 /*
  * File Access Modes

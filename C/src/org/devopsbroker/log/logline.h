@@ -51,7 +51,11 @@ typedef struct LogLine {
 	uint32_t lineLength;
 } LogLine;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(LogLine) == 64, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(LogLine) == 40, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

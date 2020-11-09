@@ -21,6 +21,10 @@
 #
 # NOTE: Deterministic archives do not store file timestamps, so the /usr/bin/ar
 # 'u' option to only replace newer files cannot work
+#
+# Please set the following environment variables:
+#    o OSTYPE (win64, linux)
+#    o MACHTYPE (x86_64, armv7l)
 # -----------------------------------------------------------------------------
 #
 
@@ -34,8 +38,13 @@ ASM := /usr/bin/nasm
 CC := /usr/bin/gcc
 
 ifeq ($(DEBUG), 1)
-    ASMFLAGS := -felf64 -gdwarf
-    CFLAGS := -Wall -gdwarf -m64 -Og -fdiagnostics-color=always -DDEBUG
+    ifeq ($(MACHTYPE), 'x86_64')
+        ASMFLAGS := -felf64 -gdwarf
+        CFLAGS := -Wall -gdwarf -m64 -Og -fdiagnostics-color=always -DDEBUG -DMACHTYPE=$(MACHTYPE)
+    else
+        ASMFLAGS := -gdwarf
+        CFLAGS := -Wall -gdwarf -Og -fdiagnostics-color=always -DDEBUG -DMACHTYPE=$(MACHTYPE)
+    endif
 else
     ASMFLAGS := -felf64
     CFLAGS := -Wall -m64 -O2 -fdiagnostics-color=always -DNDEBUG
@@ -49,7 +58,7 @@ LIB_NAME := libdevopsbroker.a
 C_SOURCES := $(shell /usr/bin/find $(SRC_DIR) -type f -name "*.c")
 C_OBJECTS := $(subst src/,obj/,$(C_SOURCES:.c=.o))
 
-ASM_SOURCES := $(shell /usr/bin/find $(SRC_DIR) -type f -name "*.asm")
+ASM_SOURCES := $(shell /usr/bin/find $(SRC_DIR) -type f -name "*.$(OSTYPE)-$(MACHTYPE).asm")
 ASM_OBJECTS := $(subst src/,obj/,$(ASM_SOURCES:.asm=.o))
 
 EXEC_CHMOD := $(shell which chmod)
@@ -168,71 +177,71 @@ $(OBJ_DIR)/time/%.o: $(SRC_DIR)/time/%.c $(SRC_DIR)/time/%.h | prepare
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Obtain object files for the ASM libraries
-$(OBJ_DIR)/adt/%.o: $(SRC_DIR)/adt/%.asm | prepare
+$(OBJ_DIR)/adt/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/adt/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/compress/%.o: $(SRC_DIR)/compress/%.asm | prepare
+$(OBJ_DIR)/compress/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/compress/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/fs/%.o: $(SRC_DIR)/fs/%.asm | prepare
+$(OBJ_DIR)/fs/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/fs/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/hash/%.o: $(SRC_DIR)/hash/%.asm | prepare
+$(OBJ_DIR)/hash/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/hash/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/info/%.o: $(SRC_DIR)/info/%.asm | prepare
+$(OBJ_DIR)/info/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/info/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/io/%.o: $(SRC_DIR)/io/%.asm | prepare
+$(OBJ_DIR)/io/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/io/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/lang/%.o: $(SRC_DIR)/lang/%.asm | prepare
+$(OBJ_DIR)/lang/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/lang/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/log/%.o: $(SRC_DIR)/log/%.asm | prepare
+$(OBJ_DIR)/log/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/log/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/memory/%.o: $(SRC_DIR)/memory/%.asm | prepare
+$(OBJ_DIR)/memory/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/memory/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/net/%.o: $(SRC_DIR)/net/%.asm | prepare
+$(OBJ_DIR)/net/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/net/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/socket/%.o: $(SRC_DIR)/socket/%.asm | prepare
+$(OBJ_DIR)/socket/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/socket/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/sysfs/%.o: $(SRC_DIR)/sysfs/%.asm | prepare
+$(OBJ_DIR)/sysfs/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/sysfs/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/system/%.o: $(SRC_DIR)/system/%.asm | prepare
+$(OBJ_DIR)/system/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/system/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/terminal/%.o: $(SRC_DIR)/terminal/%.asm | prepare
+$(OBJ_DIR)/terminal/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/terminal/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/test/%.o: $(SRC_DIR)/test/%.asm | prepare
+$(OBJ_DIR)/test/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/test/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/text/%.o: $(SRC_DIR)/text/%.asm | prepare
+$(OBJ_DIR)/text/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/text/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(OBJ_DIR)/time/%.o: $(SRC_DIR)/time/%.asm | prepare
+$(OBJ_DIR)/time/%.$(OSTYPE)-$(MACHTYPE).o: $(SRC_DIR)/time/%.$(OSTYPE)-$(MACHTYPE).asm | prepare
 	$(call printInfo,Compiling $(@F))
 	$(ASM) $(ASMFLAGS) $< -o $@
 

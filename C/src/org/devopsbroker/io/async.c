@@ -57,7 +57,11 @@ typedef struct AIORequestPool {
 	uint32_t   numAIORequestUsed;
 } AIORequestPool;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(AIORequestPool) == 32, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(AIORequestPool) == 28, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
@@ -275,7 +279,11 @@ AIORequest *f1207515_read(AIOFile *aioFile, void *buf, size_t bufSize) {
 	aioReadRequest->aio_fildes = aioFile->fd;
 	aioReadRequest->aio_lio_opcode = AIO_READ;
 	aioReadRequest->aio_reqprio = 0;
+	#if __SIZEOF_POINTER__ == 8
 	aioReadRequest->aio_buf = (uint64_t) buf;
+	#elif  __SIZEOF_POINTER__ == 4
+	aioReadRequest->aio_buf = (uint32_t) buf;
+	#endif
 	aioReadRequest->aio_nbytes = bufSize;
 	aioReadRequest->aio_offset = aioFile->offset;
 	aioReadRequest->aio_flags = 0;
@@ -308,7 +316,11 @@ AIORequest *f1207515_write(AIOFile *aioFile, void *buf, size_t count) {
 	aioWriteRequest->aio_fildes = aioFile->fd;
 	aioWriteRequest->aio_lio_opcode = AIO_WRITE;
 	aioWriteRequest->aio_reqprio = 0;
+	#if __SIZEOF_POINTER__ == 8
 	aioWriteRequest->aio_buf = (uint64_t) buf;
+	#elif  __SIZEOF_POINTER__ == 4
+	aioWriteRequest->aio_buf = (uint32_t) buf;
+	#endif
 	aioWriteRequest->aio_nbytes = count;
 	aioWriteRequest->aio_offset = aioFile->offset;
 	aioWriteRequest->aio_flags = 0;
@@ -380,7 +392,11 @@ int32_t f1207515_getEvents(AIOFile *aioFile) {
 	aioTicket->numEvents += retValue;
 
 	for (uint32_t i=0; i < retValue; i++) {
+		#if __SIZEOF_POINTER__ == 8
 		aioRequest = (AIORequest*) aioTicket->eventList[i].obj;
+		#elif  __SIZEOF_POINTER__ == 4
+		aioRequest = (AIORequest*) ((uint32_t) aioTicket->eventList[i].obj);
+		#endif
 
 		if (aioRequest->aio_lio_opcode == AIO_READ) {
 			aioContext->numBytesRead += aioTicket->eventList[i].res;
@@ -395,6 +411,7 @@ int32_t f1207515_getEvents(AIOFile *aioFile) {
 }
 
 void f1207515_printContext(AIOContext *aioContext) {
+	#if __SIZEOF_POINTER__ == 8 
 	printf("AIOContext ID: %lu\n", aioContext->id);
 	printf("\tMax Operations:     %u\n", aioContext->maxOperations);
 	printf("\tTotal Num Requests: %u\n", aioContext->numRequests);
@@ -402,6 +419,15 @@ void f1207515_printContext(AIOContext *aioContext) {
 	printf("\tNum Bytes Read:     %ld bytes\n", aioContext->numBytesRead);
 	printf("\tNum Write Requests: %u\n", aioContext->numWriteRequests);
 	printf("\tNum Bytes Written:  %ld bytes\n", aioContext->numBytesWrite);
+	#elif  __SIZEOF_POINTER__ == 4
+	printf("AIOContext ID: %lu\n", aioContext->id);
+	printf("\tMax Operations:     %u\n", aioContext->maxOperations);
+	printf("\tTotal Num Requests: %u\n", aioContext->numRequests);
+	printf("\tNum Read Requests:  %u\n", aioContext->numReadRequests);
+	printf("\tNum Bytes Read:     %lld bytes\n", aioContext->numBytesRead);
+	printf("\tNum Write Requests: %u\n", aioContext->numWriteRequests);
+	printf("\tNum Bytes Written:  %lld bytes\n", aioContext->numBytesWrite);
+	#endif
 	printf("\n");
 }
 
@@ -414,6 +440,7 @@ void f1207515_printTicket(AIOTicket *aioTicket) {
 		requestPtr = aioTicket->requestList[i];
 
 		printf("\nAIORequest #%u:\n", i);
+		#if __SIZEOF_POINTER__ == 8
 		printf("\tpointer:        %p\n", requestPtr);
 		printf("\taio_data:       %lu\n", (uint64_t) aioTicket->requestList[i]->aio_data);
 		printf("\taio_lio_opcode: %u\n", (uint16_t) aioTicket->requestList[i]->aio_lio_opcode);
@@ -421,20 +448,43 @@ void f1207515_printTicket(AIOTicket *aioTicket) {
 		printf("\taio_fildes:     %u\n", (uint32_t) aioTicket->requestList[i]->aio_fildes);
 		printf("\taio_buf:        %p\n", (void*) aioTicket->requestList[i]->aio_buf);
 		printf("\taio_nbytes:     %lu\n", (uint64_t) aioTicket->requestList[i]->aio_nbytes);
-		printf("\taio_offset:     %ld\n", (int64_t) aioTicket->requestList[i]->aio_offset);
+		printf("\taio_offset:     %ld\n", (uint64_t) aioTicket->requestList[i]->aio_offset);
 		printf("\taio_flags:      %u\n", (uint32_t) aioTicket->requestList[i]->aio_flags);
+		#elif  __SIZEOF_POINTER__ == 4
+		printf("\tpointer:        %p\n", requestPtr);
+		printf("\taio_data:       %llu\n", (uint64_t) aioTicket->requestList[i]->aio_data);
+		printf("\taio_lio_opcode: %u\n", (uint16_t) aioTicket->requestList[i]->aio_lio_opcode);
+		printf("\taio_reqprio:    %d\n", (int16_t) aioTicket->requestList[i]->aio_reqprio);
+		printf("\taio_fildes:     %u\n", (uint32_t) aioTicket->requestList[i]->aio_fildes);
+		printf("\taio_buf:        %p\n", (void*) ((uint32_t) aioTicket->requestList[i]->aio_buf));
+		printf("\taio_nbytes:     %llu\n", (uint64_t) aioTicket->requestList[i]->aio_nbytes);
+		printf("\taio_offset:     %lld\n", (uint64_t) aioTicket->requestList[i]->aio_offset);
+		printf("\taio_flags:      %u\n", (uint32_t) aioTicket->requestList[i]->aio_flags);
+		#endif
 	}
 
 	printf("\nNumber of AIOEvents:   %u\n", aioTicket->numEvents);
+	#if __SIZEOF_POINTER__ == 8
 	printf("\tNum Bytes Read:     %ld bytes\n", aioTicket->numBytesRead);
 	printf("\tNum Bytes Written:  %ld bytes\n", aioTicket->numBytesWrite);
+	#elif  __SIZEOF_POINTER__ == 4
+	printf("\tNum Bytes Read:     %lld bytes\n", aioTicket->numBytesRead);
+	printf("\tNum Bytes Written:  %lld bytes\n", aioTicket->numBytesWrite);
+	#endif
 
 	for (uint32_t i=0; i < aioTicket->numEvents; i++) {
 		printf("\nAIOEvent #%u:\n", i);
+		#if __SIZEOF_POINTER__ == 8
 		printf("\tdata:           %lu\n", (uint64_t) aioTicket->eventList[i].data);
 		printf("\tobj:            %p\n", (void*) aioTicket->eventList[i].obj);
 		printf("\tres:            %ld\n", (int64_t) aioTicket->eventList[i].res);
 		printf("\tres2:           %ld\n", (int64_t)aioTicket->eventList[i].res2);
+		#elif  __SIZEOF_POINTER__ == 4
+		printf("\tdata:           %llu\n", (uint64_t) aioTicket->eventList[i].data);
+		printf("\tobj:            %p\n", (void*) ((uint32_t) aioTicket->eventList[i].obj));
+		printf("\tres:            %lld\n", (int64_t) aioTicket->eventList[i].res);
+		printf("\tres2:           %lld\n", (int64_t)aioTicket->eventList[i].res2);
+		#endif
 	}
 
 	printf("\n");

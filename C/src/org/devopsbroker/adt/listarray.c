@@ -114,7 +114,71 @@ void b196167f_initListArrayWithSize(ListArray *listArray, const uint32_t size) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utility Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void b196167f_clear(ListArray *listArray) {
+#ifdef __arm__
+void b196167f_add(ListArray *listArray, void *element) {
+	if (listArray->length == listArray->size) {
+		// Ensure the new capacity is a multiple of 8
+		uint32_t capacity = (((listArray->length + 7) >> 3) << 3) << 1;
+
+		listArray->values = f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), capacity);
+		listArray->size = capacity;
+
+	}
+
+	listArray->values[listArray->length++] = element;
+}
+#endif
+
+#ifdef __arm__
+void b196167f_addAll(ListArray *listArray, void *elementArray[], uint32_t numElements) {
+	uint32_t newLength = listArray->length + numElements;
+
+	if (newLength >= listArray->size) {
+		// Ensure the new capacity is a multiple of 8
+		uint32_t capacity = (((newLength + 7) >> 3) << 3) << 1;
+
+		listArray->values = f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), capacity);
+		listArray->size = capacity;
+	}
+
+	for (uint32_t i = listArray->length; i < newLength; i++) {
+		listArray->values[i] = elementArray[0];
+		elementArray++;
+	}
+
+	listArray->length = newLength;
+}
+#endif
+
+#ifdef __arm__
+void b196167f_addFromStack(ListArray *listArray, void *stack[], uint32_t numElements) {
+	uint32_t newLength = listArray->length + numElements;
+
+	if (newLength >= listArray->size) {
+		// Ensure the new capacity is a multiple of 8
+		uint32_t capacity = (((newLength + 7) >> 3) << 3) << 1;
+
+		listArray->values = f668c4bd_resizeArray(listArray->values, listArray->length, sizeof(void*), capacity);
+		listArray->size = capacity;
+	}
+
+	for (uint32_t i = listArray->length; i < newLength; i++) {
+		listArray->values[i] = stack[0];
+		stack--;
+	}
+
+	listArray->length = newLength;
+}
+#endif
+
+void b196167f_clear(ListArray *listArray, void freeElement(void *ptr)) {
+	if (listArray->values != NULL && freeElement != NULL) {
+		// Free all the elements first, if necessary
+		for (uint32_t i=0; i < listArray->length; i++) {
+			freeElement(listArray->values[i]);
+		}
+	}
+
 	listArray->length = 0;
 }
 

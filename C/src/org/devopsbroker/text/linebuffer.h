@@ -40,7 +40,11 @@
 
 // ═══════════════════════════════ Preprocessor ═══════════════════════════════
 
+#if __SIZEOF_POINTER__ == 8
 #define C196BC72_BUFFER_SIZE 4072                          // PAGESIZE - 24
+#elif  __SIZEOF_POINTER__ == 4
+#define C196BC72_BUFFER_SIZE 4076                          // PAGESIZE - 20 
+#endif
 
 // ═════════════════════════════════ Typedefs ═════════════════════════════════
 
@@ -49,7 +53,11 @@ typedef struct Line {
 	uint32_t length;
 } Line;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(Line) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(Line) == 8, "Check your assumptions");
+#endif
 
 typedef struct LineBuffer {
 	char buffer[C196BC72_BUFFER_SIZE];

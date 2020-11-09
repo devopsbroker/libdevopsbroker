@@ -49,7 +49,11 @@ typedef struct FileBuffer {
 	uint32_t           numBytes;
 } FileBuffer;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(FileBuffer) == 32, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(FileBuffer) == 24, "Check your assumptions");
+#endif
 
 typedef struct FileBufferList {
 	FileBuffer **values;

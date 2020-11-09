@@ -1,5 +1,5 @@
 ;
-; listarray.linux.asm - DevOpsBroker NASM file for the ListArray struct
+; listarray.linux-amd64.asm - DevOpsBroker NASM file for the ListArray struct
 ;
 ; Copyright (C) 2019-2020 Edward Smith <edwardsmith@devopsbroker.org>
 ;

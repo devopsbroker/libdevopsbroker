@@ -47,7 +47,11 @@ typedef struct StringBuilder {
 	uint32_t size;
 } StringBuilder;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(StringBuilder) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(StringBuilder) == 12, "Check your assumptions");
+#endif
 
 // ════════════════════════════════ Structures ════════════════════════════════
 

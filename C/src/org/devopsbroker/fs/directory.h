@@ -44,11 +44,19 @@
 
 typedef StringBuilder DirPath;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(DirPath) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(DirPath) == 12, "Check your assumptions");
+#endif
 
 typedef ListArray FilePathList;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(FilePathList) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(FilePathList) == 12, "Check your assumptions");
+#endif
 
 typedef struct File {
 	char name[256];
@@ -62,7 +70,11 @@ typedef struct Directory {
 	ListArray fileList;
 } Directory;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(Directory) == 288, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(Directory) == 280, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

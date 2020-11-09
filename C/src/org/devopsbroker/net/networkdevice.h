@@ -64,7 +64,11 @@ typedef struct ifreq NetworkDeviceRequest;   // Request struct for making ioctl 
 	}
 */
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(NetworkDeviceRequest) == 40, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(NetworkDeviceRequest) == 32, "Check your assumptions");
+#endif
 
 typedef struct NetworkDevice {
 	IPv4Address ipv4Address;
@@ -74,7 +78,11 @@ typedef struct NetworkDevice {
 	IPv6Address ipv6Gateway;
 	uint32_t ipv4Gateway;           // e.g. 192.168.1.1
 	uint32_t index;                 // e.g. 2
+	#if __SIZEOF_POINTER__ == 8
 	char _padding[4];
+	#elif  __SIZEOF_POINTER__ == 4
+	char _padding[8];
+	#endif
 } NetworkDevice;
 
 static_assert(sizeof(NetworkDevice) == 96, "Check your assumptions");

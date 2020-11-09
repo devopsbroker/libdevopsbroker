@@ -136,7 +136,11 @@ typedef struct iovec IOBuffer;
 	size_t iov_len;    // Number of bytes to transfer
 */
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(IOBuffer) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(IOBuffer) == 8, "Check your assumptions");
+#endif
 
 typedef struct msghdr ReceiveMessageHeader;
 /*	void         *msg_name;         // optional address
@@ -148,7 +152,11 @@ typedef struct msghdr ReceiveMessageHeader;
 	int           msg_flags;        // flags on received message
 */
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(ReceiveMessageHeader) == 56, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(ReceiveMessageHeader) == 28, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

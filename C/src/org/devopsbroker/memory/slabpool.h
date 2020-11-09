@@ -47,7 +47,11 @@ typedef struct SlabPool {
 	uint32_t   numSlabsUsed;
 } SlabPool;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(SlabPool) == 32, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(SlabPool) == 28, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

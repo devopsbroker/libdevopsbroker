@@ -269,7 +269,11 @@ typedef struct NetlinkSocket {
 	int fd;
 } NetlinkSocket;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(NetlinkSocket) == 32, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(NetlinkSocket) == 24, "Check your assumptions");
+#endif
 
 typedef struct rta_cacheinfo RouteCacheInfo;
 /*	unsigned int   rta_clntref;

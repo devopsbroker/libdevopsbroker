@@ -43,7 +43,11 @@ typedef struct CmdLineParam {
 	int  argc;
 } CmdLineParam;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(CmdLineParam) == 24, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(CmdLineParam) == 12, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

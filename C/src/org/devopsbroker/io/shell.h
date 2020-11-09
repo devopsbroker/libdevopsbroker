@@ -41,7 +41,11 @@ typedef struct Shell {
 	int fd;
 } Shell;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(Shell) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(Shell) == 8, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

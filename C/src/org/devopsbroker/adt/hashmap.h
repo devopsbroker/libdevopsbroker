@@ -44,7 +44,11 @@ typedef struct MapEntry {
 	uint32_t hash;
 } MapEntry;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(MapEntry) == 32, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(MapEntry) == 16, "Check your assumptions");
+#endif
 
 typedef struct HashMap {
 	MapEntry **table;
@@ -55,7 +59,11 @@ typedef struct HashMap {
 	uint32_t length;
 } HashMap;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(HashMap) == 40, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(HashMap) == 24, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

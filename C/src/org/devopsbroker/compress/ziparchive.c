@@ -125,7 +125,11 @@ typedef struct LocalFileHeader {
 	uint16_t    extraFieldLen;
 } LocalFileHeader __attribute__ ((aligned (16)));
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(LocalFileHeader) == 56, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(LocalFileHeader) == 44, "Check your assumptions");
+#endif
 
 /*
  * Data Descriptor
@@ -202,7 +206,11 @@ typedef struct FileHeader {
 	uint16_t internalFileAttribs;
 } FileHeader __attribute__ ((aligned (16)));
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(FileHeader) == 72, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(FileHeader) == 60, "Check your assumptions");
+#endif
 
 /*
  * Digital Signature
@@ -216,7 +224,11 @@ typedef struct DigitalSignature {
 	uint16_t dataSize;
 } DigitalSignature;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(DigitalSignature) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(DigitalSignature) == 12, "Check your assumptions");
+#endif
 
 /*
  * Central Directory Structure
@@ -232,7 +244,11 @@ typedef struct CentralDirectory {
 	DigitalSignature digitalSignature;
 } CentralDirectory;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(CentralDirectory) == 32, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(CentralDirectory) == 24, "Check your assumptions");
+#endif
 
 /*
  * Zip64 End of Central Directory Record
@@ -313,7 +329,11 @@ typedef struct EndOfCDR {
 	uint16_t commentLength;
 } EndOfCDR;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(EndOfCDR) == 32, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(EndOfCDR) == 28, "Check your assumptions");
+#endif
 
 /*
  * Zip Archive Format

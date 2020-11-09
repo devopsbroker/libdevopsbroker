@@ -42,7 +42,11 @@ typedef struct ListArray {
 	uint32_t size;
 } ListArray;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(ListArray) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(ListArray) == 12, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
@@ -92,7 +96,7 @@ void b196167f_destroyListArray(ListArray *listArray, void freeElement(void *ptr)
  * Parameters:
  *   listArray      A pointer to the ListArray instance to clean up
  *   freeElement    A function pointer to the method that frees the underlying
- *                  elemenmt contained within the ListArray instance
+ *                  element contained within the ListArray instance
  * ----------------------------------------------------------------------------
  */
 void b196167f_cleanUpListArray(ListArray *listArray, void freeElement(void *ptr));
@@ -137,11 +141,11 @@ void b196167f_add(ListArray *listArray, void *element);
  *
  * Parameters:
  *   listArray      The ListArray instance
- *   elementArray   The element to add to the ListArray
+ *   elementArray   The elements to add to the ListArray
  *   numElements    The number of elements to add
  * ----------------------------------------------------------------------------
  */
-void b196167f_addAll(ListArray *listArray, void *elementArray, uint32_t numElements);
+void b196167f_addAll(ListArray *listArray, void *elementArray[], uint32_t numElements);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_addFromStack
@@ -153,7 +157,7 @@ void b196167f_addAll(ListArray *listArray, void *elementArray, uint32_t numEleme
  *   numElements    The number of elements to add
  * ----------------------------------------------------------------------------
  */
-void b196167f_addFromStack(ListArray *listArray, void *stack, uint32_t numElements);
+void b196167f_addFromStack(ListArray *listArray, void *stack[], uint32_t numElements);
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_clear
@@ -161,9 +165,11 @@ void b196167f_addFromStack(ListArray *listArray, void *stack, uint32_t numElemen
  *
  * Parameters:
  *   listArray      A pointer to the ListArray instance
+ *   freeElement    A function pointer to the method that frees the underlying
+ *                  element contained within the ListArray instance
  * ----------------------------------------------------------------------------
  */
-void b196167f_clear(ListArray *listArray);
+void b196167f_clear(ListArray *listArray, void freeElement(void *ptr));
 
 /* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
  * Function:    b196167f_ensureCapacity

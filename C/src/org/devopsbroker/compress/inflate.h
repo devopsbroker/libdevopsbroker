@@ -69,7 +69,11 @@ typedef struct Inflate {
 	InflationStatus   status;
 } Inflate;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(Inflate) == 88, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(Inflate) == 72, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

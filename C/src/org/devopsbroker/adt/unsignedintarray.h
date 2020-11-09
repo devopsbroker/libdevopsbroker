@@ -44,7 +44,11 @@ typedef struct UnsignedIntArray {
 	uint32_t size;
 } UnsignedIntArray __attribute__ ((aligned (16)));
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(UnsignedIntArray) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(UnsignedIntArray) == 12, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

@@ -54,7 +54,11 @@ typedef struct FileBufferPool {
 	uint32_t   numFileBufferUsed;
 } FileBufferPool;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(FileBufferPool) == 32, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(FileBufferPool) == 28, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
@@ -375,8 +379,13 @@ void ce97d170_readFileBufferList(AIOFile *aioFile, FileBufferList *bufferList, i
 	for (int32_t i=0; i < numEvents; i++) {
 		AIORequest *aioRequest;
 
+		#if __SIZEOF_POINTER__ == 8
 		aioRequest = (AIORequest*)aioTicket->eventList[i].obj;
 		bufferPtr = (void*) aioRequest->aio_buf;
+		#elif  __SIZEOF_POINTER__ == 4
+		aioRequest = (AIORequest*) ((uint32_t) aioTicket->eventList[i].obj);
+		bufferPtr = (void*) ((uint32_t) aioRequest->aio_buf);
+		#endif
 
 		fileBuffer = ce97d170_acquireFileBuffer(bufferPtr);
 		fileBuffer->numBytes = (int64_t) aioTicket->eventList[i].res;

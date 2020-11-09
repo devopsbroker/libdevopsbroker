@@ -43,7 +43,11 @@ typedef struct StackArray {
 	uint32_t size;
 } StackArray;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(StackArray) == 16, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(StackArray) == 12, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

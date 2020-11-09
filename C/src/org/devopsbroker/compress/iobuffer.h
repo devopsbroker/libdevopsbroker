@@ -49,7 +49,11 @@ typedef struct InputBuffer {
 	uint32_t    offsetBitPos;
 } InputBuffer;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(InputBuffer) == 48, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(InputBuffer) == 40, "Check your assumptions");
+#endif
 
 typedef struct OutputBuffer {
 	uint8_t             *buffer;
@@ -59,7 +63,11 @@ typedef struct OutputBuffer {
 	uint32_t             size;
 } OutputBuffer;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(OutputBuffer) == 32, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(OutputBuffer) == 20, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

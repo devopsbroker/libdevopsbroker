@@ -61,7 +61,11 @@ typedef struct ifreq EthernetRequest;   // Request struct for making ioctl calls
 	}
 */
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(EthernetRequest) == 40, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(EthernetRequest) == 32, "Check your assumptions");
+#endif
 
 typedef struct ethtool_cmd EthernetStatus;
 /*	uint32_t    cmd;

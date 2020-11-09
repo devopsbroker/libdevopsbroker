@@ -49,7 +49,11 @@ typedef struct PagePool {
 	uint32_t   numPagesUsed;
 } PagePool;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(PagePool) == 48, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(PagePool) == 40, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 

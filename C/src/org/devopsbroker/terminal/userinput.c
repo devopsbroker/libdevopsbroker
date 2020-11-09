@@ -46,5 +46,9 @@
 int a5c0506e_read_uint64(char *line, uint64_t *answer) {
 	line = fgets(line, sizeof(line), stdin);
 
+	#if __SIZEOF_POINTER__ == 8
 	return sscanf(line, "%lu", answer);
+	#elif  __SIZEOF_POINTER__ == 4
+	return sscanf(line, "%llu", answer);
+	#endif
 }

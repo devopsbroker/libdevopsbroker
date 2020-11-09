@@ -187,8 +187,8 @@ static char *getRoutingTable(unsigned char rtm_table) {
 }
 
 void e7173ad4_debugNetlinkAttribute(DebugNetlinkAttribute *debugAttr) {
-	char *attributeType;
-	char *attributeValue;
+	char *attributeType = NULL;
+	char *attributeValue = NULL;
 
 	switch(debugAttr->attribute->rta_type) {
 		case RTA_CACHEINFO :
