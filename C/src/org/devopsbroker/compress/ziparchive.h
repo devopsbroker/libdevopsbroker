@@ -54,7 +54,11 @@ typedef struct ZipArchive {
 	char            *outputDir;
 } ZipArchive;
 
+#if __SIZEOF_POINTER__ == 8
 static_assert(sizeof(ZipArchive) == 432, "Check your assumptions");
+#elif  __SIZEOF_POINTER__ == 4
+static_assert(sizeof(ZipArchive) == 384, "Check your assumptions");
+#endif
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
