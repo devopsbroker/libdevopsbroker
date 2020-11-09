@@ -235,36 +235,6 @@ typedef struct CentralDirectory {
 static_assert(sizeof(CentralDirectory) == 32, "Check your assumptions");
 
 /*
- * End of Central Directory Record
- *   - end of central dir signature                       4 bytes  (0x06054b50)
- *   - number of this disk                                2 bytes
- *   - number of the disk with the start of the
- *     central directory                                  2 bytes
- *   - total number of entries in the central
- *     directory on this disk                             2 bytes
- *   - total number of entries in the central
- *     directory                                          2 bytes
- *   - size of the central directory                      4 bytes
- *   - offset of start of central directory
- *     with respect to the starting disk number           4 bytes
- *   - .ZIP file comment length                           2 bytes
- *   - .ZIP file comment                                  (variable size)
- */
-typedef struct EndOfCDR {
-	char*    comment;
-	uint32_t signature;
-	uint32_t size;
-	uint32_t startOffset;
-	uint16_t diskNum;
-	uint16_t startDiskNum;
-	uint16_t totalEntriesOnDisk;
-	uint16_t totalEntries;
-	uint16_t commentLength;
-} EndOfCDR;
-
-static_assert(sizeof(EndOfCDR) == 32, "Check your assumptions");
-
-/*
  * Zip64 End of Central Directory Record
  *   - zip64 end of central dir signature                 4 bytes  (0x06064b50)
  *   - size of zip64 end of central directory record      8 bytes
@@ -316,6 +286,36 @@ typedef struct Zip64EndOfCDL {
 static_assert(sizeof(Zip64EndOfCDL) == 16, "Check your assumptions");
 
 /*
+ * End of Central Directory Record
+ *   - end of central dir signature                       4 bytes  (0x06054b50)
+ *   - number of this disk                                2 bytes
+ *   - number of the disk with the start of the
+ *     central directory                                  2 bytes
+ *   - total number of entries in the central
+ *     directory on this disk                             2 bytes
+ *   - total number of entries in the central
+ *     directory                                          2 bytes
+ *   - size of the central directory                      4 bytes
+ *   - offset of start of central directory
+ *     with respect to the starting disk number           4 bytes
+ *   - .ZIP file comment length                           2 bytes
+ *   - .ZIP file comment                                  (variable size)
+ */
+typedef struct EndOfCDR {
+	char*    comment;
+	uint32_t signature;
+	uint32_t size;
+	uint32_t startOffset;
+	uint16_t diskNum;
+	uint16_t startDiskNum;
+	uint16_t totalEntriesOnDisk;
+	uint16_t totalEntries;
+	uint16_t commentLength;
+} EndOfCDR;
+
+static_assert(sizeof(EndOfCDR) == 32, "Check your assumptions");
+
+/*
  * Zip Archive Format
  *   [local file header 1]
  *   [file data 1]
@@ -357,6 +357,8 @@ static void ce667b0d_destroyFileHeader(void *fileHeader);
 static LocalFileHeader *ce667b0d_createLocalFileHeader();
 static void ce667b0d_destroyLocalFileHeader(LocalFileHeader *localFileHeader);
 
+extern void ce667b0d_mapEndOfCDR(EndOfCDR *endOfCDR, void *bufferPtr);
+
 // ═════════════════════════ Function Implementations ═════════════════════════
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Create/Destroy Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -390,7 +392,7 @@ void ce667b0d_initZipArchive(ZipArchive *zipArchive, AIOContext *aioContext, cha
 	ce97d170_initFileBufferList(&zipArchive->bufferList);
 
 	// 2. Initialize the AIOFile struct
-	f1207515_initAIOFile(&zipArchive->aioFile, fileName);
+	f1207515_initAIOFile(aioContext, &zipArchive->aioFile, fileName);
 
 	// 3. Initialize the AIOContext and output directory
 	zipArchive->aioContext = aioContext;
@@ -440,7 +442,7 @@ void ce667b0d_unzip(ZipArchive *zipArchive) {
 
 	// 2. Find the End of Central Directory Record
 	if (findEndOfCDR(&zipFormat)) {
-		// printEndOfCDR(&zipFormat.endOfCDR);
+		printEndOfCDR(&zipFormat.endOfCDR);
 
 		// 3. Load the Central Directory
 		loadCentralDirectory(&zipFormat);
@@ -461,7 +463,7 @@ void ce667b0d_unzip(ZipArchive *zipArchive) {
 				dataLength = zipArchive->aioFile.fileSize;
 			}
 
-			ce97d170_readFileBufferList(zipArchive->aioContext, &zipArchive->aioFile, &zipArchive->bufferList, dataLength);
+			ce97d170_readFileBufferList(&zipArchive->aioFile, &zipArchive->bufferList, dataLength);
 		}
 
 		// 5. Process the FileHeader list obtained from the Central Directory
@@ -490,7 +492,7 @@ static bool findEndOfCDR(ZipFormat *zipFormat) {
 	length = aioFile->fileSize - aioFile->offset;
 
 	// 2. Read end of Zip archive
-	fileBuffer = ce97d170_readFileBuffer(zipFormat->zipArchive->aioContext, aioFile, length);
+	fileBuffer = ce97d170_readFileBuffer(aioFile, length);
 	ce97d170_addBuffer(&zipFormat->zipArchive->bufferList, fileBuffer);
 
 	bufPtr = fileBuffer->buffer + fileBuffer->numBytes;
@@ -498,6 +500,8 @@ static bool findEndOfCDR(ZipFormat *zipFormat) {
 	if (fileBuffer->numBytes > ZIP_END_OF_CDR_SIZE) {
 		for (bufPtr -= ZIP_END_OF_CDR_SIZE; bufPtr >= fileBuffer->buffer; bufPtr--) {
 			if ( (*(uint32_t*)bufPtr) == ZIP_END_OF_CDR_SIG) {
+				ce667b0d_mapEndOfCDR(&zipFormat->endOfCDR, bufPtr);
+/*
 				zipFormat->endOfCDR.signature = (*(uint32_t*)bufPtr);
 				bufPtr += 4;
 				zipFormat->endOfCDR.diskNum = (*(uint16_t*)bufPtr);
@@ -514,7 +518,7 @@ static bool findEndOfCDR(ZipFormat *zipFormat) {
 				bufPtr += 4;
 				zipFormat->endOfCDR.commentLength = (*(uint16_t*)bufPtr);
 				bufPtr += 2;
-
+*/
 				return true;
 			}
 		}
@@ -547,7 +551,7 @@ static void loadCentralDirectory(ZipFormat *zipFormat) {
 		dataLength = endOfCDR->startOffset - aioFile->offset + endOfCDR->size;
 
 		// Read the data
-		ce97d170_readFileBufferList(zipArchive->aioContext, aioFile, &zipArchive->bufferList, dataLength);
+		ce97d170_readFileBufferList(aioFile, &zipArchive->bufferList, dataLength);
 		fileBuffer = ce97d170_containsData(&zipArchive->bufferList, endOfCDR->startOffset, dataLength);
 	}
 
@@ -669,7 +673,7 @@ static void processFileHeaderList(ZipArchive *zipArchive, CentralDirectory *cent
 				dataLength += (fileHeader->localHeaderOffset - inputFile->offset);
 
 				// Read the data
-				ce97d170_readFileBufferList(zipArchive->aioContext, inputFile, &zipArchive->bufferList, dataLength);
+				ce97d170_readFileBufferList(inputFile, &zipArchive->bufferList, dataLength);
 				fileBuffer = ce97d170_containsData(&zipArchive->bufferList, fileHeader->localHeaderOffset, dataLength);
 			}
 

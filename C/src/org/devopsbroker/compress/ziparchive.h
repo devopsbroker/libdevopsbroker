@@ -48,13 +48,13 @@
  *    - Output directory for zip file artifacts
  */
 typedef struct ZipArchive {
-	FileBufferList   bufferList;
 	AIOFile          aioFile;
+	FileBufferList   bufferList;
 	AIOContext      *aioContext;
 	char            *outputDir;
 } ZipArchive;
 
-static_assert(sizeof(ZipArchive) == 80, "Check your assumptions");
+static_assert(sizeof(ZipArchive) == 432, "Check your assumptions");
 
 // ═════════════════════════════ Global Variables ═════════════════════════════
 
